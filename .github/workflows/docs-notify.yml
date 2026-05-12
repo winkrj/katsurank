@@ -10,8 +10,9 @@ jobs:
   notify:
     name: Notify on docs change
     runs-on: ubuntu-latest
+
     steps:
-      - name: Checkout (for commit info)
+      - name: Checkout for commit info
         uses: actions/checkout@v4
         with:
           fetch-depth: 2
@@ -28,12 +29,12 @@ jobs:
 
           {
             echo "content<<EOF"
-            echo "📝 **문서가 갱신되었습니다**"
+            echo "📝 *문서가 갱신되었습니다*"
             echo ""
-            echo "**커밋**: \`$SHA_SHORT\` — $SUBJECT"
-            echo "**작성자**: $AUTHOR"
+            echo "*커밋*: \`$SHA_SHORT\` — $SUBJECT"
+            echo "*작성자*: $AUTHOR"
             echo ""
-            echo "**변경된 문서**:"
+            echo "*변경된 문서*:"
             echo '```'
             echo "$CHANGED"
             echo '```'
@@ -42,9 +43,7 @@ jobs:
             echo "EOF"
           } >> "$GITHUB_OUTPUT"
 
-      # --- Slack 알림 (SLACK_WEBHOOK 시크릿 필요) ---
       - name: Send to Slack
-        if: ${{ env.SLACK_WEBHOOK != '' }}
         env:
           SLACK_WEBHOOK: ${{ secrets.SLACK_WEBHOOK }}
         run: |
