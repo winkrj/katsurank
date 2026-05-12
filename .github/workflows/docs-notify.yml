@@ -1,0 +1,54 @@
+name: Docs Change Notify
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - 'docs/**'
+
+jobs:
+  notify:
+    name: Notify on docs change
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout (for commit info)
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 2
+
+      - name: Build message
+        id: msg
+        run: |
+          CHANGED=$(git diff --name-only HEAD~1 HEAD | grep '^docs/' | head -20)
+          AUTHOR=$(git log -1 --pretty=format:'%an')
+          SUBJECT=$(git log -1 --pretty=format:'%s')
+          SHA_SHORT=$(git rev-parse --short HEAD)
+          REPO_URL="${{ github.server_url }}/${{ github.repository }}"
+          COMMIT_URL="$REPO_URL/commit/${{ github.sha }}"
+
+          {
+            echo "content<<EOF"
+            echo "📝 **문서가 갱신되었습니다**"
+            echo ""
+            echo "**커밋**: \`$SHA_SHORT\` — $SUBJECT"
+            echo "**작성자**: $AUTHOR"
+            echo ""
+            echo "**변경된 문서**:"
+            echo '```'
+            echo "$CHANGED"
+            echo '```'
+            echo ""
+            echo "🔗 $COMMIT_URL"
+            echo "EOF"
+          } >> "$GITHUB_OUTPUT"
+
+      # --- Slack 알림 (SLACK_WEBHOOK 시크릿 필요) ---
+      - name: Send to Slack
+        if: ${{ env.SLACK_WEBHOOK != '' }}
+        env:
+          SLACK_WEBHOOK: ${{ secrets.SLACK_WEBHOOK }}
+        run: |
+          curl -H "Content-Type: application/json" \
+               -X POST \
+               -d "$(jq -n --arg text "${{ steps.msg.outputs.content }}" '{text: $text}')" \
+               "$SLACK_WEBHOOK"
