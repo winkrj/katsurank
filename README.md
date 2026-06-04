@@ -68,7 +68,7 @@ pnpm dev
 
 ## 협업
 
-- 협업 규칙·브랜치 전략·PR 룰: [`CONTRIBUTING.md`](CONTRIBUTING.md)
+- 협업 규칙·브랜치 전략·PR 룰: [`CONTRIBUTING.md`](.claude/CONTRIBUTING.md)
 - 모든 기획·기술 결정은 `docs/` 에 마크다운으로 기록
 - 결정이 바뀌면 문서 버전 올리고 변경 이력 갱신
 
