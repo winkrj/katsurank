@@ -1,0 +1,19 @@
+# =========================================================
+# local 프로파일 — docker compose 의 PostgreSQL 사용
+# (docs/setup/docker-compose.yml: db/user=katsurank, pw=katsurank_local)
+# =========================================================
+spring:
+  datasource:
+    url: jdbc:postgresql://localhost:5432/katsurank
+    username: katsurank
+    password: katsurank_local
+
+  jpa:
+    properties:
+      hibernate:
+        format_sql: true
+
+logging:
+  level:
+    com.katsurank: DEBUG
+    org.hibernate.SQL: DEBUG

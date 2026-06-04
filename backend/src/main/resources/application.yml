@@ -1,0 +1,62 @@
+# =========================================================
+# 공통 설정 (모든 프로파일 공유)
+# 프로파일별 값은 application-local.yml / application-prod.yml 참조.
+# 기본 활성 프로파일은 local. 운영은 SPRING_PROFILES_ACTIVE=prod 로 덮어쓴다.
+# =========================================================
+spring:
+  application:
+    name: katsurank
+
+  profiles:
+    active: local
+
+  # 가상 스레드 (Java 21) — I/O 대기 많은 폴링·카카오 API 워크로드에 유효
+  threads:
+    virtual:
+      enabled: true
+
+  datasource:
+    driver-class-name: org.postgresql.Driver
+
+  jpa:
+    open-in-view: false        # OSIV 끔 — 영속성 컨텍스트를 트랜잭션 경계로 한정
+    hibernate:
+      ddl-auto: validate       # 스키마는 Flyway가 관리. Hibernate는 검증만 (ddl-auto 의존 금지)
+    properties:
+      hibernate:
+        jdbc:
+          time_zone: UTC        # 시각은 UTC로 저장, 표시 시점에만 KST 변환
+
+  # 스키마 관리 — Flyway (db/migration/V*.sql)
+  flyway:
+    enabled: true
+    locations: classpath:db/migration
+
+  # 외부저장소 세션 — spring-session-jdbc (JWT 미채택)
+  # 세션 테이블은 Flyway(V2__spring_session.sql)로 관리하므로 자동 생성 끔.
+  session:
+    store-type: jdbc
+    timeout: 14d
+    jdbc:
+      initialize-schema: never
+
+# 리버스 프록시(Railway 등) 뒤에서 X-Forwarded-* 신뢰
+server:
+  forward-headers-strategy: framework
+
+# 관측 — Actuator + Micrometer (Prometheus 노출)
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info,metrics,prometheus
+  endpoint:
+    health:
+      show-details: when_authorized
+  metrics:
+    tags:
+      application: katsurank
+
+logging:
+  level:
+    root: INFO

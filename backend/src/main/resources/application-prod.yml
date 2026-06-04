@@ -1,0 +1,18 @@
+# =========================================================
+# prod 프로파일 — 비밀값은 환경변수로 주입 (커밋 금지)
+# 활성화: SPRING_PROFILES_ACTIVE=prod
+# =========================================================
+spring:
+  datasource:
+    url: ${DATABASE_URL}
+    username: ${DATABASE_USERNAME}
+    password: ${DATABASE_PASSWORD}
+
+  jpa:
+    properties:
+      hibernate:
+        format_sql: false
+
+logging:
+  level:
+    com.katsurank: INFO
