@@ -1,0 +1,28 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<configuration>
+    <!-- Spring Boot 기본 변환규칙(%clr, %wEx 등) -->
+    <include resource="org/springframework/boot/logging/logback/defaults.xml"/>
+
+    <!-- local: 사람이 읽는 콘솔. traceId 를 대괄호로 노출 -->
+    <springProfile name="local">
+        <appender name="CONSOLE" class="ch.qos.logback.core.ConsoleAppender">
+            <encoder>
+                <pattern>%clr(%d{yyyy-MM-dd HH:mm:ss.SSS}){faint} %clr(%5p) %clr([%X{traceId:-}]){magenta} %clr(%-40.40logger{39}){cyan} %clr(:){faint} %m%n%wEx</pattern>
+            </encoder>
+        </appender>
+    </springProfile>
+
+    <!-- local 이외(prod 등): 구조화 JSON 로깅 (logstash-logback-encoder). MDC(traceId 등) 자동 포함 -->
+    <springProfile name="!local">
+        <appender name="CONSOLE" class="ch.qos.logback.core.ConsoleAppender">
+            <encoder class="net.logstash.logback.encoder.LogstashEncoder">
+                <timeZone>UTC</timeZone>
+                <customFields>{"app":"katsurank"}</customFields>
+            </encoder>
+        </appender>
+    </springProfile>
+
+    <root level="INFO">
+        <appender-ref ref="CONSOLE"/>
+    </root>
+</configuration>
