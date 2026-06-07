@@ -24,6 +24,8 @@ dependencies {
 	implementation("org.springframework.boot:spring-boot-starter-security-oauth2-client")
 	implementation("org.springframework.boot:spring-boot-starter-validation")
 	implementation("org.springframework.boot:spring-boot-starter-webmvc")
+	implementation("org.springframework.boot:spring-boot-starter-cache")
+	implementation("com.github.ben-manes.caffeine:caffeine")
 	implementation("org.springframework.boot:spring-boot-session")
 	implementation("org.springframework.session:spring-session-jdbc")
 	implementation("org.springframework.boot:spring-boot-flyway")

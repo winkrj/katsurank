@@ -32,6 +32,13 @@ spring:
     enabled: true
     locations: classpath:db/migration
 
+  # 캐시 — 인메모리 Caffeine (Redis 불필요). 카카오 로컬 API 검색 응답 캐시.
+  cache:
+    type: caffeine
+    cache-names: kakaoPlaceSearch
+    caffeine:
+      spec: maximumSize=1000,expireAfterWrite=30m
+
   # 외부저장소 세션 — spring-session-jdbc (JWT 미채택)
   # 세션 테이블은 Flyway(V2__spring_session.sql)로 관리하므로 자동 생성 끔.
   session:
@@ -72,6 +79,11 @@ app:
     domain: ${APP_COOKIE_DOMAIN:}
     secure: ${APP_COOKIE_SECURE:false}
     same-site: ${APP_COOKIE_SAME_SITE:Lax}
+
+# 카카오 로컬 API (가게 검색) — REST API 키는 환경변수로 주입(커밋 금지)
+kakao:
+  rest-api-key: ${KAKAO_REST_API_KEY:local-kakao-rest-api-key}
+  local-api-base-url: https://dapi.kakao.com
 
 # 리버스 프록시(Railway 등) 뒤에서 X-Forwarded-* 신뢰
 server:
