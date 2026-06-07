@@ -45,6 +45,10 @@ public class User {
     @Column(name = "last_login_at")
     private Instant lastLoginAt;
 
+    /** 현재 유효 1표(Vote.id) 빠른 조회용 캐시. 투표 도메인이 갱신한다. */
+    @Column(name = "current_vote_id")
+    private Long currentVoteId;
+
     private User(Long kakaoId, String nickname, String profileImage) {
         this.kakaoId = kakaoId;
         this.nickname = nickname;
@@ -64,5 +68,10 @@ public class User {
         this.nickname = nickname;
         this.profileImage = profileImage;
         this.lastLoginAt = Instant.now();
+    }
+
+    /** 현재 1순위(유효 표)를 가리키도록 캐시를 갱신한다. (투표 도메인 트랜잭션 안에서만 호출) */
+    public void pointCurrentVoteTo(Long voteId) {
+        this.currentVoteId = voteId;
     }
 }

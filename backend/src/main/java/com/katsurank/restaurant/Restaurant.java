@@ -10,6 +10,7 @@ import jakarta.persistence.Id;
 import jakarta.persistence.PrePersist;
 import jakarta.persistence.PreUpdate;
 import jakarta.persistence.Table;
+import jakarta.persistence.Version;
 import lombok.AccessLevel;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
@@ -76,6 +77,14 @@ public class Restaurant {
     @Column(name = "vote_count", nullable = false)
     private int voteCount;
 
+    /**
+     * 낙관적 락 버전. 표 이동 시 동시 갱신되는 {@code vote_count} 의 분실 갱신(lost update)을 막는다.
+     * 충돌 시 {@code OptimisticLockingFailureException} → 투표 도메인이 재시도한다.
+     */
+    @Version
+    @Column(name = "version", nullable = false)
+    private Long version;
+
     /** 이전(RELOCATED) 시 새 레코드 연결. 후속 작업 — 등록 시엔 null. */
     @Column(name = "relocated_to_id")
     private Long relocatedToId;
@@ -120,6 +129,29 @@ public class Restaurant {
                                       String phone, String placeUrl, Long createdBy) {
         return new Restaurant(kakaoPlaceId, name, address, roadAddress, latitude, longitude,
                 kakaoCategory, phone, placeUrl, createdBy);
+    }
+
+    /** 투표 1표 유입 — vote_count +1. (투표 도메인 트랜잭션 안에서만 호출) */
+    public void increaseVoteCount() {
+        this.voteCount++;
+    }
+
+    /** 표 이탈 — vote_count -1. 0 미만으로 내려가지 않도록 방어한다. */
+    public void decreaseVoteCount() {
+        if (this.voteCount > 0) {
+            this.voteCount--;
+        }
+    }
+
+    /** ACTIVE 만 투표 가능(폐업·이전·심사중·거부는 불가). */
+    public boolean isVotable() {
+        return this.status == RestaurantStatus.ACTIVE;
+    }
+
+    /** 폐업 처리(박제) — 표·히스토리는 보존하되 투표·랭킹에서 제외된다. (감지는 운영자 수동) */
+    public void close() {
+        this.status = RestaurantStatus.CLOSED;
+        this.closedAt = Instant.now();
     }
 
     @PrePersist
