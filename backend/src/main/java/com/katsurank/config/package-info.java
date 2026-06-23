@@ -1,5 +1,4 @@
 /**
- * 설정 — Security/CORS/CSRF, RestClient, 세션, 캐시 등 @Configuration 모음.
- * (로직 미구현, 패키지 골격만)
+ * 설정 — Security/CORS/CSRF, OAuth2 핸들러, 세션 쿠키, @LoginUser ArgumentResolver 등록 등.
  */
 package com.katsurank.config;
