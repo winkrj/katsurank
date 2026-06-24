@@ -7,7 +7,9 @@ import org.springframework.data.domain.PageRequest;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 /**
  * 가게 등록·조회·검색 서비스. 트랜잭션 경계는 이 계층.
@@ -70,11 +72,13 @@ public class RestaurantService {
     public List<RestaurantSearchResponse> search(String query, int limit) {
         int effectiveLimit = Math.min(Math.max(limit, 1), MAX_SEARCH_LIMIT);
         List<Restaurant> results = restaurantRepository
-                .findByStatusAndNameContainingIgnoreCaseOrderByVoteCountDesc(
+                .findByStatusAndNameContainingIgnoreCaseOrderByVoteCountDescIdAsc(
                         RestaurantStatus.ACTIVE, query.trim(),
                         PageRequest.of(0, effectiveLimit));
+        Map<Integer, Long> rankCache = new HashMap<>();
         return results.stream()
-                .map(r -> RestaurantSearchResponse.of(r, computeRank(r.getVoteCount())))
+                .map(r -> RestaurantSearchResponse.of(r,
+                        rankCache.computeIfAbsent(r.getVoteCount(), this::computeRank)))
                 .toList();
     }
 
