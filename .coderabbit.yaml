@@ -1,0 +1,106 @@
+# yaml-language-server: $schema=https://coderabbit.ai/integrations/schema.v2.json
+language: "ko-KR"
+tone_instructions: >
+  이 프로젝트는 서울 돈까스 1인 1표 랭킹 서비스(Spring Boot 4.0 + Java 21)입니다.
+  리뷰는 한국어로 작성해 주세요. 코드 컨벤션 위반은 명확히 지적하되,
+  잘한 부분도 언급해 주세요.
+early_access: true
+
+reviews:
+  profile: "assertive"
+  request_changes_workflow: true
+  high_level_summary: true
+  high_level_summary_placeholder: "@coderabbitai summary"
+  poem: false
+  review_status: true
+  collapse_walkthrough: false
+  sequence_diagrams: true
+  changed_files_summary: true
+  path_filters: []
+  path_instructions:
+    - path: "backend/src/main/java/com/katsurank/**/*.java"
+      instructions: >
+        프로젝트 절대 규칙:
+        - 3계층(Controller → Service → Repository). 트랜잭션 경계는 Service.
+        - 엔티티를 JSON 직접 노출 금지, 반드시 DTO(record) 변환.
+        - DTO는 Java record로 선언. sealed interface 적극 활용.
+        - HTTP 클라이언트는 RestClient만 사용 (RestTemplate, WebClient 금지).
+        - 시각은 UTC(Instant)로 저장. LocalDateTime 사용 시 지적.
+        - CSRF는 항상 켜진 상태여야 함(Double Submit Cookie). 끄는 코드가 있으면 즉시 지적.
+        - JWT 사용 금지. 인증은 카카오 OAuth2 + spring-session-jdbc.
+        - 가게(Restaurant)는 hard delete 금지. status(ACTIVE/CLOSED/RELOCATED/PENDING/REJECTED)로 관리.
+        - 두꺼운 도메인 모델: 비즈니스 로직은 엔티티 메서드로 캡슐화. setter 남발 금지. 정적 팩토리 메서드 사용.
+    - path: "backend/src/main/java/com/katsurank/vote/**"
+      instructions: >
+        투표 도메인 핵심 규칙:
+        - 1인 1표. 부분 유니크 인덱스(user_id WHERE is_current=TRUE)로 DB 보장.
+        - 표 이동은 7단계 단일 트랜잭션. vote_count 동시성은 @Version 낙관적 락 + 재시도.
+        - Vote 엔티티는 soft delete(is_current=false 박제). hard delete 금지.
+    - path: "backend/src/main/java/com/katsurank/ranking/**"
+      instructions: >
+        랭킹 규칙:
+        - 서울 단일 랭킹 1개만 존재. 뷰포트(bounds) 기반 랭킹 금지.
+        - 읽기 전용(@Transactional(readOnly=true)) 확인.
+    - path: "backend/src/main/java/com/katsurank/restaurant/**"
+      instructions: >
+        가게 도메인:
+        - 체인점 = 지점마다 독립 Restaurant. 본점 구별·병합 금지.
+        - 폐업 = 박제(표 보존, 랭킹 제외). 이전 = 승계(relocated_to_id로 새 레코드에 표 이관).
+        - 카테고리 화이트리스트 검증은 서비스 계층에서.
+    - path: "backend/src/main/java/com/katsurank/config/**"
+      instructions: >
+        보안 설정:
+        - CSRF는 절대 끄지 않음. CookieCsrfTokenRepository.withHttpOnlyFalse() 필수.
+        - CORS allowCredentials(true) + 프론트 오리진 제한 확인.
+        - SessionCreationPolicy.IF_REQUIRED 유지.
+    - path: "backend/src/main/resources/db/migration/**"
+      instructions: >
+        Flyway 마이그레이션:
+        - 한번 머지된 마이그레이션 파일은 수정 금지.
+        - 버전 번호 충돌 여부 확인.
+        - ddl-auto 의존 금지, 스키마 변경은 반드시 마이그레이션으로.
+    - path: "backend/src/test/**"
+      instructions: >
+        테스트 규칙:
+        - @SpringBootTest 통합 테스트에서 데이터 오염 방지 확인(@Transactional 또는 @Sql 활용).
+        - 동시성 테스트는 CountDownLatch + ExecutorService 패턴.
+        - AssertJ 사용.
+    - path: "backend/build.gradle.kts"
+      instructions: >
+        의존성 확인:
+        - WebClient/RestTemplate 의존성이 들어오면 지적.
+        - JWT 관련 의존성(jjwt 등)이 들어오면 즉시 지적.
+    - path: "docs/**"
+      instructions: >
+        SSOT 문서. 기존 문서와의 일관성 확인.
+  tools:
+    shellcheck:
+      enabled: true
+    markdownlint:
+      enabled: true
+    github-checks:
+      enabled: true
+      timeout_ms: 90000
+    languagetool:
+      enabled: true
+      enabled_only: false
+      level: "picky"
+      disabled_categories:
+        - "TYPOS"
+    hadolint:
+      enabled: true
+    yamllint:
+      enabled: true
+    gitleaks:
+      enabled: true
+
+chat:
+  auto_reply: true
+
+knowledge_base:
+  learnings:
+    scope: "auto"
+  issues:
+    scope: "auto"
+  pull_requests:
+    scope: "auto"
