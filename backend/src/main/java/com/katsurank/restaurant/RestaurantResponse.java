@@ -18,9 +18,10 @@ public record RestaurantResponse(
         RestaurantStatus status,
         String category,
         int voteCount,
+        Long rank,
         Instant createdAt) {
 
-    public static RestaurantResponse from(Restaurant r) {
+    public static RestaurantResponse from(Restaurant r, Long rank) {
         return new RestaurantResponse(
                 r.getId(),
                 r.getKakaoPlaceId(),
@@ -35,6 +36,11 @@ public record RestaurantResponse(
                 r.getStatus(),
                 r.getCategory(),
                 r.getVoteCount(),
+                rank,
                 r.getCreatedAt());
+    }
+
+    public static RestaurantResponse from(Restaurant r) {
+        return from(r, null);
     }
 }
