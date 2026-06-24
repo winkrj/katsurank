@@ -72,7 +72,7 @@ public class VoteService {
         for (int attempt = 1; attempt <= MAX_ATTEMPTS; attempt++) {
             try {
                 return txTemplate.execute(status -> doVote(userId, restaurantId));
-            } catch (OptimisticLockingFailureException | DataIntegrityViolationException ex) {
+            } catch (OptimisticLockingFailureException | DataIntegrityViolationException | IllegalStateException ex) {
                 if (attempt == MAX_ATTEMPTS) {
                     log.warn("투표 재시도 한도 초과 userId={} restaurantId={} attempts={}", userId, restaurantId, attempt);
                     throw new VoteConflictException();

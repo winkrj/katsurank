@@ -38,6 +38,8 @@ class VoteServiceTest {
     @Autowired
     VoteRepository voteRepository;
     @Autowired
+    TestVoteRepository testVoteRepository;
+    @Autowired
     RestaurantRepository restaurantRepository;
     @Autowired
     UserRepository userRepository;
@@ -55,7 +57,7 @@ class VoteServiceTest {
             });
         }
         if (!createdUserIds.isEmpty()) {
-            voteRepository.deleteByUserIdIn(createdUserIds);
+            testVoteRepository.deleteByUserIdIn(createdUserIds);
         }
         restaurantRepository.deleteAllById(createdRestaurantIds);
         userRepository.deleteAllById(createdUserIds);

@@ -40,7 +40,12 @@ public record KakaoKeywordSearchResponse(List<Document> documents) {
         }
 
         private static BigDecimal toBigDecimal(String value) {
-            return StringUtils.hasText(value) ? new BigDecimal(value) : null;
+            if (!StringUtils.hasText(value)) return null;
+            try {
+                return new BigDecimal(value);
+            } catch (NumberFormatException ex) {
+                return null;
+            }
         }
     }
 

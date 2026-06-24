@@ -18,8 +18,7 @@ public interface RestaurantRepository extends JpaRepository<Restaurant, Long> {
     @Query("SELECT r FROM Restaurant r WHERE r.status = :status ORDER BY r.voteCount DESC, r.id ASC")
     Page<Restaurant> findRanking(@Param("status") RestaurantStatus status, Pageable pageable);
 
-    @Query("SELECT r FROM Restaurant r WHERE r.status = :status ORDER BY r.voteCount DESC, r.id ASC LIMIT 1")
-    List<Restaurant> findTopByStatus(@Param("status") RestaurantStatus status);
+    Optional<Restaurant> findFirstByStatusOrderByVoteCountDescIdAsc(RestaurantStatus status);
 
     List<Restaurant> findByStatusAndLatitudeIsNotNullAndLongitudeIsNotNull(RestaurantStatus status);
 }

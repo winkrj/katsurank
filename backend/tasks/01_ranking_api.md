@@ -78,7 +78,7 @@
 
 ---
 
-### GET `/api/v1/restaurants`
+### GET `/api/v1/ranking/map-pins`
 지도 핀 표시용 전체 가게 목록. 랭킹과 책임이 다름. 인증 불필요.
 
 **Response 200**

@@ -18,7 +18,7 @@ import java.time.Instant;
  * <p>두꺼운 도메인 모델 — 가입/로그인 시 상태 변경은 엔티티 메서드로만 수행한다(setter 미노출).
  * 모든 시각은 UTC({@link Instant})로 저장하고, 표시 시점에만 KST 로 변환한다.
  *
- * <p>{@code current_vote_id} 컬럼은 투표 도메인이 소유·갱신하므로 여기서는 매핑하지 않는다.
+ * <p>{@code current_vote_id} 컬럼은 투표 도메인이 소유·갱신한다({@link #pointCurrentVoteTo}).
  */
 @Entity
 @Table(name = "users")

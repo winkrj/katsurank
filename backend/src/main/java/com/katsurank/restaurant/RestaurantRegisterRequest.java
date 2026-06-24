@@ -1,6 +1,7 @@
 package com.katsurank.restaurant;
 
 import jakarta.validation.constraints.NotBlank;
+import jakarta.validation.constraints.Size;
 
 import java.math.BigDecimal;
 
@@ -9,13 +10,13 @@ import java.math.BigDecimal;
  * 등록자(createdBy)는 본문이 아니라 로그인 세션에서 얻는다.
  */
 public record RestaurantRegisterRequest(
-        @NotBlank String kakaoPlaceId,
-        @NotBlank String name,
-        String address,
-        String roadAddress,
+        @NotBlank @Size(max = 50) String kakaoPlaceId,
+        @NotBlank @Size(max = 200) String name,
+        @Size(max = 500) String address,
+        @Size(max = 500) String roadAddress,
         BigDecimal latitude,
         BigDecimal longitude,
-        String kakaoCategory,
-        String phone,
-        String placeUrl) {
+        @Size(max = 200) String kakaoCategory,
+        @Size(max = 30) String phone,
+        @Size(max = 500) String placeUrl) {
 }

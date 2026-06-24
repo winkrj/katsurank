@@ -47,9 +47,7 @@ public class RankingService {
 
     @Transactional(readOnly = true)
     public Optional<RankingItem> getTop() {
-        List<Restaurant> top = restaurantRepository.findTopByStatus(RestaurantStatus.ACTIVE);
-        return top.stream()
-                .findFirst()
+        return restaurantRepository.findFirstByStatusOrderByVoteCountDescIdAsc(RestaurantStatus.ACTIVE)
                 .map(r -> RankingItem.of(r, 1));
     }
 

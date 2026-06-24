@@ -4,6 +4,7 @@ import com.katsurank.user.User;
 import com.katsurank.user.UserRepository;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.security.oauth2.client.userinfo.DefaultOAuth2UserService;
 import org.springframework.security.oauth2.client.userinfo.OAuth2UserRequest;
 import org.springframework.security.oauth2.client.userinfo.OAuth2UserService;
@@ -42,7 +43,11 @@ public class CustomOAuth2UserService implements OAuth2UserService<OAuth2UserRequ
                 })
                 .orElseGet(() -> {
                     log.info("신규 사용자 가입 kakaoId={}", info.kakaoId());
-                    return userRepository.save(User.register(info.kakaoId(), info.nickname(), info.profileImage()));
+                    try {
+                        return userRepository.saveAndFlush(User.register(info.kakaoId(), info.nickname(), info.profileImage()));
+                    } catch (DataIntegrityViolationException ex) {
+                        return userRepository.findByKakaoId(info.kakaoId()).orElseThrow();
+                    }
                 });
 
         return new AuthPrincipal(user.getId(), user.getKakaoId(), user.getNickname(), user.getProfileImage());

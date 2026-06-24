@@ -136,11 +136,12 @@ public class Restaurant {
         this.voteCount++;
     }
 
-    /** 표 이탈 — vote_count -1. 0 미만으로 내려가지 않도록 방어한다. */
+    /** 표 이탈 — vote_count -1. 0 미만이면 정합성 오류이므로 즉시 실패한다. */
     public void decreaseVoteCount() {
-        if (this.voteCount > 0) {
-            this.voteCount--;
+        if (this.voteCount <= 0) {
+            throw new IllegalStateException("vote_count가 이미 0입니다. restaurantId=" + this.id);
         }
+        this.voteCount--;
     }
 
     /** ACTIVE 만 투표 가능(폐업·이전·심사중·거부는 불가). */
