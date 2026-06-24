@@ -10,19 +10,20 @@
 |---|---|
 | 서비스명 | 카츠랭 (katsurank) |
 | 도메인 (예정) | katsurank.kr |
-| 한 줄 컨셉 | 1인 1표, 표 이동 가능, 지도 기반 실시간 랭킹 |
-| 인증 | 카카오 OAuth |
+| 한 줄 컨셉 | 1인 1표, 표 이동 가능, 서울 단일 랭킹 |
+| 인증 | 카카오 OAuth2 + 외부저장소 세션 |
 | 일정 | 4주 MVP, 하루 1~2시간 |
-| 상태 | 🚧 개발 시작 전 |
+| 상태 | 🚧 백엔드 개발 중 |
 
 ## 기술 스택
 
 | 영역 | 스택 |
 |---|---|
-| 백엔드 | Spring Boot 3.x · Java 21 · JPA · PostgreSQL |
+| 백엔드 | Spring Boot 4.0.x · Java 21 (가상 스레드) · JPA · PostgreSQL · Flyway |
+| HTTP 클라이언트 | RestClient (Spring 6.1+) |
 | 프론트 | Next.js (App Router) · TypeScript · Tailwind CSS |
 | 지도 | 카카오맵 JS SDK · 카카오 로컬 검색 API |
-| 인증 | 카카오 OAuth2 (세션 쿠키) |
+| 인증 | 카카오 OAuth2 + 외부저장소 세션 (spring-session-jdbc) |
 | 호스팅 | Railway (백엔드) · Vercel (프론트) |
 
 > 프론트 세부 스택(상태관리·폼 등)은 협업자와 미팅 후 확정.
