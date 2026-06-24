@@ -25,13 +25,16 @@ public class RankingService {
 
     @Transactional(readOnly = true)
     public RankingResponse getRanking(int offset, int limit) {
-        if (limit > MAX_LIMIT) {
+        if (offset < 0) {
+            throw new IllegalArgumentException("offset은 0 이상이어야 합니다.");
+        }
+        if (limit < 1 || limit > MAX_LIMIT) {
             throw new LimitExceededException();
         }
 
         Page<Restaurant> page = restaurantRepository.findRanking(
                 RestaurantStatus.ACTIVE,
-                PageRequest.of(offset / Math.max(limit, 1), limit));
+                new OffsetPageRequest(offset, limit));
 
         List<RankingItem> items = new ArrayList<>(page.getNumberOfElements());
         List<Restaurant> content = page.getContent();
@@ -44,11 +47,8 @@ public class RankingService {
 
     @Transactional(readOnly = true)
     public Optional<RankingItem> getTop() {
-        Page<Restaurant> page = restaurantRepository.findRanking(
-                RestaurantStatus.ACTIVE,
-                PageRequest.of(0, 1));
-
-        return page.getContent().stream()
+        List<Restaurant> top = restaurantRepository.findTopByStatus(RestaurantStatus.ACTIVE);
+        return top.stream()
                 .findFirst()
                 .map(r -> RankingItem.of(r, 1));
     }

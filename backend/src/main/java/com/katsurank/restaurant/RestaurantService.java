@@ -2,6 +2,7 @@ package com.katsurank.restaurant;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -48,7 +49,12 @@ public class RestaurantService {
                 request.placeUrl(),
                 userId);
 
-        Restaurant saved = restaurantRepository.save(restaurant);
+        Restaurant saved;
+        try {
+            saved = restaurantRepository.saveAndFlush(restaurant);
+        } catch (DataIntegrityViolationException ex) {
+            throw new DuplicatePlaceException(request.kakaoPlaceId());
+        }
         log.info("가게 등록 id={} status={} kakaoPlaceId={} by userId={}",
                 saved.getId(), saved.getStatus(), saved.getKakaoPlaceId(), userId);
         return RestaurantResponse.from(saved);
