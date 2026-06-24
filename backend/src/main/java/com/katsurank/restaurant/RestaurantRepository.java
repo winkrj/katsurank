@@ -21,4 +21,9 @@ public interface RestaurantRepository extends JpaRepository<Restaurant, Long> {
     Optional<Restaurant> findFirstByStatusOrderByVoteCountDescIdAsc(RestaurantStatus status);
 
     List<Restaurant> findByStatusAndLatitudeIsNotNullAndLongitudeIsNotNull(RestaurantStatus status);
+
+    List<Restaurant> findByStatusAndNameContainingIgnoreCaseOrderByVoteCountDescIdAsc(
+            RestaurantStatus status, String name, Pageable pageable);
+
+    long countByStatusAndVoteCountGreaterThan(RestaurantStatus status, int voteCount);
 }

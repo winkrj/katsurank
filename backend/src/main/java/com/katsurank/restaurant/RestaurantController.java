@@ -10,10 +10,13 @@ import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
+import java.util.List;
+
 /**
- * 가게 API. 등록은 로그인 필요(SecurityConfig 의 anyRequest authenticated), 단건 조회는 공개(GET permitAll).
+ * 가게 API. 등록은 로그인 필요, 조회/검색은 공개(GET permitAll).
  */
 @RestController
 @RequestMapping("/api/v1/restaurants")
@@ -35,5 +38,15 @@ public class RestaurantController {
     @GetMapping("/{id}")
     public RestaurantResponse get(@PathVariable Long id) {
         return restaurantService.getById(id);
+    }
+
+    @GetMapping("/search")
+    public List<RestaurantSearchResponse> search(
+            @RequestParam(required = false) String q,
+            @RequestParam(defaultValue = "20") int limit) {
+        if (q == null || q.isBlank()) {
+            throw new MissingQueryException();
+        }
+        return restaurantService.search(q, limit);
     }
 }
