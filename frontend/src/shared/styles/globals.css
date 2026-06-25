@@ -1,27 +1,25 @@
-@import "tailwindcss";
-
-@theme {
-  /* 브랜드 컬러 */
-  --color-cream: #FAF7F0;
-  --color-ink: #2C2926;
-  --color-stamp: #B82B2B;
-  --color-muted: #7A7468;
-  --color-card: #FFFFFF;
-  --color-border: #E0DBD0;
-  --color-rank-2: #5A544A;
-  --color-rank-3: #8A8478;
-  --color-rank-border: #C0BBB0;
-
-  /* 폰트 */
-  --font-sans: 'Pretendard', 'Noto Sans KR', system-ui, sans-serif;
-  --font-serif: 'Noto Serif KR', '나눔명조', serif;
-}
+@import 'tailwindcss';
 
 :root {
-  --text: #6b6375;
+  --text: #2a1a12;
   --text-h: #08060d;
   --bg: #fff;
   --border: #e5e4e7;
+
+  /* 브랜드 컬러 */
+  --color-title: #2a1a12;
+  --color-primary-button-border: #dbba24;
+  --color-primary-button-background: #ffc533;
+  --color-primary-button-text: #2a1a12;
+
+  --color-secondary-button-border: #ada9a0;
+  --color-secondary-button-background: #ffffff;
+  --color-secondary-button-text: #2a1a12;
+
+  --font-sans: 'Pretendard', 'Noto Sans KR', system-ui, sans-serif;
+  --font-serif: 'Noto Serif KR', '나눔명조', serif;
+
+  --width-left-section: 580px;
 
   font: 16px/1.5 theme(--font-sans);
   color: var(--text);
@@ -34,7 +32,7 @@
 
 @media (prefers-color-scheme: dark) {
   :root {
-    --text: #9ca3af;
+    --text: #2a1a12;
     --text-h: #f3f4f6;
     --bg: #16171d;
     --border: #2e303a;
@@ -47,18 +45,18 @@
   box-sizing: border-box;
 }
 
+html {
+  height: 100%;
+}
+
 body {
   margin: 0;
+  min-height: 100%;
+  background: #fffdf4;
 }
 
 #root {
-  min-height: 100svh;
-}
-
-h1,
-h2 {
-  font-weight: 600;
-  color: var(--text-h);
+  min-height: 100%;
 }
 
 a {

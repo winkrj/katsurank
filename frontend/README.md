@@ -19,12 +19,12 @@ pnpm dev
 
 ## 자주 쓰는 명령
 
-| 명령 | 설명 |
-|------|------|
-| `pnpm dev` | 개발 서버 |
-| `pnpm build` | 프로덕션 빌드 |
+| 명령           | 설명               |
+| -------------- | ------------------ |
+| `pnpm dev`     | 개발 서버          |
+| `pnpm build`   | 프로덕션 빌드      |
 | `pnpm preview` | 빌드 결과 미리보기 |
-| `pnpm lint` | ESLint |
+| `pnpm lint`    | ESLint             |
 
 ## 프로젝트를 처음부터 다시 만들 때 (참고)
 
@@ -53,19 +53,16 @@ src/
 │   ├── my-page/
 │   ├── legal/
 │   └── oauth/
-├── features/            # 여러 페이지에서 쓰는 기능
-│   ├── vote/
-│   └── restaurant-search/
-├── shared/
-│   ├── api/             # 백엔드 호출
-│   ├── ui/              # 공용 UI
+├── shared/              # pages 밖 공용
+│   ├── api/             # HTTP fetch
+│   ├── queries/         # useQuery
+│   ├── mutations/       # useMutation
+│   ├── types/           # 공용 타입
+│   ├── ui/
 │   ├── hooks/
-│   ├── lib/
 │   └── styles/
 ├── assets/
 └── main.tsx
 ```
 
 환경 변수: `frontend/.env.example` → `.env` 복사 후 `VITE_API_BASE_URL` 설정.
-
-

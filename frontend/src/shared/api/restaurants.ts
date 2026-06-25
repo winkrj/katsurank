@@ -1,16 +1,5 @@
 import { apiClient } from './client'
-
-export type Restaurant = {
-  id: number
-  name: string
-  address: string
-  voteCount: number
-}
-
-export type RestaurantListParams = {
-  bounds?: string
-  sort?: string
-}
+import type { Restaurant, RestaurantListParams } from '../types/restaurant'
 
 export function fetchRestaurants(params?: RestaurantListParams) {
   const search = new URLSearchParams()
@@ -25,7 +14,5 @@ export function fetchRestaurant(id: number) {
 }
 
 export function searchRestaurants(q: string) {
-  return apiClient<Restaurant[]>(
-    `/api/restaurants/search?q=${encodeURIComponent(q)}`,
-  )
+  return apiClient<Restaurant[]>(`/api/restaurants/search?q=${encodeURIComponent(q)}`)
 }

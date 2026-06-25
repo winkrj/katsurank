@@ -1,9 +1,14 @@
-import { PageShell } from '../../shared/ui/PageShell'
+import './style/home.css';
+import { useIsMobile } from '../../shared/hooks/useIsMobile';
+import { DesktopMain } from './components/DesktopMain';
+import { MobileHero } from './components/MobileHero';
 
 export function HomePage() {
+  const isMobile = useIsMobile();
+
   return (
-    <PageShell title="메인">
-      <p className="page__placeholder">지도 + 랭킹 (구현 예정)</p>
-    </PageShell>
-  )
+    <main className="overflow-x-hidden bg-[#FFFDF4] text-[#2A1A12]">
+      {isMobile ? <MobileHero /> : <DesktopMain />}
+    </main>
+  );
 }

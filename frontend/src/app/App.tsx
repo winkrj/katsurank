@@ -4,7 +4,7 @@ import { AppRoutes } from './routes'
 const queryClient = new QueryClient({
   defaultOptions: {
     queries: {
-      staleTime: 30_000,   // 30초 — 랭킹 폴링 기본값
+      staleTime: 30_000, // 30초 — 랭킹 폴링 기본값
       retry: 1,
     },
   },

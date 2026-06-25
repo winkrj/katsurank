@@ -1,8 +1,5 @@
 import { apiClient } from './client'
-
-export type VoteRequest = {
-  restaurantId: number
-}
+import type { VoteRequest } from '../types/vote'
 
 export function createVote(body: VoteRequest) {
   return apiClient<void>('/api/votes', {

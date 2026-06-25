@@ -10,10 +10,7 @@ export class ApiError extends Error {
   }
 }
 
-export async function apiClient<T>(
-  path: string,
-  init?: RequestInit,
-): Promise<T> {
+export async function apiClient<T>(path: string, init?: RequestInit): Promise<T> {
   const response = await fetch(`${API_BASE}${path}`, {
     ...init,
     headers: {
