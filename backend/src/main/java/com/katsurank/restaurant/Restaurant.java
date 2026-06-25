@@ -155,6 +155,17 @@ public class Restaurant {
         this.closedAt = Instant.now();
     }
 
+    /** 이전 처리 — 기존 가게의 표를 새 가게로 승계한다. */
+    public void relocateTo(Restaurant newRestaurant) {
+        this.status = RestaurantStatus.RELOCATED;
+        this.relocatedToId = newRestaurant.getId();
+    }
+
+    /** 이전 시 vote_count 일괄 조정. 운영 빈도 극히 낮으므로 별도 메서드. */
+    public void adjustVoteCount(int delta) {
+        this.voteCount = Math.max(0, this.voteCount + delta);
+    }
+
     @PrePersist
     void onCreate() {
         Instant now = Instant.now();
