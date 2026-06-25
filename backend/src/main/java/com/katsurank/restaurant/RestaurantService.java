@@ -3,7 +3,6 @@ package com.katsurank.restaurant;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.dao.DataIntegrityViolationException;
-import org.springframework.data.domain.PageRequest;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -11,9 +10,6 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-/**
- * 가게 등록·조회·검색 서비스. 트랜잭션 경계는 이 계층.
- */
 @Service
 public class RestaurantService {
 
@@ -21,9 +17,12 @@ public class RestaurantService {
     private static final int MAX_SEARCH_LIMIT = 50;
 
     private final RestaurantRepository restaurantRepository;
+    private final RestaurantQueryRepository restaurantQueryRepository;
 
-    public RestaurantService(RestaurantRepository restaurantRepository) {
+    public RestaurantService(RestaurantRepository restaurantRepository,
+                             RestaurantQueryRepository restaurantQueryRepository) {
         this.restaurantRepository = restaurantRepository;
+        this.restaurantQueryRepository = restaurantQueryRepository;
     }
 
     @Transactional
@@ -71,10 +70,7 @@ public class RestaurantService {
     @Transactional(readOnly = true)
     public List<RestaurantSearchResponse> search(String query, int limit) {
         int effectiveLimit = Math.min(Math.max(limit, 1), MAX_SEARCH_LIMIT);
-        List<Restaurant> results = restaurantRepository
-                .findByStatusAndNameContainingIgnoreCaseOrderByVoteCountDescIdAsc(
-                        RestaurantStatus.ACTIVE, query.trim(),
-                        PageRequest.of(0, effectiveLimit));
+        List<Restaurant> results = restaurantQueryRepository.searchByName(query.trim(), effectiveLimit);
         Map<Integer, Long> rankCache = new HashMap<>();
         return results.stream()
                 .map(r -> RestaurantSearchResponse.of(r,
@@ -83,7 +79,6 @@ public class RestaurantService {
     }
 
     private long computeRank(int voteCount) {
-        return restaurantRepository.countByStatusAndVoteCountGreaterThan(
-                RestaurantStatus.ACTIVE, voteCount) + 1;
+        return restaurantQueryRepository.countWithVoteCountGreaterThan(voteCount) + 1;
     }
 }

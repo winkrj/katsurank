@@ -6,7 +6,6 @@ import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 
-import java.util.List;
 import java.util.Optional;
 
 public interface RestaurantRepository extends JpaRepository<Restaurant, Long> {
@@ -19,11 +18,4 @@ public interface RestaurantRepository extends JpaRepository<Restaurant, Long> {
     Page<Restaurant> findRanking(@Param("status") RestaurantStatus status, Pageable pageable);
 
     Optional<Restaurant> findFirstByStatusOrderByVoteCountDescIdAsc(RestaurantStatus status);
-
-    List<Restaurant> findByStatusAndLatitudeIsNotNullAndLongitudeIsNotNull(RestaurantStatus status);
-
-    List<Restaurant> findByStatusAndNameContainingIgnoreCaseOrderByVoteCountDescIdAsc(
-            RestaurantStatus status, String name, Pageable pageable);
-
-    long countByStatusAndVoteCountGreaterThan(RestaurantStatus status, int voteCount);
 }
