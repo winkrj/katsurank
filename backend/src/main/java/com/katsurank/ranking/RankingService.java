@@ -1,10 +1,10 @@
 package com.katsurank.ranking;
 
 import com.katsurank.restaurant.Restaurant;
+import com.katsurank.restaurant.RestaurantQueryRepository;
 import com.katsurank.restaurant.RestaurantRepository;
 import com.katsurank.restaurant.RestaurantStatus;
 import org.springframework.data.domain.Page;
-import org.springframework.data.domain.PageRequest;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -18,9 +18,12 @@ public class RankingService {
     private static final int MAX_LIMIT = 50;
 
     private final RestaurantRepository restaurantRepository;
+    private final RestaurantQueryRepository restaurantQueryRepository;
 
-    public RankingService(RestaurantRepository restaurantRepository) {
+    public RankingService(RestaurantRepository restaurantRepository,
+                          RestaurantQueryRepository restaurantQueryRepository) {
         this.restaurantRepository = restaurantRepository;
+        this.restaurantQueryRepository = restaurantQueryRepository;
     }
 
     @Transactional(readOnly = true)
@@ -53,8 +56,7 @@ public class RankingService {
 
     @Transactional(readOnly = true)
     public List<MapPinResponse> getMapPins() {
-        return restaurantRepository
-                .findByStatusAndLatitudeIsNotNullAndLongitudeIsNotNull(RestaurantStatus.ACTIVE)
+        return restaurantQueryRepository.findActivePinsWithCoordinates()
                 .stream()
                 .map(MapPinResponse::from)
                 .toList();
