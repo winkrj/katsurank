@@ -17,7 +17,7 @@ repositories {
 	mavenCentral()
 }
 
-val querydslVersion = "5.1.0"
+val querydslVersion = "7.1"
 
 dependencies {
 	implementation("org.springframework.boot:spring-boot-starter-actuator")
@@ -34,12 +34,12 @@ dependencies {
 	implementation("org.flywaydb:flyway-core")
 	implementation("org.flywaydb:flyway-database-postgresql")
 	implementation("net.logstash.logback:logstash-logback-encoder:8.0")
-	implementation("com.querydsl:querydsl-jpa:$querydslVersion:jakarta")
+	implementation("io.github.openfeign.querydsl:querydsl-jpa:$querydslVersion")
 	compileOnly("org.projectlombok:lombok")
 	developmentOnly("org.springframework.boot:spring-boot-devtools")
 	runtimeOnly("org.postgresql:postgresql")
 	annotationProcessor("org.projectlombok:lombok")
-	annotationProcessor("com.querydsl:querydsl-apt:$querydslVersion:jakarta")
+	annotationProcessor("io.github.openfeign.querydsl:querydsl-apt:$querydslVersion:jakarta")
 	annotationProcessor("jakarta.annotation:jakarta.annotation-api")
 	annotationProcessor("jakarta.persistence:jakarta.persistence-api")
 	testImplementation("org.springframework.boot:spring-boot-starter-actuator-test")
