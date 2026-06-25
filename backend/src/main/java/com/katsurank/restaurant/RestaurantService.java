@@ -108,12 +108,25 @@ public class RestaurantService {
         voteRepository.archiveCurrentVotes(id);
 
         log.info("가게 폐업 id={} archivedVotes={}", id, currentVotes.size());
-        return new CloseResponse(restaurant.getId(), restaurant.getName(),
-                restaurant.getStatus(), restaurant.getClosedAt());
+        return CloseResponse.from(restaurant);
+    }
+
+    public RelocateResponse relocate(Long oldId, RelocateRequest request) {
+        for (int attempt = 1; attempt <= MAX_RETRY; attempt++) {
+            try {
+                return doRelocate(oldId, request);
+            } catch (OptimisticLockingFailureException ex) {
+                if (attempt == MAX_RETRY) {
+                    throw ex;
+                }
+                log.warn("이전 낙관적 락 충돌 oldId={} attempt={}", oldId, attempt);
+            }
+        }
+        throw new IllegalStateException("unreachable");
     }
 
     @Transactional
-    public RelocateResponse relocate(Long oldId, RelocateRequest request) {
+    protected RelocateResponse doRelocate(Long oldId, RelocateRequest request) {
         Restaurant oldRestaurant = findActiveOrThrow(oldId);
 
         if (oldRestaurant.getKakaoPlaceId().equals(request.newKakaoPlaceId())) {
@@ -122,6 +135,9 @@ public class RestaurantService {
 
         Restaurant newRestaurant = restaurantRepository.findByKakaoPlaceId(request.newKakaoPlaceId())
                 .orElseThrow(() -> new NewPlaceNotFoundException(request.newKakaoPlaceId()));
+        if (newRestaurant.getStatus() != RestaurantStatus.ACTIVE) {
+            throw new AlreadyClosedException(newRestaurant.getId());
+        }
 
         List<Vote> currentVotes = voteRepository.findByRestaurantIdAndCurrentIsTrue(oldId);
         int movedVoteCount = currentVotes.size();
@@ -131,10 +147,8 @@ public class RestaurantService {
         newRestaurant.adjustVoteCount(movedVoteCount);
         oldRestaurant.relocateTo(newRestaurant);
 
-        // 엔티티 변경을 먼저 flush 후 벌크 UPDATE (clearAutomatically로 PC 초기화)
         voteRepository.archiveCurrentVotes(oldId);
 
-        // PC 초기화 후 새 엔티티 생성
         List<Vote> newVotes = userIds.stream()
                 .map(userId -> Vote.cast(userId, newRestaurant.getId()))
                 .toList();

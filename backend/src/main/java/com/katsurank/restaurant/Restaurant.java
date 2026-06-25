@@ -161,9 +161,15 @@ public class Restaurant {
         this.relocatedToId = newRestaurant.getId();
     }
 
-    /** 이전 시 vote_count 일괄 조정. 운영 빈도 극히 낮으므로 별도 메서드. */
+    /** 이전 시 vote_count 일괄 조정. 결과가 음수면 정합성 오류이므로 즉시 실패. */
     public void adjustVoteCount(int delta) {
-        this.voteCount = Math.max(0, this.voteCount + delta);
+        int adjusted = this.voteCount + delta;
+        if (adjusted < 0) {
+            throw new IllegalStateException(
+                    "vote_count 조정 결과가 음수입니다. restaurantId=" + this.id
+                    + " current=" + this.voteCount + " delta=" + delta);
+        }
+        this.voteCount = adjusted;
     }
 
     @PrePersist

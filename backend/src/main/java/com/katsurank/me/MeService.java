@@ -64,6 +64,7 @@ public class MeService {
                 .stream().collect(Collectors.toMap(Restaurant::getId, Function.identity()));
 
         return votes.stream()
+                .filter(v -> restaurantMap.containsKey(v.getRestaurantId()))
                 .map(v -> VoteHistoryItem.of(v, restaurantMap.get(v.getRestaurantId())))
                 .toList();
     }
