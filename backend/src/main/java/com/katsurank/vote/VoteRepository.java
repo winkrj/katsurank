@@ -1,14 +1,22 @@
 package com.katsurank.vote;
 
 import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.Modifying;
+import org.springframework.data.jpa.repository.Query;
+import org.springframework.data.repository.query.Param;
 
+import java.util.List;
 import java.util.Optional;
 
 public interface VoteRepository extends JpaRepository<Vote, Long> {
 
-    /** 사용자의 현재 유효표(부분 유니크 인덱스로 최대 1건 보장). */
     Optional<Vote> findByUserIdAndCurrentIsTrue(Long userId);
 
-    /** 가게의 현재 유효표 수 — vote_count 캐시 검증/관측용. */
     long countByRestaurantIdAndCurrentIsTrue(Long restaurantId);
+
+    List<Vote> findByRestaurantIdAndCurrentIsTrue(Long restaurantId);
+
+    @Modifying(flushAutomatically = true, clearAutomatically = true)
+    @Query("UPDATE Vote v SET v.current = false WHERE v.restaurantId = :restaurantId AND v.current = true")
+    int archiveCurrentVotes(@Param("restaurantId") Long restaurantId);
 }

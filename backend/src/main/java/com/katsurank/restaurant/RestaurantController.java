@@ -6,6 +6,7 @@ import jakarta.validation.Valid;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PatchMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
@@ -48,5 +49,16 @@ public class RestaurantController {
             throw new MissingQueryException();
         }
         return restaurantService.search(q, limit);
+    }
+
+    @PatchMapping("/{id}/close")
+    public CloseResponse close(@PathVariable Long id) {
+        return restaurantService.close(id);
+    }
+
+    @PatchMapping("/{id}/relocate")
+    public RelocateResponse relocate(@PathVariable Long id,
+                                     @Valid @RequestBody RelocateRequest request) {
+        return restaurantService.relocate(id, request);
     }
 }

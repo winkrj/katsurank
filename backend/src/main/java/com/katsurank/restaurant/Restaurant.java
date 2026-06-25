@@ -155,6 +155,23 @@ public class Restaurant {
         this.closedAt = Instant.now();
     }
 
+    /** 이전 처리 — 기존 가게의 표를 새 가게로 승계한다. */
+    public void relocateTo(Restaurant newRestaurant) {
+        this.status = RestaurantStatus.RELOCATED;
+        this.relocatedToId = newRestaurant.getId();
+    }
+
+    /** 이전 시 vote_count 일괄 조정. 결과가 음수면 정합성 오류이므로 즉시 실패. */
+    public void adjustVoteCount(int delta) {
+        int adjusted = this.voteCount + delta;
+        if (adjusted < 0) {
+            throw new IllegalStateException(
+                    "vote_count 조정 결과가 음수입니다. restaurantId=" + this.id
+                    + " current=" + this.voteCount + " delta=" + delta);
+        }
+        this.voteCount = adjusted;
+    }
+
     @PrePersist
     void onCreate() {
         Instant now = Instant.now();
