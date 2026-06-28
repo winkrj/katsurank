@@ -5,13 +5,15 @@ import { Button } from '../../../shared/ui/Button';
 import { AlertDialog, ConfirmDialog } from '../../../shared/ui/dialog';
 
 type RestaurantVoteConfirmButtonProps = {
-  restaurantName: string;
-  className?: string;
-};
+  restaurantName: string
+  className?: string
+  label?: string
+}
 
 export function RestaurantVoteConfirmButton({
   restaurantName,
   className,
+  label = '내 인생 돈까스로 투표하기',
 }: RestaurantVoteConfirmButtonProps) {
   const isLoggedIn = useAuthStore((s) => s.isLoggedIn());
   const [confirmOpen, setConfirmOpen] = useState(false);
@@ -21,18 +23,18 @@ export function RestaurantVoteConfirmButton({
     setSuccessOpen(true);
   }
 
-  // if (!isLoggedIn) {
-  //   return (
-  //     <Button tag="a" variant="primary" href={KAKAO_LOGIN_URL} className={className}>
-  //       내 인생 돈까스로 투표하기
-  //     </Button>
-  //   )
-  // }
+  if (!isLoggedIn) {
+    return (
+      <Button tag="a" variant="primary" href={KAKAO_LOGIN_URL} className={className}>
+        {label}
+      </Button>
+    )
+  }
 
   return (
     <>
       <Button variant="primary" className={className} onClick={() => setConfirmOpen(true)}>
-        내 인생 돈까스로 투표하기
+        {label}
       </Button>
 
       <ConfirmDialog
