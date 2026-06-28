@@ -4,6 +4,7 @@ import { RankBadge } from './RankBadge'
 
 type RankingListProps = {
   layout?: 'default' | 'mobile'
+  limit?: number
 }
 
 const RANKING_LIMIT = {
@@ -11,9 +12,9 @@ const RANKING_LIMIT = {
   mobile: 10,
 } as const
 
-export function RankingList({ layout = 'default' }: RankingListProps) {
+export function RankingList({ layout = 'default', limit: limitProp }: RankingListProps) {
   const isMobileLayout = layout === 'mobile'
-  const limit = RANKING_LIMIT[layout]
+  const limit = limitProp ?? RANKING_LIMIT[layout]
   const rankings = MOCK_RANKINGS.slice(0, limit)
 
   return (

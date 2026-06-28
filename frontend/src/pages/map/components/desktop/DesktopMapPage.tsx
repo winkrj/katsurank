@@ -21,45 +21,38 @@ export function DesktopMapPage() {
   return (
     <div className="flex h-screen pt-20">
       {/* 좌측 사이드바 */}
-      <aside className="flex w-[260px] shrink-0 flex-col gap-4 overflow-y-auto border-r border-[#E8D9BF] bg-[#FFFDF4] p-4">
-        <MapSearchBar />
+      <aside className="flex w-[320px] shrink-0 flex-col border-r border-[#E8D9BF] bg-[#FFFDF4]">
+        {/* 검색바 — 고정 */}
+        <div className="shrink-0 p-4 pb-3">
+          <MapSearchBar />
+        </div>
 
-        <RankingList layout="default" />
+        {/* 랭킹 목록 — 스크롤 */}
+        <div className="min-h-0 flex-1 overflow-y-auto px-4">
+          <RankingList layout="default" limit={100} />
+        </div>
 
-        {/* 내 한 표 */}
-        <div className="rounded-xl border border-[#E8D9BF] bg-white p-4">
-          <div className="flex items-center gap-2 text-[13px] font-black text-[#2A1A12]">
-            <img
-              src="/images/katsu_char.png"
-              alt=""
-              className="h-10 w-10 object-contain"
-              aria-hidden
-              onError={(e) => {
-                e.currentTarget.style.display = 'none'
-              }}
-            />
-            <div>
-              <p className="font-black">내 한 표</p>
-              <p className="font-normal text-[#8A7A6A]">
-                {isLoggedIn ? '아직 투표하지 않았어요.' : '아직 투표하지 않았어요.'}
-              </p>
-            </div>
+        {/* 내 한 표 — 하단 고정 */}
+        <div className="shrink-0 border-t border-[#E8D9BF] p-4">
+          <div className="rounded-xl border border-[#E8D9BF] bg-white p-4">
+            <p className="text-[13px] font-black text-[#2A1A12]">내 한 표</p>
+            <p className="mt-0.5 text-[12px] text-[#8A7A6A]">아직 투표하지 않았어요.</p>
+            {isLoggedIn ? (
+              <button
+                type="button"
+                className="mt-3 w-full rounded-xl border border-[#DBBA24] bg-[#FFC533] py-2.5 text-[14px] font-black text-[#2A1A12] transition hover:bg-[#D88A24]"
+              >
+                내 한 표 던지기
+              </button>
+            ) : (
+              <Link
+                to="/"
+                className="mt-3 block w-full rounded-xl border border-[#DBBA24] bg-[#FFC533] py-2.5 text-center text-[14px] font-black text-[#2A1A12] transition hover:bg-[#D88A24]"
+              >
+                로그인 후 투표하기
+              </Link>
+            )}
           </div>
-          {isLoggedIn ? (
-            <button
-              type="button"
-              className="mt-3 w-full rounded-xl border border-[#DBBA24] bg-[#FFC533] py-2.5 text-[14px] font-black text-[#2A1A12] transition hover:bg-[#D88A24]"
-            >
-              내 한 표 던지기
-            </button>
-          ) : (
-            <Link
-              to="/"
-              className="mt-3 block w-full rounded-xl border border-[#DBBA24] bg-[#FFC533] py-2.5 text-center text-[14px] font-black text-[#2A1A12] transition hover:bg-[#D88A24]"
-            >
-              로그인 후 투표하기
-            </Link>
-          )}
         </div>
       </aside>
 
