@@ -97,3 +97,8 @@ postgres-data/
 # Claude Code (로컬 개인 설정)
 # =========================================
 .claude/settings.local.json
+
+# =========================================
+# 로컬 비밀 설정 (절대 커밋 금지)
+# =========================================
+backend/src/main/resources/application-local.yml
