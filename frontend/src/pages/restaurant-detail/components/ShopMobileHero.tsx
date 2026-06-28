@@ -1,16 +1,48 @@
+import { useEffect, useRef, useState } from 'react';
 import { Link } from 'react-router-dom';
-import { RESTAURANT_IMAGE_TOTAL_COUNT } from '../constants';
 
 type ShopMobileHeroProps = {
-  image: string;
+  images: string[];
   name: string;
-  currentIndex?: number;
 };
 
-export function ShopMobileHero({ image, name, currentIndex = 1 }: ShopMobileHeroProps) {
+export function ShopMobileHero({ images, name }: ShopMobileHeroProps) {
+  const [currentIndex, setCurrentIndex] = useState(0);
+  const scrollRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    const container = scrollRef.current;
+    if (!container) return;
+
+    const slides = container.querySelectorAll<HTMLElement>('[data-slide]');
+    const observer = new IntersectionObserver(
+      (entries) => {
+        for (const entry of entries) {
+          if (entry.isIntersecting) {
+            setCurrentIndex(Number((entry.target as HTMLElement).dataset.slide));
+          }
+        }
+      },
+      { root: container, threshold: 0.5 },
+    );
+
+    slides.forEach((slide) => observer.observe(slide));
+    return () => observer.disconnect();
+  }, [images]);
+
   return (
     <div className="relative aspect-[4/3] w-full overflow-hidden bg-[#E8D9BF]">
-      <img src={image} alt={`${name} 대표 사진`} className="size-full object-cover" />
+      <div
+        ref={scrollRef}
+        className="flex h-full w-full snap-x snap-mandatory overflow-x-auto [&::-webkit-scrollbar]:hidden"
+        style={{ scrollbarWidth: 'none' }}
+      >
+        {images.map((src, i) => (
+          <div key={src} data-slide={i} className="h-full w-full shrink-0 snap-center">
+            <img src={src} alt={`${name} 사진 ${i + 1}`} className="size-full object-cover" />
+          </div>
+        ))}
+      </div>
 
       <div className="absolute inset-x-0 top-0 flex items-center justify-between px-4 pt-3">
         <Link
@@ -39,9 +71,24 @@ export function ShopMobileHero({ image, name, currentIndex = 1 }: ShopMobileHero
         </div>
       </div>
 
-      <div className="absolute bottom-3 right-4 rounded-full bg-black/45 px-2.5 py-1 text-[12px] font-semibold text-white backdrop-blur-sm">
-        {currentIndex}/{RESTAURANT_IMAGE_TOTAL_COUNT}
-      </div>
+      {images.length > 1 && (
+        <>
+          <div className="absolute bottom-3 left-1/2 flex -translate-x-1/2 items-center gap-1.5">
+            {images.map((_, i) => (
+              <div
+                key={i}
+                className={`rounded-full transition-all duration-200 ${
+                  i === currentIndex ? 'h-1.5 w-3.5 bg-white' : 'h-1.5 w-1.5 bg-white/50'
+                }`}
+              />
+            ))}
+          </div>
+
+          <div className="absolute bottom-3 right-4 rounded-full bg-black/45 px-2.5 py-1 text-[12px] font-semibold text-white backdrop-blur-sm">
+            {currentIndex + 1}/{images.length}
+          </div>
+        </>
+      )}
     </div>
   );
 }
@@ -51,7 +98,7 @@ function BackIcon() {
     <svg width="18" height="18" viewBox="0 0 18 18" fill="none" aria-hidden>
       <path
         d="M11 4 6 9l5 5"
-        stroke="currentColor"
+        stroke="#fff"
         strokeWidth="2"
         strokeLinecap="round"
         strokeLinejoin="round"

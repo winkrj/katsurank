@@ -12,7 +12,7 @@ type MobileRestaurantDetailProps = {
 export function MobileRestaurantDetail({ restaurant }: MobileRestaurantDetailProps) {
   return (
     <main className="bg-[#FFFDF4] pb-[68px] text-[#2A1A12]">
-      <ShopMobileHero image={restaurant.images[0]} name={restaurant.name} />
+      <ShopMobileHero images={restaurant.images} name={restaurant.name} />
 
       <div className="space-y-5 px-4 py-5">
         <ShopMobileInfo restaurant={restaurant} />
