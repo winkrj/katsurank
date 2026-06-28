@@ -1,5 +1,7 @@
 package com.katsurank.restaurant;
 
+import com.katsurank.support.CleanUp;
+import com.katsurank.support.TestFixtures;
 import com.katsurank.user.User;
 import com.katsurank.user.UserRepository;
 import com.katsurank.vote.VoteService;
@@ -10,20 +12,13 @@ import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.test.context.jdbc.Sql;
 import org.springframework.transaction.annotation.Transactional;
 
-import java.math.BigDecimal;
 import java.util.List;
-import java.util.UUID;
-import java.util.concurrent.ThreadLocalRandom;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
 @SpringBootTest
 @Transactional
-@Sql(statements = {
-        "UPDATE users SET current_vote_id = NULL",
-        "DELETE FROM votes",
-        "DELETE FROM restaurants",
-})
+@Sql(statements = {CleanUp.SQL_CLEAR_VOTES, CleanUp.SQL_DELETE_VOTES, CleanUp.SQL_DELETE_RESTAURANTS})
 class RestaurantSearchTest {
 
     @Autowired RestaurantService restaurantService;
@@ -46,8 +41,8 @@ class RestaurantSearchTest {
     }
 
     @Test
-    @DisplayName("검색 응답에 status 필드 없음 + rank 포함")
-    void searchResponseHasRankNoStatus() {
+    @DisplayName("검색 응답에 rank 포함")
+    void searchResponseHasRank() {
         newRestaurant("테스트돈가스", 5);
 
         List<RestaurantSearchResponse> results = restaurantService.search("돈가스", 20);
@@ -59,7 +54,7 @@ class RestaurantSearchTest {
     @Test
     @DisplayName("CLOSED 가게는 검색에서 제외")
     void closedExcludedFromSearch() {
-        Restaurant r = newRestaurant("폐업돈가스", 0);
+        Restaurant r = TestFixtures.createRestaurant(restaurantRepository, "폐업돈가스");
         r = restaurantRepository.findById(r.getId()).orElseThrow();
         r.close();
         restaurantRepository.save(r);
@@ -83,7 +78,7 @@ class RestaurantSearchTest {
     @Test
     @DisplayName("상세 조회 — CLOSED 가게는 rank=null")
     void getByIdClosedHasNullRank() {
-        Restaurant r = newRestaurant("폐업가게", 0);
+        Restaurant r = TestFixtures.createRestaurant(restaurantRepository, "폐업가게");
         r = restaurantRepository.findById(r.getId()).orElseThrow();
         r.close();
         restaurantRepository.save(r);
@@ -95,7 +90,7 @@ class RestaurantSearchTest {
     }
 
     @Test
-    @DisplayName("동점 → 같은 rank (집계 기반)")
+    @DisplayName("동점 → 같은 rank")
     void sameVoteCountSameRank() {
         Restaurant r1 = newRestaurant("가게A", 5);
         Restaurant r2 = newRestaurant("가게B", 5);
@@ -121,19 +116,11 @@ class RestaurantSearchTest {
     // --- helpers ---
 
     private Restaurant newRestaurant(String name, int voteCount) {
-        Restaurant r = restaurantRepository.save(Restaurant.register(
-                "test-" + UUID.randomUUID(), name, "서울 어딘가", "서울 어딘가로 1",
-                new BigDecimal("37.5000000"), new BigDecimal("127.0000000"),
-                "음식점 > 일식 > 돈까스,우동", null, "https://place.map.kakao.com/test", null));
+        Restaurant r = TestFixtures.createRestaurant(restaurantRepository, name);
         for (int i = 0; i < voteCount; i++) {
-            User user = newUser();
+            User user = TestFixtures.createUser(userRepository);
             voteService.vote(user.getId(), r.getId());
         }
         return restaurantRepository.findById(r.getId()).orElseThrow();
-    }
-
-    private User newUser() {
-        long kakaoId = ThreadLocalRandom.current().nextLong(1, Long.MAX_VALUE);
-        return userRepository.save(User.register(kakaoId, "tester-" + kakaoId, null));
     }
 }
