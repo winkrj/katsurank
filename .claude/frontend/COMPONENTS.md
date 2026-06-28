@@ -295,7 +295,9 @@ pages/home/
 - [ ] 모바일/데스크탑 UI가 다르면 `components/mobile/` · `components/desktop/`로 분리
 - [ ] Tailwind 우선 (`STYLE.md`)
 - [ ] `app/routes.tsx` Route 등록
-- [ ] 모바일: `pt-*`는 헤더(`h-14`), `pb-*`는 탭바(`68px`) 고려
+- [ ] 모바일: `pt-14`(헤더 56px) **반드시** 추가 — `HomeHeader`는 `fixed`라 문서 흐름에 없음. 없으면 헤더에 콘텐츠가 가려짐
+- [ ] 모바일: `pb-[calc(68px+env(safe-area-inset-bottom,0px))]` 또는 `pb-[68px]`로 탭바 여백 확보
+- [ ] 전체화면 컴포넌트(지도 등): `marginTop: 56px` + `height: calc(100vh - 56px - 68px)` 조합 사용 (`pt-14` 대신)
 - [ ] `pnpm run build` 통과
 - [ ] Prettier 포맷
 
