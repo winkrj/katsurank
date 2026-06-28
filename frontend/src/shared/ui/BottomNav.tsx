@@ -1,12 +1,10 @@
 import { NavLink } from 'react-router-dom'
-import { KAKAO_LOGIN_URL } from '../constant/api'
-import { useAuthStore } from '../stores/authStore'
 
-const NAV_TABS = [
-  { to: '/', label: '랭킹', end: true, icon: IconRanking },
+const TABS = [
+  { to: '/rankings', label: '랭킹', end: false, icon: IconRanking },
   { to: '/map', label: '지도', end: false, icon: IconMap },
   { to: '/search', label: '검색', end: false, icon: IconSearch },
-  { to: '/me', label: '내표', end: false, icon: IconMyVote },
+  { to: '/me', label: '내 표', end: false, icon: IconMyVote },
 ] as const
 
 const tabClass = ({ isActive }: { isActive: boolean }) =>
@@ -16,8 +14,6 @@ const tabClass = ({ isActive }: { isActive: boolean }) =>
   ].join(' ')
 
 export function BottomNav() {
-  const isLoggedIn = useAuthStore((s) => s.isLoggedIn())
-
   return (
     <>
       <div className="h-[calc(68px+env(safe-area-inset-bottom,0px))]" aria-hidden />
@@ -26,7 +22,7 @@ export function BottomNav() {
         aria-label="하단 네비게이션"
         className="fixed bottom-0 left-0 z-[100] box-content flex h-[68px] w-full items-stretch border-t border-[#E8D9BF] bg-[#FFFDF4] pb-[env(safe-area-inset-bottom,0px)]"
       >
-        {NAV_TABS.map(({ to, label, end, icon: Icon }) => (
+        {TABS.map(({ to, label, end, icon: Icon }) => (
           <NavLink key={to} to={to} end={end} className={tabClass}>
             {({ isActive }) => (
               <>
@@ -36,118 +32,90 @@ export function BottomNav() {
             )}
           </NavLink>
         ))}
-
-        {isLoggedIn ? (
-          <NavLink to="/me" className={tabClass}>
-            {({ isActive }) => (
-              <>
-                <IconLogin active={isActive} />
-                <span>로그인</span>
-              </>
-            )}
-          </NavLink>
-        ) : (
-          <a href={KAKAO_LOGIN_URL} className={tabClass({ isActive: false })}>
-            <IconLogin active={false} />
-            <span>로그인</span>
-          </a>
-        )}
       </nav>
     </>
   )
 }
 
-type IconProps = {
-  active?: boolean
-}
+type IconProps = { active?: boolean }
+
+const activeColor = '#2A1A12'
+const inactiveColor = '#8A7A6A'
 
 function IconRanking({ active }: IconProps) {
+  const c = active ? activeColor : inactiveColor
   return (
-    <svg
-      width="24"
-      height="24"
-      viewBox="0 0 24 24"
-      aria-hidden
-      className={active ? 'text-[#2A1A12]' : 'text-[#8A7A6A]'}
-    >
+    <svg width="24" height="24" viewBox="0 0 24 24" fill="none" aria-hidden>
+      {/* 트로피 컵 */}
       <path
-        fill="currentColor"
-        d="M12 2l2.2 4.5 5 .7-3.6 3.5.9 5-4.5-2.4-4.5 2.4.9-5L4.8 7.2l5-.7L12 2z"
+        d="M8 3h8v7a4 4 0 0 1-8 0V3Z"
+        stroke={c}
+        strokeWidth="1.8"
+        strokeLinejoin="round"
+        fill={active ? c : 'none'}
+        fillOpacity={active ? 0.12 : 0}
       />
-      <path fill="currentColor" d="M7 14h10v2H7z" opacity="0.85" />
+      <path d="M8 6H5a2 2 0 0 0 0 4h3M16 6h3a2 2 0 0 1 0 4h-3" stroke={c} strokeWidth="1.8" strokeLinecap="round" />
+      <path d="M12 14v3M9 20h6" stroke={c} strokeWidth="1.8" strokeLinecap="round" />
+      <path d="M8 17h8" stroke={c} strokeWidth="1.8" strokeLinecap="round" />
     </svg>
   )
 }
 
 function IconMap({ active }: IconProps) {
+  const c = active ? activeColor : inactiveColor
   return (
-    <svg
-      width="24"
-      height="24"
-      viewBox="0 0 24 24"
-      fill="none"
-      stroke="currentColor"
-      strokeWidth="1.8"
-      aria-hidden
-      className={active ? 'text-[#2A1A12]' : 'text-[#8A7A6A]'}
-    >
-      <path d="M4 6l6-3 6 3 4-2v13l-4 2-6-3-6 3-4-2V4z" />
-      <path d="M10 3v13M14 6v13" />
+    <svg width="24" height="24" viewBox="0 0 24 24" fill="none" aria-hidden>
+      <path
+        d="M3 7.5 9 5l6 3 6-2.5v12L15 20l-6-3-6 2.5V7.5Z"
+        stroke={c}
+        strokeWidth="1.8"
+        strokeLinejoin="round"
+        fill={active ? c : 'none'}
+        fillOpacity={active ? 0.1 : 0}
+      />
+      <path d="M9 5v12M15 8v12" stroke={c} strokeWidth="1.8" strokeLinecap="round" />
     </svg>
   )
 }
 
 function IconSearch({ active }: IconProps) {
+  const c = active ? activeColor : inactiveColor
   return (
-    <svg
-      width="24"
-      height="24"
-      viewBox="0 0 24 24"
-      fill="none"
-      stroke="currentColor"
-      strokeWidth="1.8"
-      aria-hidden
-      className={active ? 'text-[#2A1A12]' : 'text-[#8A7A6A]'}
-    >
-      <circle cx="11" cy="11" r="6.5" />
-      <path d="M16 16l4 4" strokeLinecap="round" />
+    <svg width="24" height="24" viewBox="0 0 24 24" fill="none" aria-hidden>
+      <circle
+        cx="11"
+        cy="11"
+        r="6"
+        stroke={c}
+        strokeWidth="1.8"
+        fill={active ? c : 'none'}
+        fillOpacity={active ? 0.12 : 0}
+      />
+      <path d="M16 16l4 4" stroke={c} strokeWidth="2" strokeLinecap="round" />
     </svg>
   )
 }
 
 function IconMyVote({ active }: IconProps) {
+  const c = active ? activeColor : inactiveColor
   return (
-    <svg
-      width="24"
-      height="24"
-      viewBox="0 0 24 24"
-      fill="none"
-      stroke="currentColor"
-      strokeWidth="1.8"
-      aria-hidden
-      className={active ? 'text-[#2A1A12]' : 'text-[#8A7A6A]'}
-    >
-      <path d="M7 4h10l1 4H6l1-4z" />
-      <path d="M8 8v8l4 2 4-2V8" />
-      <path d="M12 10v6" />
-    </svg>
-  )
-}
-
-function IconLogin({ active }: IconProps) {
-  return (
-    <svg
-      width="24"
-      height="24"
-      viewBox="0 0 24 24"
-      fill="none"
-      stroke="currentColor"
-      strokeWidth="1.8"
-      aria-hidden
-      className={active ? 'text-[#2A1A12]' : 'text-[#8A7A6A]'}
-    >
-      <circle cx="12" cy="8" r="3.5" />
-      <path d="M6 20c.8-3 2.8-4.5 6-4.5s5.2 1.5 6 4.5" strokeLinecap="round" />
+    <svg width="24" height="24" viewBox="0 0 24 24" fill="none" aria-hidden>
+      {/* 투표함 */}
+      <rect
+        x="4"
+        y="12"
+        width="16"
+        height="9"
+        rx="1.5"
+        stroke={c}
+        strokeWidth="1.8"
+        fill={active ? c : 'none'}
+        fillOpacity={active ? 0.12 : 0}
+      />
+      <path d="M4 15h16" stroke={c} strokeWidth="1.8" strokeLinecap="round" />
+      <path d="M9 3h6a1 1 0 0 1 1 1v8H8V4a1 1 0 0 1 1-1Z" stroke={c} strokeWidth="1.8" strokeLinejoin="round" />
+      <path d="M10 7.5l1.5 1.5L14 6" stroke={c} strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" />
     </svg>
   )
 }
