@@ -30,7 +30,7 @@
 | 프론트/백 | React(Next.js)+TS / Spring Boot 4.0·Java 21, 순수 REST API |
 | 실시간성 | 30초 폴링 |
 | 디자인 톤 | 화이트 베이스, 먹/도장 빨강, Noto Serif KR (04 v0.2 기준) |
-| 호스팅 | 백엔드 Railway / 프론트 Vercel |
+| 호스팅 | **백엔드 Oracle Cloud Free Tier** (VM + Nginx) / 프론트 Vercel (미정) |
 | 일정 | 한 달, 하루 1~2시간 |
 | 수익 모델 | 없음 (개인 프로젝트, 무료) |
 
@@ -44,6 +44,8 @@
 | `03_data_model_and_tech.md` | 데이터 모델·기술 스택·API·관측 | 개발 |
 | `04_brand_design_guide.md` | 브랜드·컬러·타이포·컴포넌트 | 디자인 |
 | `05_week1_setup_guide.md` | 1주차 구체 작업 가이드 (※ Thymeleaf 전제라 갱신 예정) | 개발 |
+| `06_deployment_guide.md` | **서버 배포 가이드** — Oracle Cloud + Nginx + CI/CD 단계별 | 개발·배포 |
+| `07_roadmap.md` | **개발 로드맵 & 진행 추적** — 마일스톤별 체크리스트 | 모든 창 |
 | `setup/docker-compose.yml` | 로컬 PostgreSQL 셋업 | 개발 |
 | `setup/application.yml` | Spring Boot 설정 템플릿 | 개발 |
 
@@ -94,19 +96,21 @@
 
 ## 다음 액션 (현재 시점)
 
-- [ ] 백엔드 설계 계속 — Vote 동시성 로직(서비스 심장부), 랭킹 쿼리, 관측 계측
-- [ ] `05_week1_setup_guide` 갱신 — Thymeleaf 전제·CSRF off 등 REST 전환 반영해 v0.2로
-- [ ] 신규 `06_backend_architecture` 문서 작성 (패키지 구조·인증 흐름·트랜잭션 경계·관측 상세)
-- [ ] `application.yml` 갱신 — Flyway·가상스레드·세션 저장소·프로파일 분리 반영
-- [ ] 카카오 디벨로퍼스 앱 등록 (Day 2 전까지)
+> 상세 체크리스트는 `07_roadmap.md` 참조.
+
+- [ ] **[M2] 서버 배포** — `06_deployment_guide.md` 순서대로 진행
+  - 1순위: Oracle Cloud 계정 생성 + VM 프로비저닝
+  - 2순위: 도메인 등록 (katsurank.kr) + CloudFlare 연결
+- [ ] **[M2] GitHub Actions** 자동 배포 파이프라인 검증 (`.github/workflows/deploy.yml` 작성 완료)
+- [ ] `07_roadmap.md`에서 완료된 항목 체크
 
 ## 미정 사항 (열린 결정)
 
-- [ ] 세션 저장소: `spring-session-jdbc`(PostgreSQL) 시작 vs Redis 도입 시점
-- [ ] 응답 포맷: 공통 `ApiResponse` 래퍼 vs 순수 데이터 + 상태코드 (프론트 개발자와 합의)
-- [ ] CI/CD: GitHub Actions vs 호스팅 자체 빌드
+- [ ] 응답 포맷: 공통 `ApiResponse` 래퍼 vs 순수 데이터 + 상태코드 (프론트 개발 시작 전 결정)
+- [ ] 프론트 최종 배포 위치: Vercel 유력
 
 ## 변경 이력
 
 - **v0.1 (2026-05-11)**: 인덱스 문서 작성. 마스터 창 운영 시작.
 - **v0.2 (2026-06-04)**: 백엔드 아키텍처 결정 반영. **랭킹을 서울 단일 랭킹으로 확정**(컨셉 핵심·스냅샷 수정). 인증을 외부저장소 세션으로, 프론트를 React+REST로 확정. 폐업/이전(A+C)·체인점(독립 식당) 정책 추가. 문서 인덱스 버전 갱신(01→v0.3, 02→v0.2, 03→v0.2, 04→v0.2 참조). 05는 Thymeleaf 전제라 갱신 예정으로 표기.
+- **v0.3 (2026-06-28)**: **백엔드 API v1 완료** — Vote 동시성, 랭킹·검색·마이페이지·폐업이전 API, QueryDSL, 통합 테스트. 호스팅을 Railway → Oracle Cloud Free Tier로 변경. `06_deployment_guide.md`, `07_roadmap.md`, `deploy.yml` 추가. 다음 액션을 M2(배포)로 전환.
