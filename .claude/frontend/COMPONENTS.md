@@ -75,6 +75,9 @@ export function SomePage() {
 pages/<page-name>/
 ├── <PageName>Page.tsx     # 진입점 — 조립·분기만
 ├── components/            # 이 페이지 전용 UI
+│   ├── desktop/           # 데스크탑 전용 UI
+│   ├── mobile/            # 모바일 전용 UI
+│   └── …                  # 양쪽 공용 (RankBadge, XxxList 등)
 ├── types/                 # 이 페이지 전용 타입
 ├── constants/             # 상수 값만 (목업·타입 X) → DATA.md
 ├── mocks/                 # 목업 데이터 (개발용)
@@ -99,6 +102,63 @@ pages/<page-name>/
 
 > **`features/` 폴더는 쓰지 않는다.** 공용은 전부 `shared/` 아래로.
 
+### 2-1. `desktop/` · `mobile/` 폴더 (모바일/데스크탑 UI 분리)
+
+모바일과 데스크탑 **레이아웃이 다른 페이지**는 `components/` 안에 **`desktop/`**, **`mobile/`** 폴더를 만들어 나눈다.
+
+```
+pages/search/
+├── SearchPage.tsx
+└── components/
+    ├── desktop/
+    │   └── DesktopSearchPage.tsx   # 또는 SearchSidebar.tsx 등
+    ├── mobile/
+    │   └── MobileSearchPage.tsx
+    ├── SearchForm.tsx              # layout prop 등으로 양쪽 공용
+    ├── SearchResultCard.tsx
+    └── SearchResultList.tsx
+```
+
+| 위치 | 넣을 것 |
+| ---- | ------- |
+| `components/desktop/` | **데스크탑에서만** 렌더되는 UI |
+| `components/mobile/` | **모바일에서만** 렌더되는 UI |
+| `components/` (루트) | **양쪽에서 공유**하는 UI (카드, 리스트, 폼, 뱃지 등) |
+
+**`*Page.tsx`는 여전히 `useIsMobile()`로 분기만** 하고, 실제 마크업은 하위 폴더 컴포넌트에 둔다.
+
+```tsx
+// ✅ Good — SearchPage.tsx
+import { useIsMobile } from '../../shared/hooks/useIsMobile'
+import { DesktopSearchPage } from './components/desktop/DesktopSearchPage'
+import { MobileSearchPage } from './components/mobile/MobileSearchPage'
+
+export function SearchPage() {
+  const isMobile = useIsMobile()
+  return isMobile ? <MobileSearchPage /> : <DesktopSearchPage />
+}
+
+// ❌ Bad — desktop/mobile 파일을 components/ 루트에 섞어 두기
+// components/DesktopSearchPage.tsx
+// components/MobileSearchPage.tsx
+// components/SearchSidebar.tsx
+```
+
+**네이밍**
+
+- 진입용 shell: `DesktopXxxPage.tsx` / `MobileXxxPage.tsx` (해당 폴더 안)
+- 섹션 단위: `DesktopShopHero.tsx` / `MobileShopHero.tsx` 또는 역할 이름만 (`ShopVotePanel.tsx` — 폴더로 구분)
+
+**예외 — 폴더 없이 루트에 둬도 됨**
+
+- 모바일/데스크탑 **차이가 거의 없는** 작은 컴포넌트 (`layout` prop 하나로 처리)
+- **한쪽만** 있는 UI가 1~2개뿐인 아주 작은 페이지 (그래도 shell은 `mobile/` · `desktop/` 권장)
+
+**기존 코드**
+
+- `MobileXxx.tsx` / `DesktopXxx.tsx`가 `components/` 루트에 있으면 **새 작업·리팩 시** `mobile/` · `desktop/`으로 옮긴다.
+- `shared/ui/header/`처럼 **앱 전역** 레이아웃은 `shared/` 규칙을 따른다 (페이지 `components/` 아님).
+
 ---
 
 ## 3. 컴포넌트 나누는 기준
@@ -107,7 +167,7 @@ pages/<page-name>/
 
 - **화면 섹션** 1개 = 컴포넌트 1개 (Hero, RankingList, ShopDetailHeader …)
 - **리스트 + 아이템** → `XxxList.tsx` + `XxxListItem.tsx` (또는 `RankBadge`처럼 작은 단위)
-- **모바일 / 데스크탑 레이아웃이 다름** → `MobileXxx.tsx` / `DesktopXxx.tsx` (+ `useIsMobile`)
+- **모바일 / 데스크탑 레이아웃이 다름** → `components/mobile/` · `components/desktop/` (+ `useIsMobile`, §2-1)
 - **한 파일 150줄 넘어가려 할 때** → 섹션 단위로 쪼개기
 
 ### 3-2. 한 파일에 둬도 됨
@@ -135,7 +195,7 @@ pages/<page-name>/
 | 폴더            | `kebab-case`               | `restaurant-detail/`        |
 | 섹션 컴포넌트   | 역할 이름 (Page 접미사 X)  | `ShopHero`, `VoteSection`   |
 | 리스트          | `XxxList`                  | `RankingList`               |
-| 모바일/데스크탑 | `MobileXxx` / `DesktopXxx` | `MobileHero`, `DesktopMain` |
+| 모바일/데스크탑 shell | `mobile/` · `desktop/` 폴더 + `MobileXxx` / `DesktopXxx` | `mobile/MobileSearchPage`, `desktop/DesktopMain` |
 | props 타입      | `ComponentNameProps`       | `ShopHeroProps`             |
 
 export는 **named export** (`export function Foo`).
@@ -171,12 +231,14 @@ export function RestaurantDetailPage() {
 
 ```
 pages/restaurant-detail/
-├── RestaurantDetailPage.tsx      # 조립
+├── RestaurantDetailPage.tsx      # useIsMobile 분기
 ├── components/
-│   ├── ShopDetailHero.tsx        # 상단 이름·주소·순위
-│   ├── ShopInfoList.tsx          # 영업시간·전화
-│   ├── ShopVoteSection.tsx       # 투표 버튼 영역
-│   └── ShopMapLink.tsx           # 카카오맵 링크
+│   ├── desktop/
+│   │   └── DesktopRestaurantDetail.tsx
+│   ├── mobile/
+│   │   └── MobileRestaurantDetail.tsx
+│   ├── ShopVoteStatsCard.tsx     # 양쪽 공용
+│   └── RestaurantVoteConfirmButton.tsx
 ├── hooks/
 │   └── useRestaurantDetail.ts    # (API 연동 시)
 └── constants/
@@ -198,9 +260,11 @@ pages/restaurant-detail/components/ShopVoteSection.tsx  ← 이 페이지 배치
 pages/home/
 ├── HomePage.tsx              # isMobile 분기만 (~15줄)
 ├── components/
-│   ├── MobileHero.tsx
-│   ├── DesktopMain.tsx
-│   ├── HeroHeading.tsx
+│   ├── mobile/
+│   │   └── MobileHero.tsx
+│   ├── desktop/
+│   │   └── DesktopMain.tsx
+│   ├── HeroHeading.tsx       # layout prop으로 공용
 │   ├── RankingList.tsx
 │   ├── RankBadge.tsx
 │   ├── VoteButtons.tsx
@@ -228,6 +292,7 @@ pages/home/
 
 - [ ] `AppLayout` / `<Outlet />` 구조 준수
 - [ ] `*Page.tsx`는 조립만, 섹션은 `components/`
+- [ ] 모바일/데스크탑 UI가 다르면 `components/mobile/` · `components/desktop/`로 분리
 - [ ] Tailwind 우선 (`STYLE.md`)
 - [ ] `app/routes.tsx` Route 등록
 - [ ] 모바일: `pt-*`는 헤더(`h-14`), `pb-*`는 탭바(`68px`) 고려

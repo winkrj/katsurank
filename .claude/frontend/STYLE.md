@@ -36,6 +36,8 @@ frontend/src/
 │   └── home/
 │       ├── HomePage.tsx
 │       ├── components/
+│       │   ├── desktop/    # 데스크탑 전용 → COMPONENTS.md §2-1
+│       │   └── mobile/     # 모바일 전용
 │       ├── constants/
 │       └── style/      # 이 페이지에서만 반복되는 CSS
 │           └── home.css

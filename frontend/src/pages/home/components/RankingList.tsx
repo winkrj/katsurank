@@ -6,8 +6,15 @@ type RankingListProps = {
   layout?: 'default' | 'mobile'
 }
 
+const RANKING_LIMIT = {
+  default: 5,
+  mobile: 10,
+} as const
+
 export function RankingList({ layout = 'default' }: RankingListProps) {
   const isMobileLayout = layout === 'mobile'
+  const limit = RANKING_LIMIT[layout]
+  const rankings = MOCK_RANKINGS.slice(0, limit)
 
   return (
     <section className="w-full">
@@ -24,7 +31,7 @@ export function RankingList({ layout = 'default' }: RankingListProps) {
               isMobileLayout ? 'mobile-hero__ranking-title font-black' : 'text-[15px] font-black'
             }
           >
-            실시간 랭킹 TOP 5
+            실시간 랭킹 TOP {limit}
           </h2>
           <Link
             to="/rankings"
@@ -39,7 +46,7 @@ export function RankingList({ layout = 'default' }: RankingListProps) {
         </div>
 
         <ol>
-          {MOCK_RANKINGS.map((item) => (
+          {rankings.map((item) => (
             <li key={item.id}>
               <Link
                 to={`/restaurants/${item.id}`}

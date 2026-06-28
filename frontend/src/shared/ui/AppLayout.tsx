@@ -5,8 +5,10 @@ import { BottomNav } from './BottomNav'
 
 export function AppLayout() {
   const isMobile = useIsMobile()
-  const isRestaurantDetail = useMatch('/restaurants/:id')
-  const hideMobileHeader = isMobile && isRestaurantDetail
+  const restaurantDetailMatch = useMatch('/restaurants/:id')
+  const isRestaurantDetailPage =
+    restaurantDetailMatch != null && restaurantDetailMatch.params.id !== 'new'
+  const hideMobileHeader = isMobile && isRestaurantDetailPage
 
   return (
     <>

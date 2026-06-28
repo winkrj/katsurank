@@ -10,7 +10,7 @@ export function HeroHeading({ variant }: HeroHeadingProps) {
         <h1 className="mobile-hero__title">
           서울 돈까스 랭킹
           <br />
-          TOP 100
+          TOP 10
         </h1>
       </>
     );
@@ -22,7 +22,7 @@ export function HeroHeading({ variant }: HeroHeadingProps) {
       <h1 className="mb-7 text-[3rem] font-bold leading-[1.3] tracking-[0.001em]">
         서울 돈까스 랭킹
         <br />
-        TOP 100
+        TOP 5
       </h1>
     </>
   );
