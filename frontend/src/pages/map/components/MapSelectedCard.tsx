@@ -1,4 +1,5 @@
 import { Link } from 'react-router-dom'
+import { RestaurantVoteConfirmButton } from '../../restaurant-detail/components/RestaurantVoteConfirmButton'
 import type { MapRestaurant } from '../types/map'
 
 type MapSelectedCardProps = {
@@ -81,12 +82,10 @@ export function MapSelectedCard({ restaurant: r, onClose }: MapSelectedCardProps
           길찾기
         </a>
         <div className="w-px bg-[#E8D9BF]" />
-        <button
-          type="button"
-          className="flex flex-1 items-center justify-center bg-[#FFC533] py-3 text-[14px] font-black text-[#2A1A12] transition hover:bg-[#D88A24]"
-        >
-          내 인생 돈까스로 투표하기
-        </button>
+        <RestaurantVoteConfirmButton
+          restaurantName={r.name}
+          className="flex flex-1 items-center justify-center rounded-none bg-[#FFC533] py-3 text-[14px] font-black text-[#2A1A12] transition hover:bg-[#D88A24]"
+        />
       </div>
 
       <button

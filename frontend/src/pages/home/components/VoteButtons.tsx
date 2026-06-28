@@ -1,5 +1,6 @@
 import { Button } from '../../../shared/ui/Button'
 import { KAKAO_LOGIN_URL } from '../../../shared/constant/api'
+import { useNavigate } from 'react-router-dom'
 
 type VoteButtonsProps = {
   isLoggedIn: boolean
@@ -8,6 +9,7 @@ type VoteButtonsProps = {
 
 export function VoteButtons({ isLoggedIn, layout = 'default' }: VoteButtonsProps) {
   const isMobileLayout = layout === 'mobile'
+  const navigate = useNavigate()
   const btnClass = isMobileLayout ? 'mobile-hero__btn' : undefined
   const containerClass = isMobileLayout
     ? 'mobile-hero__buttons grid grid-cols-2'
@@ -25,7 +27,7 @@ export function VoteButtons({ isLoggedIn, layout = 'default' }: VoteButtonsProps
         </Button>
       )}
 
-      <Button tag="button" variant="secondary" className={btnClass}>
+      <Button tag="button" variant="secondary" className={btnClass} onClick={() => navigate('/map')}>
         지도 보기
       </Button>
     </div>

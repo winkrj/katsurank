@@ -1,6 +1,7 @@
 import { NavLink } from 'react-router-dom'
 
 const TABS = [
+  { to: '/', label: '홈', end: true, icon: IconHome },
   { to: '/rankings', label: '랭킹', end: false, icon: IconRanking },
   { to: '/map', label: '지도', end: false, icon: IconMap },
   { to: '/search', label: '검색', end: false, icon: IconSearch },
@@ -41,6 +42,22 @@ type IconProps = { active?: boolean }
 
 const activeColor = '#2A1A12'
 const inactiveColor = '#8A7A6A'
+
+function IconHome({ active }: IconProps) {
+  const c = active ? activeColor : inactiveColor
+  return (
+    <svg width="24" height="24" viewBox="0 0 24 24" fill="none" aria-hidden>
+      <path
+        d="M3 10.5L12 3l9 7.5V20a1 1 0 0 1-1 1H15v-5h-6v5H4a1 1 0 0 1-1-1V10.5Z"
+        stroke={c}
+        strokeWidth="1.8"
+        strokeLinejoin="round"
+        fill={active ? c : 'none'}
+        fillOpacity={active ? 0.12 : 0}
+      />
+    </svg>
+  )
+}
 
 function IconRanking({ active }: IconProps) {
   const c = active ? activeColor : inactiveColor

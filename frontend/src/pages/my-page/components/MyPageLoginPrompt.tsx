@@ -1,16 +1,16 @@
-import { KAKAO_LOGIN_URL } from '../../../shared/constant/api'
+import { KAKAO_LOGIN_URL } from '../../../shared/constant/api';
 
 const FEATURES = [
   { emoji: '1️⃣', label: '1인 1표 원칙' },
   { emoji: '↩️', label: '표 이동 가능' },
   { emoji: '📊', label: '실시간 랭킹 반영' },
-] as const
+] as const;
 
 export function MyPageLoginPrompt() {
   return (
-    <main className="flex min-h-[calc(100vh-56px-68px-env(safe-area-inset-bottom,0px))] flex-col items-center justify-between bg-[#FFFDF4] px-6 pb-8 pt-10 text-[#2A1A12]">
+    <main className="flex min-h-screen flex-col items-center bg-[#FFFDF4] px-6 pb-[calc(68px+env(safe-area-inset-bottom,0px))] pt-[calc(3.5rem+2rem)] text-[#2A1A12]">
       {/* 상단 일러스트 영역 */}
-      <div className="flex flex-col items-center gap-6">
+      <div className="flex flex-col items-center mt-[30px] gap-5">
         {/* 왕관 장식 + 아이콘 */}
         <div className="relative flex items-center justify-center">
           {/* 배경 원 */}
@@ -34,15 +34,14 @@ export function MyPageLoginPrompt() {
         </div>
 
         {/* 헤드카피 */}
-        <div className="text-center">
-          <p className="mb-1 text-[13px] font-bold text-[#8A7A6A]">로그인하고 투표해보세요</p>
+        <div className="text-center mt-4">
           <h1 className="text-[24px] font-black leading-tight tracking-tight">
             내 한 표로
             <br />
             <span className="text-[#D88A24]">서울 1위</span>가 바뀐다!
           </h1>
           <p className="mt-3 text-[14px] leading-relaxed text-[#5F4A3C]">
-            지금 가장 맛있는 돈까스집에
+            지금 로그인 후 최애 돈까스집에
             <br />
             당신만의 한 표를 던져보세요.
           </p>
@@ -87,9 +86,6 @@ export function MyPageLoginPrompt() {
               <span className="text-[12px] font-semibold text-[#5F4A3C]">{votes}</span>
             </div>
           ))}
-          <p className="mt-3 text-center text-[11px] text-[#8A7A6A]">
-            로그인하면 내 한 표를 던질 수 있어요 👇
-          </p>
         </div>
       </div>
 
@@ -102,12 +98,9 @@ export function MyPageLoginPrompt() {
           <img src="/images/kakao_icon.png" alt="" className="size-5" aria-hidden />
           카카오로 1초 만에 시작하기
         </a>
-        <p className="mt-3 text-center text-[11px] text-[#8A7A6A]">
-          SNS 계정 정보를 따로 저장하지 않아요
-        </p>
       </div>
     </main>
-  )
+  );
 }
 
 function CrownIcon() {
@@ -124,7 +117,7 @@ function CrownIcon() {
       <circle cx="16" cy="4" r="2" fill="#C78316" />
       <circle cx="26" cy="8" r="2" fill="#C78316" />
     </svg>
-  )
+  );
 }
 
 function SparkleIcon({ className, size }: { className?: string; size: number }) {
@@ -139,5 +132,5 @@ function SparkleIcon({ className, size }: { className?: string; size: number }) 
     >
       <path d="M6 0l1.2 4.8L12 6l-4.8 1.2L6 12l-1.2-4.8L0 6l4.8-1.2z" />
     </svg>
-  )
+  );
 }

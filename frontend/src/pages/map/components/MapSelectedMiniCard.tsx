@@ -1,4 +1,5 @@
 import { Link } from 'react-router-dom'
+import { RestaurantVoteConfirmButton } from '../../restaurant-detail/components/RestaurantVoteConfirmButton'
 import type { MapRestaurant } from '../types/map'
 
 type MapSelectedMiniCardProps = {
@@ -45,12 +46,11 @@ export function MapSelectedMiniCard({ restaurant: r, onClose }: MapSelectedMiniC
         >
           상세보기
         </Link>
-        <button
-          type="button"
-          className="flex flex-1 items-center justify-center rounded-xl bg-[#FFC533] py-2.5 text-[13px] font-black text-[#2A1A12]"
-        >
-          투표하기
-        </button>
+        <RestaurantVoteConfirmButton
+          restaurantName={r.name}
+          label="투표하기"
+          className="flex flex-1 items-center justify-center rounded-xl py-2.5 text-[13px] font-black"
+        />
       </div>
     </div>
   )
