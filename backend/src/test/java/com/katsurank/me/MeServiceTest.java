@@ -3,6 +3,8 @@ package com.katsurank.me;
 import com.katsurank.restaurant.Restaurant;
 import com.katsurank.restaurant.RestaurantRepository;
 import com.katsurank.restaurant.RestaurantStatus;
+import com.katsurank.support.CleanUp;
+import com.katsurank.support.TestFixtures;
 import com.katsurank.user.User;
 import com.katsurank.user.UserRepository;
 import com.katsurank.vote.VoteService;
@@ -13,20 +15,13 @@ import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.test.context.jdbc.Sql;
 import org.springframework.transaction.annotation.Transactional;
 
-import java.math.BigDecimal;
 import java.util.List;
-import java.util.UUID;
-import java.util.concurrent.ThreadLocalRandom;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
 @SpringBootTest
 @Transactional
-@Sql(statements = {
-        "UPDATE users SET current_vote_id = NULL",
-        "DELETE FROM votes",
-        "DELETE FROM restaurants",
-})
+@Sql(statements = {CleanUp.SQL_CLEAR_VOTES, CleanUp.SQL_DELETE_VOTES, CleanUp.SQL_DELETE_RESTAURANTS})
 class MeServiceTest {
 
     @Autowired MeService meService;
@@ -37,7 +32,7 @@ class MeServiceTest {
     @Test
     @DisplayName("투표 이력 없는 신규 유저 → currentVote: null, history []")
     void newUserNoVote() {
-        User user = newUser();
+        User user = TestFixtures.createUser(userRepository);
 
         MeResponse me = meService.getMe(user.getId());
 
@@ -52,8 +47,8 @@ class MeServiceTest {
     @Test
     @DisplayName("투표 후 → currentVote에 가게 정보 + rank 포함")
     void afterVote() {
-        User user = newUser();
-        Restaurant r = newRestaurant("명동돈가스");
+        User user = TestFixtures.createUser(userRepository);
+        Restaurant r = TestFixtures.createRestaurant(restaurantRepository, "명동돈가스");
         voteService.vote(user.getId(), r.getId());
 
         MeResponse me = meService.getMe(user.getId());
@@ -68,9 +63,9 @@ class MeServiceTest {
     @Test
     @DisplayName("표 이동 → history 2개 (최신순), isCurrent 각각 true/false")
     void moveVoteHistory() {
-        User user = newUser();
-        Restaurant a = newRestaurant("가게A");
-        Restaurant b = newRestaurant("가게B");
+        User user = TestFixtures.createUser(userRepository);
+        Restaurant a = TestFixtures.createRestaurant(restaurantRepository, "가게A");
+        Restaurant b = TestFixtures.createRestaurant(restaurantRepository, "가게B");
 
         voteService.vote(user.getId(), a.getId());
         voteService.vote(user.getId(), b.getId());
@@ -87,8 +82,8 @@ class MeServiceTest {
     @Test
     @DisplayName("CLOSED 가게 투표 중 → restaurantStatus: CLOSED, rank: null")
     void closedRestaurantRankNull() {
-        User user = newUser();
-        Restaurant r = newRestaurant("폐업가게");
+        User user = TestFixtures.createUser(userRepository);
+        Restaurant r = TestFixtures.createRestaurant(restaurantRepository, "폐업가게");
         voteService.vote(user.getId(), r.getId());
 
         Restaurant loaded = restaurantRepository.findById(r.getId()).orElseThrow();
@@ -99,19 +94,5 @@ class MeServiceTest {
 
         assertThat(me.currentVote().restaurantStatus()).isEqualTo(RestaurantStatus.CLOSED);
         assertThat(me.currentVote().rank()).isNull();
-    }
-
-    // --- helpers ---
-
-    private User newUser() {
-        long kakaoId = ThreadLocalRandom.current().nextLong(1, Long.MAX_VALUE);
-        return userRepository.save(User.register(kakaoId, "tester-" + kakaoId, null));
-    }
-
-    private Restaurant newRestaurant(String name) {
-        return restaurantRepository.save(Restaurant.register(
-                "test-" + UUID.randomUUID(), name, "서울 어딘가", "서울 어딘가로 1",
-                new BigDecimal("37.5000000"), new BigDecimal("127.0000000"),
-                "음식점 > 일식 > 돈까스,우동", null, "https://place.map.kakao.com/test", null));
     }
 }

@@ -2,6 +2,8 @@ package com.katsurank.ranking;
 
 import com.katsurank.restaurant.Restaurant;
 import com.katsurank.restaurant.RestaurantRepository;
+import com.katsurank.support.CleanUp;
+import com.katsurank.support.TestFixtures;
 import com.katsurank.user.User;
 import com.katsurank.user.UserRepository;
 import com.katsurank.vote.VoteService;
@@ -12,22 +14,15 @@ import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.test.context.jdbc.Sql;
 import org.springframework.transaction.annotation.Transactional;
 
-import java.math.BigDecimal;
 import java.util.List;
 import java.util.Optional;
-import java.util.UUID;
-import java.util.concurrent.ThreadLocalRandom;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
 @SpringBootTest
 @Transactional
-@Sql(statements = {
-        "UPDATE users SET current_vote_id = NULL",
-        "DELETE FROM votes",
-        "DELETE FROM restaurants"
-})
+@Sql(statements = {CleanUp.SQL_CLEAR_VOTES, CleanUp.SQL_DELETE_VOTES, CleanUp.SQL_DELETE_RESTAURANTS})
 class RankingServiceTest {
 
     @Autowired RankingService rankingService;
@@ -52,13 +47,10 @@ class RankingServiceTest {
         assertThat(response.items().get(0).rank()).isEqualTo(1);
         assertThat(response.items().get(0).id()).isEqualTo(r1.getId());
         assertThat(response.items().get(0).voteCount()).isEqualTo(10);
-
         assertThat(response.items().get(1).rank()).isEqualTo(2);
         assertThat(response.items().get(1).id()).isEqualTo(r2.getId());
-
         assertThat(response.items().get(2).rank()).isEqualTo(3);
         assertThat(response.items().get(2).id()).isEqualTo(r3.getId());
-
         assertThat(response.total()).isEqualTo(3);
     }
 
@@ -89,7 +81,7 @@ class RankingServiceTest {
     }
 
     @Test
-    @DisplayName("ACTIVE 가게 0개 → top 204 (empty), ranking items=[]")
+    @DisplayName("ACTIVE 가게 0개 → top empty, ranking items=[]")
     void emptyRanking() {
         RankingResponse response = rankingService.getRanking(0, 20);
         assertThat(response.items()).isEmpty();
@@ -136,9 +128,9 @@ class RankingServiceTest {
     @DisplayName("지도 핀 — 좌표 없는 가게 제외, CLOSED 제외")
     void mapPinsExcludeNullCoordsAndClosed() {
         Restaurant withCoords = newRestaurant("좌표있음");
-        Restaurant noCoords = newRestaurantNoCoords("좌표없음");
-        Restaurant closedWithCoords = newRestaurant("폐업좌표있음");
+        TestFixtures.createRestaurantNoCoords(restaurantRepository, "좌표없음");
 
+        Restaurant closedWithCoords = newRestaurant("폐업좌표있음");
         closedWithCoords = restaurantRepository.findById(closedWithCoords.getId()).orElseThrow();
         closedWithCoords.close();
         restaurantRepository.save(closedWithCoords);
@@ -153,27 +145,12 @@ class RankingServiceTest {
 
     private void vote(Restaurant restaurant, int count) {
         for (int i = 0; i < count; i++) {
-            User user = newUser();
+            User user = TestFixtures.createUser(userRepository);
             voteService.vote(user.getId(), restaurant.getId());
         }
     }
 
-    private User newUser() {
-        long kakaoId = ThreadLocalRandom.current().nextLong(1, Long.MAX_VALUE);
-        return userRepository.save(User.register(kakaoId, "tester-" + kakaoId, null));
-    }
-
     private Restaurant newRestaurant(String name) {
-        return restaurantRepository.save(Restaurant.register(
-                "test-" + UUID.randomUUID(), name, "서울 어딘가", "서울 어딘가로 1",
-                new BigDecimal("37.5000000"), new BigDecimal("127.0000000"),
-                "음식점 > 일식 > 돈까스,우동", null, "https://place.map.kakao.com/test", null));
-    }
-
-    private Restaurant newRestaurantNoCoords(String name) {
-        return restaurantRepository.save(Restaurant.register(
-                "test-" + UUID.randomUUID(), name, "서울 어딘가", null,
-                null, null,
-                "음식점 > 일식 > 돈까스,우동", null, null, null));
+        return TestFixtures.createRestaurant(restaurantRepository, name);
     }
 }
