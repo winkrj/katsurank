@@ -1,19 +1,19 @@
-import { useState } from 'react'
-import { MOCK_MAP_RESTAURANTS } from '../../mocks/map.mock'
-import type { MapFilterKey, MapRestaurant } from '../../types/map'
-import { MapFilterTabs } from '../MapFilterTabs'
-import { MapKakaoMap } from '../MapKakaoMap'
-import { MapSearchBar } from '../MapSearchBar'
-import { MapSelectedMiniCard } from '../MapSelectedMiniCard'
+import { useState } from 'react';
+import { MOCK_MAP_RESTAURANTS } from '../../mocks/map.mock';
+import type { MapFilterKey, MapRestaurant } from '../../types/map';
+import { MapFilterTabs } from '../MapFilterTabs';
+import { MapKakaoMap } from '../MapKakaoMap';
+import { MapSearchBar } from '../MapSearchBar';
+import { MapSelectedMiniCard } from '../MapSelectedMiniCard';
 
-const HEADER_HEIGHT = 56
-const BOTTOM_NAV_HEIGHT = 68
+const HEADER_HEIGHT = 56;
+const BOTTOM_NAV_HEIGHT = 68;
 
 export function MobileMapPage() {
-  const [activeFilter, setActiveFilter] = useState<MapFilterKey>('all')
-  const [selected, setSelected] = useState<MapRestaurant | null>(null)
+  const [activeFilter, setActiveFilter] = useState<MapFilterKey>('all');
+  const [selected, setSelected] = useState<MapRestaurant | null>(null);
 
-  const restaurants = MOCK_MAP_RESTAURANTS
+  const restaurants = MOCK_MAP_RESTAURANTS;
 
   return (
     <div
@@ -64,17 +64,28 @@ export function MobileMapPage() {
         </div>
 
         {/* 선택된 가게 미니 카드 */}
-        {selected && <MapSelectedMiniCard restaurant={selected} onClose={() => setSelected(null)} />}
+        {selected && (
+          <MapSelectedMiniCard restaurant={selected} onClose={() => setSelected(null)} />
+        )}
       </div>
     </div>
-  )
+  );
 }
 
 function LocationIcon() {
   return (
-    <svg width="18" height="18" viewBox="0 0 18 18" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" aria-hidden>
+    <svg
+      width="18"
+      height="18"
+      viewBox="0 0 18 18"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth="1.8"
+      strokeLinecap="round"
+      aria-hidden
+    >
       <circle cx="9" cy="9" r="3" />
       <path d="M9 1v2M9 15v2M1 9h2M15 9h2" />
     </svg>
-  )
+  );
 }
