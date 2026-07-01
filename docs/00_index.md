@@ -30,7 +30,7 @@
 | 프론트/백 | React(Next.js)+TS / Spring Boot 4.0·Java 21, 순수 REST API |
 | 실시간성 | 30초 폴링 |
 | 디자인 톤 | 화이트 베이스, 먹/도장 빨강, Noto Serif KR (04 v0.2 기준) |
-| 호스팅 | **백엔드 Oracle Cloud Free Tier** (VM + Nginx) / 프론트 Vercel (미정) |
+| 호스팅 | **백엔드 AWS EC2** (t2.micro + Nginx) / 프론트 Vercel (미정) |
 | 일정 | 한 달, 하루 1~2시간 |
 | 수익 모델 | 없음 (개인 프로젝트, 무료) |
 
@@ -99,8 +99,8 @@
 > 상세 체크리스트는 `07_roadmap.md` 참조.
 
 - [ ] **[M2] 서버 배포** — `06_deployment_guide.md` 순서대로 진행
-  - 1순위: Oracle Cloud 계정 생성 + VM 프로비저닝
-  - 2순위: 도메인 등록 (katsurank.kr) + CloudFlare 연결
+  - 1순위: AWS EC2 인스턴스 생성 + 프로비저닝
+  - 2순위: 도메인 등록 (katsurank.kr) + Cloudflare 연결
 - [ ] **[M2] GitHub Actions** 자동 배포 파이프라인 검증 (`.github/workflows/deploy.yml` 작성 완료)
 - [ ] `07_roadmap.md`에서 완료된 항목 체크
 

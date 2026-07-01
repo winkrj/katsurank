@@ -42,23 +42,23 @@
 ## M2. 서버 배포 (백엔드) 🔄
 
 ### 사전 준비
-- [ ] Oracle Cloud 계정 생성
-- [ ] CloudFlare 계정 생성
+- [ ] AWS 계정 생성
+- [ ] Cloudflare 계정 생성
 - [ ] 로컬 SSH 키 확인/생성
 
 ### 1단계 — 도메인
 - [ ] `katsurank.kr` 도메인 구매 (Gabia)
-- [ ] CloudFlare에 도메인 추가
-- [ ] Gabia 네임서버 → CloudFlare로 변경
-- [ ] CloudFlare Active 확인
+- [ ] Cloudflare에 도메인 추가
+- [ ] Gabia 네임서버 → Cloudflare로 변경
+- [ ] Cloudflare Active 확인
 
 ### 2단계 — 서버 프로비저닝
-- [ ] Oracle Cloud VM 생성 (Ampere A1, Ubuntu 24.04)
-- [ ] OCI Security List: 80, 443 포트 허용
+- [ ] AWS EC2 인스턴스 생성 (t2.micro, Ubuntu 24.04)
+- [ ] Security Group: 22/80/443 포트 허용
+- [ ] Elastic IP 할당 + 연결
 - [ ] SSH 접속 확인
 
 ### 3단계 — 서버 초기 설정
-- [ ] iptables 80, 443 허용 (Oracle Cloud 특이사항!)
 - [ ] Java 21 설치
 - [ ] PostgreSQL 16 설치
 - [ ] DB + 유저 생성
@@ -77,11 +77,12 @@
 - [ ] deploy.yml push → Actions 자동 실행 확인
 
 ### 6단계 — HTTPS + 도메인
-- [ ] DNS A 레코드 추가 (DNS only 상태로)
+- [ ] DNS A 레코드 추가 (Elastic IP, DNS only 상태로)
 - [ ] DNS 전파 확인 (dig katsurank.kr)
-- [ ] Nginx 설정 파일 작성
+- [ ] API 문서(Swagger UI) Basic Auth 계정 생성 (htpasswd)
+- [ ] Nginx 설정 파일 작성 (Swagger UI/OpenAPI 경로 포함)
 - [ ] Certbot SSL 인증서 발급
-- [ ] CloudFlare Proxy 활성화 (주황 구름)
+- [ ] Cloudflare Proxy 활성화 (주황 구름)
 
 ### 7단계 — 카카오 연동
 - [ ] 카카오 디벨로퍼스: 사이트 도메인 추가
@@ -146,3 +147,4 @@
 ## 변경 이력
 
 - **v0.1 (2026-06-28)**: 최초 작성. M1 완료 기록, M2 체크리스트 상세화.
+- **v0.2 (2026-07-01)**: M2 인프라 변경 — Oracle Cloud → AWS EC2, CloudFlare 표기 통일. 프론트 전달용 API 문서(springdoc-openapi/Swagger UI) 도입, Nginx Basic Auth로 문서 경로 보호.
