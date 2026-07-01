@@ -24,6 +24,31 @@ declare namespace kakao.maps {
   interface MapOptions {
     center: LatLng
     level?: number
+    draggable?: boolean
+    scrollwheel?: boolean
+    disableDoubleClick?: boolean
+    disableDoubleClickZoom?: boolean
+  }
+
+  class Marker {
+    constructor(options: MarkerOptions)
+    setMap(map: Map | null): void
+  }
+
+  interface MarkerOptions {
+    position: LatLng
+    map?: Map
+  }
+
+  class InfoWindow {
+    constructor(options: InfoWindowOptions)
+    open(map: Map, marker: Marker): void
+    close(): void
+  }
+
+  interface InfoWindowOptions {
+    content: HTMLElement | string
+    removable?: boolean
   }
 
   interface CustomOverlayOptions {

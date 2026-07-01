@@ -11,7 +11,6 @@ import { MapSelectedCard } from '../MapSelectedCard'
 
 export function DesktopMapPage() {
   const [activeFilter, setActiveFilter] = useState<MapFilterKey>('all')
-  const [searchInMap, setSearchInMap] = useState(false)
   const [showList, setShowList] = useState(false)
   const [selected, setSelected] = useState<MapRestaurant | null>(null)
   const isLoggedIn = useAuthStore((s) => s.isLoggedIn())
@@ -62,16 +61,6 @@ export function DesktopMapPage() {
         <div className="absolute inset-x-0 top-0 z-10 flex items-center gap-3 bg-white/90 px-4 py-3 shadow-sm backdrop-blur-sm">
           <MapFilterTabs active={activeFilter} onChange={setActiveFilter} className="flex-1" />
 
-          <label className="flex shrink-0 cursor-pointer items-center gap-2 text-[13px] font-semibold text-[#2A1A12]">
-            <input
-              type="checkbox"
-              checked={searchInMap}
-              onChange={(e) => setSearchInMap(e.target.checked)}
-              className="size-4 accent-[#FFC533]"
-            />
-            현재 지도에서 검색
-          </label>
-
           <button
             type="button"
             onClick={() => setShowList((v) => !v)}
@@ -89,31 +78,6 @@ export function DesktopMapPage() {
           className="h-full"
         />
 
-        {/* 줌 컨트롤 */}
-        <div className="absolute bottom-[160px] right-4 z-10 flex flex-col overflow-hidden rounded-lg border border-[#E8D9BF] bg-white shadow-md">
-          <button
-            type="button"
-            aria-label="확대"
-            className="flex size-9 items-center justify-center border-b border-[#E8D9BF] text-[20px] font-light text-[#2A1A12] transition hover:bg-[#FFF4D8]"
-          >
-            +
-          </button>
-          <button
-            type="button"
-            aria-label="축소"
-            className="flex size-9 items-center justify-center border-b border-[#E8D9BF] text-[20px] font-light text-[#2A1A12] transition hover:bg-[#FFF4D8]"
-          >
-            −
-          </button>
-          <button
-            type="button"
-            aria-label="현재 위치"
-            className="flex size-9 items-center justify-center text-[#2A1A12] transition hover:bg-[#FFF4D8]"
-          >
-            <LocationIcon />
-          </button>
-        </div>
-
         {/* 선택된 가게 카드 */}
         {selected && <MapSelectedCard restaurant={selected} onClose={() => setSelected(null)} />}
       </div>
@@ -121,11 +85,3 @@ export function DesktopMapPage() {
   )
 }
 
-function LocationIcon() {
-  return (
-    <svg width="18" height="18" viewBox="0 0 18 18" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" aria-hidden>
-      <circle cx="9" cy="9" r="3" />
-      <path d="M9 1v2M9 15v2M1 9h2M15 9h2" />
-    </svg>
-  )
-}
