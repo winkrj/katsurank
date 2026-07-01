@@ -1,7 +1,7 @@
 # 데이터 모델 & 기술 결정
 
-- **버전**: v0.2
-- **작성일**: 2026-06-04
+- **버전**: v0.3
+- **작성일**: 2026-07-01
 - **상태**: 백엔드 아키텍처 방향 확정 (REST API 전환, 단일 서울 랭킹, 식별·상태 정책 확정)
 
 > v0.1 대비 주요 변경: 프론트가 React(Next.js) + 순수 REST API로 전환됨에 따라 인증·화면·API 구조가 바뀌었고, "서울 단일 랭킹" 확정으로 뷰포트 기반 랭킹 설계가 폐기됨. Restaurant 상태 모델·폐업/이전 정책이 추가됨. 자세한 변경은 맨 아래 변경 이력 참조.
@@ -161,20 +161,29 @@ INDEX idx_restaurant_current (restaurant_id, is_current)
 
 ---
 
-## 5. API 엔드포인트 (초안)
+## 5. API 엔드포인트
 
 > 모든 API에 버전 접두어 `/api/v1` 적용 (지금 한 줄 비용, 나중에 전부 수정 방지).
 
+> **아래 표는 개요용이며 최신 상태가 아닐 수 있다.** 요청/응답 스키마를 포함한 정확한 최신 스펙은
+> 배포된 Swagger UI를 참고한다 — `https://katsurank.kr/swagger-ui.html` (Basic Auth 필요,
+> 자격증명은 별도 채널로 전달). 로컬은 `http://localhost:8080/swagger-ui.html`.
+
 | Method | Path | 설명 |
 |---|---|---|
-| GET | `/api/v1/ranking` | **서울 단일 랭킹** 조회 (vote_count DESC, status=ACTIVE) |
+| GET | `/api/v1/ranking` | **서울 단일 랭킹** 목록 조회 (vote_count DESC, status=ACTIVE, 페이지네이션) |
 | GET | `/api/v1/ranking/top` | 현재 서울 1위 (왕좌) 단건 조회 |
-| GET | `/api/v1/restaurants` | 지도 핀용 가게 목록 (좌표 포함, status=ACTIVE) |
-| GET | `/api/v1/restaurants/{id}` | 가게 상세 |
-| POST | `/api/v1/restaurants` | 가게 추가 (카카오맵 place_id 기반) |
-| GET | `/api/v1/restaurants/search` | 자체 DB 이름 검색 |
+| GET | `/api/v1/ranking/map-pins` | 지도 핀용 가게 좌표 목록 (status=ACTIVE) |
+| GET | `/api/v1/restaurants/{id}` | 가게 상세 (status 무관, 폐업/이전된 가게도 조회 가능) |
+| POST | `/api/v1/restaurants` | 가게 등록 (카카오 place_id 기반, 로그인 필요) |
+| GET | `/api/v1/restaurants/search` | 자체 DB 이름 검색 (status=ACTIVE만) |
+| PATCH | `/api/v1/restaurants/{id}/close` | 가게 폐업 처리 (박제, 로그인 필요) |
+| PATCH | `/api/v1/restaurants/{id}/relocate` | 가게 이전 처리 (표 승계, 로그인 필요) |
 | GET | `/api/v1/kakao-places/search` | 카카오 로컬 API 프록시 (가게 추가용) |
-| POST | `/api/v1/votes` | 투표 / 표 이동 |
+| POST | `/api/v1/votes` | 투표 / 표 이동 (로그인 필요) |
+| GET | `/api/v1/auth/me` | 로그인 상태 확인 |
+| GET | `/api/v1/auth/csrf` | CSRF 토큰 발급 (SPA 부트스트랩용) |
+| POST | `/api/v1/auth/logout` | 로그아웃 |
 | GET | `/api/v1/me` | 내 정보 + 현재 1순위 |
 | GET | `/api/v1/me/vote-history` | 표 이동 히스토리 |
 
@@ -245,6 +254,7 @@ INDEX idx_restaurant_current (restaurant_id, is_current)
 
 - **v0.1 (2026-05-11)**: 초안 작성.
 - **v0.2 (2026-06-04)**: 백엔드 아키텍처 방향 확정 반영.
+- **v0.3 (2026-07-01)**: 5절 API 엔드포인트 표를 실제 코드에 맞게 정정(폐업/이전·auth 엔드포인트 추가). 정확한 스펙은 Swagger UI(springdoc-openapi)를 SSOT로 안내.
   - 프론트 React(Next.js) + 순수 REST API 전환 (Thymeleaf+HTMX 폐기).
   - 인증을 외부저장소 세션으로 확정(JWT 미채택), SPA용 OAuth 콜백·CORS·CSRF 정책 추가.
   - **랭킹을 서울 단일 랭킹으로 확정**, 뷰포트(`bounds`) 기반 랭킹 폐기. 랭킹/핀 엔드포인트 분리.

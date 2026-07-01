@@ -34,6 +34,7 @@ dependencies {
 	implementation("org.flywaydb:flyway-database-postgresql")
 	implementation("net.logstash.logback:logstash-logback-encoder:8.0")
 	implementation("io.github.openfeign.querydsl:querydsl-jpa:$querydslVersion")
+	implementation("org.springdoc:springdoc-openapi-starter-webmvc-ui:3.0.3")
 	compileOnly("org.projectlombok:lombok")
 	developmentOnly("org.springframework.boot:spring-boot-devtools")
 	runtimeOnly("org.postgresql:postgresql")

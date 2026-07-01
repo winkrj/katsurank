@@ -2,6 +2,12 @@ package com.katsurank.vote;
 
 import com.katsurank.auth.AuthPrincipal;
 import com.katsurank.auth.LoginUser;
+import com.katsurank.common.web.ApiError;
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.media.Content;
+import io.swagger.v3.oas.annotations.media.Schema;
+import io.swagger.v3.oas.annotations.responses.ApiResponse;
+import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
@@ -14,6 +20,7 @@ import org.springframework.web.bind.annotation.RestController;
  */
 @RestController
 @RequestMapping("/api/v1/votes")
+@Tag(name = "투표", description = "1인 1표 투표 / 표 이동")
 public class VoteController {
 
     private final VoteService voteService;
@@ -23,6 +30,15 @@ public class VoteController {
     }
 
     @PostMapping
+    @Operation(summary = "투표 / 표 이동",
+            description = "로그인 유저가 restaurantId에 표를 던진다. 이미 다른 가게에 투표한 상태면 표가 이동한다. "
+                    + "로그인 세션과 CSRF 헤더(X-XSRF-TOKEN)가 필요하다.")
+    @ApiResponse(responseCode = "200", description = "투표(이동) 성공")
+    @ApiResponse(responseCode = "401", description = "로그인 필요")
+    @ApiResponse(responseCode = "404", description = "존재하지 않는 restaurantId",
+            content = @Content(schema = @Schema(implementation = ApiError.class)))
+    @ApiResponse(responseCode = "409", description = "ACTIVE 가 아닌 가게에 투표 시도(RESTAURANT_NOT_VOTABLE) 또는 동시성 경합 재시도 초과(VOTE_CONFLICT)",
+            content = @Content(schema = @Schema(implementation = ApiError.class)))
     public VoteResponse vote(@Valid @RequestBody VoteRequest request, @LoginUser AuthPrincipal principal) {
         return voteService.vote(principal.userId(), request.restaurantId());
     }

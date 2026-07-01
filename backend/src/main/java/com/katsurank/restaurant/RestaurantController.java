@@ -2,6 +2,12 @@ package com.katsurank.restaurant;
 
 import com.katsurank.auth.AuthPrincipal;
 import com.katsurank.auth.LoginUser;
+import com.katsurank.common.web.ApiError;
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.media.Content;
+import io.swagger.v3.oas.annotations.media.Schema;
+import io.swagger.v3.oas.annotations.responses.ApiResponse;
+import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -21,6 +27,7 @@ import java.util.List;
  */
 @RestController
 @RequestMapping("/api/v1/restaurants")
+@Tag(name = "가게", description = "가게 등록·조회·검색·폐업/이전")
 public class RestaurantController {
 
     private final RestaurantService restaurantService;
@@ -30,6 +37,15 @@ public class RestaurantController {
     }
 
     @PostMapping
+    @Operation(summary = "가게 등록",
+            description = "카카오 로컬 검색(GET /api/v1/kakao-places/search) 결과를 그대로 body로 보내 등록한다. "
+                    + "돈까스/돈가스/경양식 카테고리만 허용되며, 등록자는 body가 아니라 로그인 세션에서 식별한다.")
+    @ApiResponse(responseCode = "201", description = "등록 성공")
+    @ApiResponse(responseCode = "401", description = "로그인 필요")
+    @ApiResponse(responseCode = "409", description = "이미 등록된 kakaoPlaceId (DUPLICATE_PLACE)",
+            content = @Content(schema = @Schema(implementation = ApiError.class)))
+    @ApiResponse(responseCode = "422", description = "허용되지 않는 카테고리 (CATEGORY_NOT_ALLOWED)",
+            content = @Content(schema = @Schema(implementation = ApiError.class)))
     public ResponseEntity<RestaurantResponse> register(@Valid @RequestBody RestaurantRegisterRequest request,
                                                        @LoginUser AuthPrincipal principal) {
         RestaurantResponse response = restaurantService.register(request, principal.userId());
@@ -37,11 +53,17 @@ public class RestaurantController {
     }
 
     @GetMapping("/{id}")
+    @Operation(summary = "가게 상세 조회", description = "인증 불필요. status와 무관하게 조회 가능(폐업/이전된 가게도 조회됨).")
+    @ApiResponse(responseCode = "404", description = "존재하지 않는 가게 (RESTAURANT_NOT_FOUND)",
+            content = @Content(schema = @Schema(implementation = ApiError.class)))
     public RestaurantResponse get(@PathVariable Long id) {
         return restaurantService.getById(id);
     }
 
     @GetMapping("/search")
+    @Operation(summary = "가게 이름 검색", description = "자체 DB에서 이름으로 검색. status=ACTIVE인 가게만 반환한다. q는 필수.")
+    @ApiResponse(responseCode = "400", description = "검색어(q) 누락 (MISSING_QUERY)",
+            content = @Content(schema = @Schema(implementation = ApiError.class)))
     public List<RestaurantSearchResponse> search(
             @RequestParam(required = false) String q,
             @RequestParam(defaultValue = "20") int limit) {
@@ -52,11 +74,26 @@ public class RestaurantController {
     }
 
     @PatchMapping("/{id}/close")
+    @Operation(summary = "가게 폐업 처리",
+            description = "가게를 폐업(박제) 상태로 전환한다. 표·히스토리는 보존되고 랭킹에서만 제외된다. hard delete는 하지 않는다.")
+    @ApiResponse(responseCode = "401", description = "로그인 필요")
+    @ApiResponse(responseCode = "404", description = "존재하지 않는 가게 (RESTAURANT_NOT_FOUND)",
+            content = @Content(schema = @Schema(implementation = ApiError.class)))
+    @ApiResponse(responseCode = "409", description = "이미 폐업/이전 처리됨 (ALREADY_CLOSED)",
+            content = @Content(schema = @Schema(implementation = ApiError.class)))
     public CloseResponse close(@PathVariable Long id) {
         return restaurantService.close(id);
     }
 
     @PatchMapping("/{id}/relocate")
+    @Operation(summary = "가게 이전 처리",
+            description = "기존 가게의 표를 newKakaoPlaceId로 이미 등록돼 있는 새 레코드로 옮긴다(승계). "
+                    + "새 레코드는 미리 POST /api/v1/restaurants로 등록돼 있어야 한다.")
+    @ApiResponse(responseCode = "401", description = "로그인 필요")
+    @ApiResponse(responseCode = "404", description = "이전 대상 가게가 등록돼 있지 않음 (NEW_PLACE_NOT_FOUND)",
+            content = @Content(schema = @Schema(implementation = ApiError.class)))
+    @ApiResponse(responseCode = "409", description = "이미 폐업/이전 처리됨 (ALREADY_CLOSED)",
+            content = @Content(schema = @Schema(implementation = ApiError.class)))
     public RelocateResponse relocate(@PathVariable Long id,
                                      @Valid @RequestBody RelocateRequest request) {
         return restaurantService.relocate(id, request);

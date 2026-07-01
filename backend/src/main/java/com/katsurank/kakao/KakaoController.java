@@ -1,5 +1,7 @@
 package com.katsurank.kakao;
 
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.constraints.NotBlank;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -16,6 +18,7 @@ import java.util.List;
 @RestController
 @RequestMapping("/api/v1/kakao-places")
 @Validated
+@Tag(name = "카카오 장소 검색", description = "가게 등록 전 카카오 로컬 API로 장소를 검색하는 프록시")
 public class KakaoController {
 
     private final KakaoLocalClient kakaoLocalClient;
@@ -25,6 +28,9 @@ public class KakaoController {
     }
 
     @GetMapping("/search")
+    @Operation(summary = "카카오 장소 키워드 검색",
+            description = "카카오 로컬 API를 그대로 프록시한다. 인증 불필요. 결과의 kakaoPlaceId를 "
+                    + "POST /api/v1/restaurants 요청에 그대로 넣어 등록한다.")
     public List<KakaoPlace> search(@RequestParam @NotBlank String query) {
         return kakaoLocalClient.searchByKeyword(query.trim());
     }

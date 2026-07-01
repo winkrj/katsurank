@@ -1,5 +1,7 @@
 package com.katsurank.restaurant;
 
+import io.swagger.v3.oas.annotations.media.Schema;
+
 /**
  * 가게 상태. hard delete 금지 — 폐업/이전도 상태로만 관리한다.
  *
@@ -11,6 +13,8 @@ package com.katsurank.restaurant;
  *   <li>{@link #REJECTED} — 카테고리 미달 등으로 거부.</li>
  * </ul>
  */
+@Schema(description = "가게 상태. ACTIVE=정상(랭킹 대상), CLOSED=폐업(박제, 랭킹 제외), "
+        + "RELOCATED=이전(승계, relocatedToId로 새 레코드 연결), PENDING=심사 대기(MVP 미사용), REJECTED=거부")
 public enum RestaurantStatus {
     ACTIVE,
     CLOSED,
