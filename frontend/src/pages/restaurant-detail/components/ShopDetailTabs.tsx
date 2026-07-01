@@ -1,7 +1,6 @@
 import { useState } from 'react'
 import type { RestaurantDetail } from '../types/restaurantDetail'
 import { ShopExtraInfoSection } from './ShopExtraInfoSection'
-import { ShopMenuSection } from './ShopMenuSection'
 
 type ShopDetailTabsProps = {
   restaurant: RestaurantDetail
@@ -31,17 +30,7 @@ export function ShopDetailTabs({ restaurant, layout = 'desktop' }: ShopDetailTab
 
       <div className={isMobile ? 'pt-6' : 'grid grid-cols-2 gap-10 pt-8'}>
         {activeTab === 'info' ? (
-          isMobile ? (
-            <div className="space-y-8">
-              <ShopMenuSection menuItems={restaurant.menuItems} />
-              <ShopExtraInfoSection restaurant={restaurant} />
-            </div>
-          ) : (
-            <>
-              <ShopMenuSection menuItems={restaurant.menuItems} />
-              <ShopExtraInfoSection restaurant={restaurant} />
-            </>
-          )
+          <ShopExtraInfoSection restaurant={restaurant} />
         ) : (
           <div className={isMobile ? '' : 'col-span-2'}>
             <p className="py-10 text-center text-[14px] text-[#8A7A6A]">

@@ -31,11 +31,6 @@ const MOCK_RESTAURANT: RestaurantDetail = {
   breakTime: '브레이크타임 15:00 - 17:00',
   phone: '02-123-4567',
   kakaoMapUrl: 'https://map.kakao.com',
-  menuItems: [
-    { name: '안심카츠', price: 13000 },
-    { name: '등심카츠', price: 13000 },
-    { name: '특로스카츠', price: 15000 },
-  ],
   closedDays: '매주 월요일',
   parking: '가능',
   reservation: '불가능',

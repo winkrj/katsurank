@@ -71,10 +71,19 @@ export function ShopInfoSection({ restaurant }: ShopInfoSectionProps) {
         rel="noreferrer"
         className="inline-flex h-11 w-full max-w-sm items-center justify-center gap-2 rounded-lg border border-[#E8D9BF] bg-white text-[14px] font-bold text-[#2A1A12] transition hover:border-[#D88A24] hover:bg-[#FFF4D8]"
       >
-        <img src="/images/kakao_icon.png" alt="" className="size-5" aria-hidden />
+        <MapIcon />
         카카오맵으로 보기
       </a>
     </section>
+  )
+}
+
+function MapIcon() {
+  return (
+    <svg width="18" height="18" viewBox="0 0 18 18" fill="none" aria-hidden>
+      <path d="M1 3.5l5-2 6 2 5-2V14.5l-5 2-6-2-5 2V3.5Z" stroke="currentColor" strokeWidth="1.4" strokeLinejoin="round" />
+      <path d="M6 1.5v13M12 3.5v13" stroke="currentColor" strokeWidth="1.4" strokeLinecap="round" />
+    </svg>
   )
 }
 

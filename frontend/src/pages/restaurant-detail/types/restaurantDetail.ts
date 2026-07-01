@@ -3,11 +3,6 @@ export type VoteTrendPoint = {
   value: number
 }
 
-export type MenuItem = {
-  name: string
-  price: number
-}
-
 export type RestaurantDetail = {
   id: number
   name: string
@@ -26,7 +21,6 @@ export type RestaurantDetail = {
   breakTime: string
   phone: string
   kakaoMapUrl: string
-  menuItems: MenuItem[]
   closedDays: string
   parking: string
   reservation: string
