@@ -78,7 +78,7 @@
 
 ### 6단계 — HTTPS + 도메인
 - [ ] DNS A 레코드 추가 (Elastic IP, DNS only 상태로)
-- [ ] DNS 전파 확인 (dig katsurank.kr)
+- [ ] DNS 전파 확인 (dig api.katsurank.kr)
 - [ ] API 문서(Swagger UI) Basic Auth 계정 생성 (htpasswd)
 - [ ] Nginx 설정 파일 작성 (Swagger UI/OpenAPI 경로 포함)
 - [ ] Certbot SSL 인증서 발급
@@ -90,8 +90,8 @@
 - [ ] 카카오 로그인 종단 간 테스트
 
 ### 완료 확인
-- [ ] `curl https://katsurank.kr/actuator/health` → `{"status":"UP"}`
-- [ ] `curl https://katsurank.kr/api/v1/restaurants/ranking` → 정상 응답
+- [ ] `curl https://api.katsurank.kr/actuator/health` → `{"status":"UP"}`
+- [ ] `curl https://api.katsurank.kr/api/v1/ranking` → 정상 응답
 
 ---
 

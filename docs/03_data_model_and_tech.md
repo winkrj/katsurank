@@ -166,7 +166,7 @@ INDEX idx_restaurant_current (restaurant_id, is_current)
 > 모든 API에 버전 접두어 `/api/v1` 적용 (지금 한 줄 비용, 나중에 전부 수정 방지).
 
 > **아래 표는 개요용이며 최신 상태가 아닐 수 있다.** 요청/응답 스키마를 포함한 정확한 최신 스펙은
-> 배포된 Swagger UI를 참고한다 — `https://katsurank.kr/swagger-ui.html` (Basic Auth 필요,
+> 배포된 Swagger UI를 참고한다 — `https://api.katsurank.kr/swagger-ui.html` (Basic Auth 필요,
 > 자격증명은 별도 채널로 전달). 로컬은 `http://localhost:8080/swagger-ui.html`.
 
 | Method | Path | 설명 |

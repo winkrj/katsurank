@@ -374,7 +374,7 @@ sudo nano /etc/nginx/sites-available/katsurank
 ```nginx
 server {
     listen 80;
-    server_name katsurank.kr www.katsurank.kr;
+    server_name api.katsurank.kr;
 
     location /.well-known/acme-challenge/ {
         root /var/www/html;
@@ -387,10 +387,10 @@ server {
 
 server {
     listen 443 ssl;
-    server_name katsurank.kr www.katsurank.kr;
+    server_name api.katsurank.kr;
 
-    # ssl_certificate /etc/letsencrypt/live/katsurank.kr/fullchain.pem;
-    # ssl_certificate_key /etc/letsencrypt/live/katsurank.kr/privkey.pem;
+    # ssl_certificate /etc/letsencrypt/live/api.katsurank.kr/fullchain.pem;
+    # ssl_certificate_key /etc/letsencrypt/live/api.katsurank.kr/privkey.pem;
 
     add_header X-Frame-Options "SAMEORIGIN";
     add_header X-Content-Type-Options "nosniff";
@@ -443,23 +443,24 @@ sudo systemctl reload nginx
 
 ### 8-1. DNS A 레코드 추가 (Cloudflare)
 
+백엔드는 `api.katsurank.kr` 서브도메인을 쓴다 (프론트가 `katsurank.kr` 루트/www를 쓸 예정이므로 분리).
+
 Cloudflare 대시보드 → DNS → Records → Add record:
 
 | Type | Name | IPv4 address | Proxy status |
 |---|---|---|---|
-| A | `katsurank.kr` | Elastic IP | **DNS only** (회색 구름) |
-| A | `www` | Elastic IP | **DNS only** (회색 구름) |
+| A | `api` | Elastic IP | **DNS only** (회색 구름) |
 
 DNS 전파 확인:
 ```bash
-dig katsurank.kr +short
+dig api.katsurank.kr +short
 # Elastic IP가 뜨면 OK
 ```
 
 ### 8-2. Certbot으로 SSL 인증서 발급
 
 ```bash
-sudo certbot --nginx -d katsurank.kr -d www.katsurank.kr
+sudo certbot --nginx -d api.katsurank.kr
 ```
 
 ### 8-3. Cloudflare Proxy 활성화
@@ -472,9 +473,9 @@ SSL 발급 완료 후 DNS A 레코드를 **Proxied** (주황 구름)으로 변�
 
 [developers.kakao.com](https://developers.kakao.com) → 내 애플리케이션 → 카츠랭 앱
 
-- **플랫폼 → 사이트 도메인**: `https://katsurank.kr` 추가
-- **카카오 로그인 → Redirect URI**: `https://katsurank.kr/login/oauth2/code/kakao` 추가
-- **개인정보 처리방침 URL**: `https://katsurank.kr/privacy` (배포 후 추가)
+- **플랫폼 → 사이트 도메인**: `https://katsurank.kr` 추가 (프론트 도메인 — 로그인 버튼이 뜨는 화면)
+- **카카오 로그인 → Redirect URI**: `https://api.katsurank.kr/login/oauth2/code/kakao` 추가 (콜백은 백엔드가 처리하므로 백엔드 도메인)
+- **개인정보 처리방침 URL**: `https://katsurank.kr/privacy` (배포 후 추가, 프론트 페이지)
 
 ---
 
@@ -489,10 +490,10 @@ git push origin main
 GitHub → Actions 탭에서 Build JAR → Upload JAR → Restart service → Health check 단계 확인.
 
 ```bash
-curl https://katsurank.kr/actuator/health
+curl https://api.katsurank.kr/actuator/health
 # {"status":"UP"}
 
-curl https://katsurank.kr/api/v1/restaurants/ranking
+curl https://api.katsurank.kr/api/v1/ranking
 ```
 
 ---
