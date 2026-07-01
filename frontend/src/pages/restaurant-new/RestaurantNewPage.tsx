@@ -33,6 +33,8 @@ export function RestaurantNewPage() {
             <RegisterStepSearch
               query={flow.query}
               results={flow.hasSearched ? flow.results : []}
+              isSearching={flow.isSearching}
+              searchError={flow.searchError}
               onQueryChange={flow.setQuery}
               onSearch={flow.handleSearch}
               onSelect={flow.handleSelectPlace}

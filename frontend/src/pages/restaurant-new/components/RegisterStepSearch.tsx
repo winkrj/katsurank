@@ -5,6 +5,8 @@ import type { KakaoPlace } from '../types/registerFlow'
 type RegisterStepSearchProps = {
   query: string
   results: KakaoPlace[]
+  isSearching?: boolean
+  searchError?: string | null
   onQueryChange: (value: string) => void
   onSearch: (query: string) => void
   onSelect: (place: KakaoPlace) => void
@@ -13,6 +15,8 @@ type RegisterStepSearchProps = {
 export function RegisterStepSearch({
   query,
   results,
+  isSearching = false,
+  searchError = null,
   onQueryChange,
   onSearch,
   onSelect,
@@ -27,7 +31,7 @@ export function RegisterStepSearch({
       <div>
         <h2 className="text-[17px] font-black text-[#2A1A12]">Step 1. 가게 검색</h2>
         <p className="mt-1 text-[13px] text-[#8A7A6A]">
-          카카오맵에서 가게를 검색한 뒤 목록에서 선택해 주세요.
+          현재 <span className="font-bold text-[#D88A24]">서울 지역 돈까스 가게</span>만 등록할 수 있어요.
         </p>
       </div>
 
@@ -48,7 +52,17 @@ export function RegisterStepSearch({
         </button>
       </form>
 
-      <KakaoPlaceResultList places={results} onSelect={onSelect} />
+      {isSearching && (
+        <p className="text-center text-[13px] text-[#8A7A6A]">검색 중...</p>
+      )}
+
+      {searchError && (
+        <p className="rounded-lg bg-red-50 px-4 py-3 text-[13px] text-red-600">{searchError}</p>
+      )}
+
+      {!isSearching && !searchError && (
+        <KakaoPlaceResultList places={results} onSelect={onSelect} />
+      )}
 
       <p className="text-[12px] leading-relaxed text-[#8A7A6A]">
         가게 정보는 카카오맵 API를 통해 제공됩니다. 등록 후 다른 사용자에게 공개됩니다.

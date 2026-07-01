@@ -1,40 +1,85 @@
+import { useEffect, useRef } from 'react'
 import { Button } from '../../../shared/ui/Button'
 import type { KakaoPlace } from '../types/registerFlow'
+
+function loadKakaoSdk(appkey: string): Promise<void> {
+  return new Promise((resolve, reject) => {
+    if (window.kakao?.maps) { resolve(); return }
+    const existing = document.querySelector('script[src^="//dapi.kakao.com/v2/maps/sdk.js"]')
+    if (existing) {
+      existing.addEventListener('load', () => window.kakao.maps.load(resolve))
+      existing.addEventListener('error', reject)
+      return
+    }
+    const script = document.createElement('script')
+    script.src = `//dapi.kakao.com/v2/maps/sdk.js?appkey=${appkey}&autoload=false`
+    script.onload = () => window.kakao.maps.load(resolve)
+    script.onerror = reject
+    document.head.appendChild(script)
+  })
+}
 
 type RegisterMapPreviewProps = {
   place: KakaoPlace
 }
 
-export function RegisterMapPreview({ place }: RegisterMapPreviewProps) {
-  return (
-    <div className="relative overflow-hidden rounded-xl border border-[#E8D9BF] bg-[#E8E4D8]">
-      <div className="aspect-[16/10] w-full bg-[linear-gradient(180deg,#E8E4D8_0%,#D4CFC0_100%)]">
-        <div className="absolute inset-0 flex items-center justify-center">
-          <div className="relative">
-            <span className="absolute -top-8 left-1/2 -translate-x-1/2 whitespace-nowrap rounded-md bg-[#2A1A12] px-2 py-1 text-[11px] font-bold text-white">
-              {place.name}
-            </span>
-            <MapPinIcon />
-          </div>
+function RegisterMapPreview({ place }: RegisterMapPreviewProps) {
+  const containerRef = useRef<HTMLDivElement>(null)
+
+  useEffect(() => {
+    const appkey = import.meta.env.VITE_KAKAO_MAP_APP_KEY as string | undefined
+    if (!containerRef.current || !appkey) return
+
+    let cancelled = false
+
+    loadKakaoSdk(appkey).then(() => {
+      if (cancelled || !containerRef.current) return
+
+      const { maps } = window.kakao
+      const center = new maps.LatLng(place.latitude, place.longitude)
+      const map = new maps.Map(containerRef.current, {
+        center,
+        level: 4,
+        draggable: false,
+        scrollwheel: false,
+        disableDoubleClick: true,
+        disableDoubleClickZoom: true,
+      })
+
+      // 커스텀 오버레이
+      const content = document.createElement('div')
+      content.innerHTML = `
+        <div style="display:flex;flex-direction:column;align-items:center;gap:4px">
+          <div style="
+            background:#ffffff;
+            color:#2A1A12;
+            font-size:13px;
+            font-weight:900;
+            padding:5px 12px;
+            border-radius:999px;
+            white-space:nowrap;
+            box-shadow:0 2px 8px rgba(0,0,0,0.15);
+            border:2px solid #ada9a0;
+          ">${place.name}</div>
+          <svg width="14" height="18" viewBox="0 0 14 18" fill="none" xmlns="http://www.w3.org/2000/svg">
+            <path d="M7 0C3.13 0 0 3.13 0 7c0 5.25 7 11 7 11s7-5.75 7-11c0-3.87-3.13-7-7-7Z" fill="#ffffff" stroke="#ada9a0" stroke-width="1.2"/>
+            <circle cx="7" cy="7" r="2.5" fill="#2A1A12"/>
+          </svg>
         </div>
-      </div>
+      `
+      new maps.CustomOverlay({ position: center, content, yAnchor: 1 }).setMap(map)
+    })
+
+    return () => { cancelled = true }
+  }, [place.latitude, place.longitude, place.name])
+
+  return (
+    <div className="overflow-hidden rounded-xl border border-[#E8D9BF]">
+      <div ref={containerRef} className="aspect-[16/9] w-full bg-[#E8E4D8]" />
       <p className="border-t border-[#E8D9BF] bg-white px-3 py-2 text-[11px] text-[#8A7A6A]">
-        지도 미리보기 (카카오맵 SDK 연동 예정) · {place.latitude.toFixed(4)},{' '}
-        {place.longitude.toFixed(4)}
+        📍 {place.roadAddress}
       </p>
     </div>
-  )
-}
-
-function MapPinIcon() {
-  return (
-    <svg width="32" height="40" viewBox="0 0 32 40" fill="none" aria-hidden>
-      <path
-        d="M16 0C9.4 0 4 5.4 4 12c0 9 12 28 12 28s12-19 12-28c0-6.6-5.4-12-12-12Z"
-        fill="#E53935"
-      />
-      <circle cx="16" cy="12" r="5" fill="white" />
-    </svg>
   )
 }
 
@@ -48,8 +93,8 @@ export function RegisterStepLocation({ place, onPrev, onNext }: RegisterStepLoca
   return (
     <section className="space-y-5">
       <div>
-        <h2 className="text-[17px] font-black text-[#2A1A12]">Step 2. 장소 선택</h2>
-        <p className="mt-1 text-[13px] text-[#8A7A6A]">이 장소가 맞나요?</p>
+        <h2 className="text-[17px] font-black text-[#2A1A12]">Step 2. 장소 확인</h2>
+        <p className="mt-1 text-[13px] text-[#8A7A6A]">지도에서 위치를 확인해 주세요.</p>
       </div>
 
       <div className="rounded-xl border border-[#E8D9BF] bg-[#FFFDF4] p-4">
@@ -60,7 +105,7 @@ export function RegisterStepLocation({ place, onPrev, onNext }: RegisterStepLoca
       <RegisterMapPreview place={place} />
 
       <dl className="grid gap-3 text-[13px]">
-        <InfoRow label="전화" value={place.phone} />
+        <InfoRow label="전화" value={place.phone || '정보 없음'} />
         <InfoRow label="카테고리" value={place.category} />
       </dl>
 
