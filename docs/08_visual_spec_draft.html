@@ -1,0 +1,539 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>카츠랭 — 시각 기획서 (초안)</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Noto+Serif+KR:wght@400;500;700&family=Noto+Sans+KR:wght@400;500;700&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --bg:#FAF7F0;
+    --ink:#2C2926;
+    --red:#B82B2B;
+    --sub:#7A7468;
+    --card:#FFFFFF;
+    --border:#E0DBD0;
+    --badge2:#5A544A;
+    --badge3:#8A8478;
+    --badge4:#C0BBB0;
+  }
+  *{box-sizing:border-box;}
+  body{
+    margin:0;
+    background:var(--bg);
+    color:var(--ink);
+    font-family:'Noto Sans KR', sans-serif;
+    line-height:1.6;
+  }
+  h1,h2,h3,.serif{ font-family:'Noto Serif KR', serif; }
+  a{ color:var(--red); }
+
+  header.hero{
+    padding:64px 24px 40px;
+    text-align:center;
+    border-bottom:1px solid var(--border);
+  }
+  header.hero .word{
+    font-size:36px;
+    font-weight:700;
+  }
+  header.hero .word .dot{ color:var(--red); }
+  header.hero .tag{
+    color:var(--sub);
+    font-size:15px;
+    margin-top:8px;
+  }
+  header.hero .meta{
+    margin-top:20px;
+    display:inline-block;
+    font-size:12px;
+    color:var(--sub);
+    border:1px solid var(--border);
+    border-radius:20px;
+    padding:6px 14px;
+    background:var(--card);
+  }
+
+  nav.toc{
+    position:sticky; top:0; z-index:10;
+    background:rgba(250,247,240,0.96);
+    backdrop-filter:blur(4px);
+    border-bottom:1px solid var(--border);
+    padding:10px 24px;
+    display:flex; gap:8px; flex-wrap:wrap; justify-content:center;
+  }
+  nav.toc a{
+    text-decoration:none;
+    color:var(--ink);
+    font-size:13px;
+    padding:6px 12px;
+    border-radius:20px;
+    border:1px solid var(--border);
+    background:var(--card);
+  }
+  nav.toc a:hover{ border-color:var(--red); color:var(--red); }
+
+  main{ max-width:960px; margin:0 auto; padding:8px 24px 120px; }
+  section{ padding:56px 0; border-bottom:1px dashed var(--border); }
+  section:last-of-type{ border-bottom:none; }
+  section h2{
+    font-size:24px;
+    margin-bottom:4px;
+  }
+  section h2 .num{ color:var(--red); margin-right:8px; }
+  section .lead{
+    color:var(--sub);
+    font-size:14px;
+    margin-bottom:28px;
+  }
+
+  .howto{
+    background:var(--card);
+    border:1px solid var(--border);
+    border-radius:8px;
+    padding:20px 24px;
+    font-size:14px;
+  }
+  .howto b{ color:var(--red); }
+
+  .cards{ display:grid; grid-template-columns:repeat(auto-fit,minmax(200px,1fr)); gap:16px; }
+  .card{
+    background:var(--card);
+    border:1px solid var(--border);
+    border-radius:8px;
+    padding:20px;
+  }
+  .card h3{ font-size:15px; margin:0 0 8px; }
+  .card p{ font-size:13px; color:var(--sub); margin:0; }
+
+  table{ width:100%; border-collapse:collapse; font-size:13px; background:var(--card); }
+  th,td{ border:1px solid var(--border); padding:10px 12px; text-align:left; vertical-align:top; }
+  th{ background:#F3EFE6; font-weight:500; }
+
+  .policy-block{ margin-bottom:28px; }
+  .policy-block h3{
+    font-size:16px;
+    display:flex; align-items:center; gap:8px;
+  }
+  .policy-block h3 .tag{
+    font-size:11px;
+    color:var(--red);
+    border:1px solid var(--red);
+    border-radius:4px;
+    padding:1px 6px;
+    font-family:'Noto Sans KR';
+    font-weight:400;
+  }
+  .policy-block ul{ margin:8px 0 0; padding-left:20px; font-size:14px; }
+  .policy-block li{ margin-bottom:6px; }
+
+  .flow-title{ font-size:16px; font-weight:500; margin-bottom:14px; }
+  .flow{
+    display:flex; align-items:stretch; flex-wrap:wrap; gap:0;
+    margin-bottom:36px;
+  }
+  .step{
+    background:var(--card);
+    border:1px solid var(--border);
+    border-radius:8px;
+    padding:14px 16px;
+    min-width:150px;
+    max-width:190px;
+    font-size:12.5px;
+  }
+  .step .n{
+    display:inline-block;
+    width:20px; height:20px;
+    border-radius:4px;
+    background:var(--ink);
+    color:var(--bg);
+    font-size:11px;
+    text-align:center;
+    line-height:20px;
+    margin-bottom:8px;
+    font-family:'Noto Serif KR';
+  }
+  .step.branch-a .n{ background:var(--red); }
+  .step.branch-b .n{ background:var(--badge3); }
+  .step b{ display:block; margin-bottom:4px; font-size:13px; }
+  .step span{ color:var(--sub); }
+  .arrow{
+    display:flex; align-items:center; justify-content:center;
+    width:28px; color:var(--sub); font-size:16px;
+  }
+  .branch-wrap{ display:flex; flex-direction:column; gap:8px; }
+
+  .discuss{
+    margin-top:14px;
+    border:1px dashed var(--red);
+    border-radius:8px;
+    padding:12px 16px;
+    font-size:13px;
+    background:#FBF1EF;
+  }
+  .discuss b{ color:var(--red); }
+
+  .frame{
+    background:var(--card);
+    border:1px solid var(--border);
+    border-radius:10px;
+    overflow:hidden;
+    margin-bottom:8px;
+  }
+  .frame .bar{
+    background:#F3EFE6;
+    border-bottom:1px solid var(--border);
+    font-size:11px;
+    color:var(--sub);
+    padding:6px 12px;
+  }
+  .frame .inner{ padding:12px; }
+  .block{
+    border:1px dashed var(--border);
+    border-radius:6px;
+    padding:10px;
+    font-size:11.5px;
+    color:var(--sub);
+    background:#FDFCFA;
+  }
+  .block b{ color:var(--ink); display:block; font-size:12.5px; margin-bottom:2px; }
+  .screens-grid{ display:grid; grid-template-columns:1fr 1fr; gap:24px; }
+  @media (max-width:700px){ .screens-grid{ grid-template-columns:1fr; } }
+  .screen-caption{ font-size:12px; color:var(--sub); margin:8px 0 24px; }
+
+  .badge{
+    display:inline-flex; align-items:center; justify-content:center;
+    width:26px; height:26px; border-radius:4px;
+    font-family:'Noto Serif KR'; font-size:13px; font-weight:500;
+    background:var(--red); color:var(--bg);
+  }
+  .badge.b2{ background:var(--badge2); color:var(--bg); }
+  .badge.b3{ background:var(--badge3); color:var(--bg); }
+  .badge.b4{ background:var(--bg); color:var(--badge3); border:1px solid var(--badge4); }
+
+  .oq-list{ list-style:none; padding:0; margin:0; }
+  .oq-list li{
+    background:var(--card);
+    border:1px solid var(--border);
+    border-left:4px solid var(--red);
+    border-radius:6px;
+    padding:14px 16px;
+    margin-bottom:10px;
+    font-size:14px;
+  }
+  .oq-list li .status{
+    font-size:11px; color:var(--sub); display:block; margin-top:4px;
+  }
+
+  footer{
+    text-align:center;
+    padding:40px 24px 80px;
+    color:var(--sub);
+    font-size:12px;
+  }
+</style>
+</head>
+<body>
+
+<header class="hero">
+  <div class="word">카츠랭<span class="dot">.</span></div>
+  <div class="tag">당신의 인생 돈까스 한 집. — 시각 기획서 (초안)</div>
+  <div class="meta">v0.1 · 2026-07-02 작성 · 상태: 논의 전 초안 · 확정 아님</div>
+</header>
+
+<nav class="toc">
+  <a href="#howto">사용법</a>
+  <a href="#overview">개요</a>
+  <a href="#value">가치·차별점</a>
+  <a href="#policy">비즈니스 로직</a>
+  <a href="#flows">플로우</a>
+  <a href="#screens">화면 구성</a>
+  <a href="#open">미정 사항</a>
+</nav>
+
+<main>
+
+  <section id="howto">
+    <h2><span class="num">0.</span>이 문서 사용법</h2>
+    <div class="howto">
+      이 문서는 <code>docs/01~04</code>에 줄글로 흩어져 있던 기획 내용을 <b>한 화면에서 훑어보고 바로 의견을 남길 수 있게</b> 재구성한 초안입니다.
+      완성본이 아니라 <b>대화의 시작점</b>입니다. 빨간 점선 박스(<span style="color:var(--red);">[논의 필요]</span>)가 있는 부분은
+      아직 결정이 안 됐거나, 프론트/디자인 관점에서 이견이 있을 만한 지점입니다. 같이 보면서 의견을 정하고, 합의된 내용은
+      다시 <code>docs/01~03</code> 원본 문서와 옵시디언 노트에 반영합니다.
+    </div>
+  </section>
+
+  <section id="overview">
+    <h2><span class="num">1.</span>프로젝트 개요</h2>
+    <div class="lead">누구를 위한, 무엇을 위한 서비스인가</div>
+    <p>
+      서울에서 진짜 최고의 돈까스집 단 하나를 가리는 사이트. 카카오 로그인 사용자가
+      <b>평생 단 한 집에만 투표</b>하고, 더 맛있는 곳을 발견하면 표를 옮길 수 있습니다.
+      랭킹은 <b>서울 단일 랭킹</b> 하나뿐이며, 1위가 "왕좌"입니다.
+    </p>
+    <div class="cards">
+      <div class="card">
+        <h3>타겟 사용자</h3>
+        <p>서울에서 돈까스 맛집을 찾는 20~30대. 별점·리뷰 정보가 너무 많아 피로한 사람들.</p>
+      </div>
+      <div class="card">
+        <h3>핵심 컨셉</h3>
+        <p>표 = 누군가의 1순위라는 진심. 별점 100개보다 무겁게 만든다.</p>
+      </div>
+      <div class="card">
+        <h3>규모/일정</h3>
+        <p>1인 개발, 한 달 목표(하루 1~2시간). 수익 모델 없음(개인 프로젝트).</p>
+      </div>
+    </div>
+  </section>
+
+  <section id="value">
+    <h2><span class="num">2.</span>핵심 가치 &amp; 차별점</h2>
+    <div class="lead">기존 지도·리뷰 서비스와 뭐가 다른가</div>
+    <div class="cards" style="margin-bottom:24px;">
+      <div class="card"><h3>단순함</h3><p>별점 0.5단위 고민 없음. 표 한 장이 전부.</p></div>
+      <div class="card"><h3>신뢰감</h3><p>표 = 한 사람의 1순위. 별점 100개보다 무거움.</p></div>
+      <div class="card"><h3>단 하나의 왕좌</h3><p>서울 1위 돈까스 단 한 집을 두고 모두가 경쟁.</p></div>
+      <div class="card"><h3>공간감</h3><p>지도로 후보를 탐색. 랭킹은 서울 전체 단일.</p></div>
+    </div>
+    <table>
+      <tr><th></th><th>기존 서비스 (네이버지도·카카오맵·망고플레이트)</th><th>카츠랭</th></tr>
+      <tr><td>평가 단위</td><td>별점 (다회 가능)</td><td>1인 1표 (평생)</td></tr>
+      <tr><td>신호 강도</td><td>약함 (만족도)</td><td>강함 (1순위)</td></tr>
+      <tr><td>카테고리</td><td>전체 음식점</td><td>돈까스 전용</td></tr>
+      <tr><td>핵심 화면</td><td>검색·리뷰</td><td>지도(탐색) + 서울 단일 랭킹</td></tr>
+      <tr><td>랭킹 단위</td><td>지역·카테고리별 다수</td><td>서울 1개 (단 하나의 1위)</td></tr>
+    </table>
+  </section>
+
+  <section id="policy">
+    <h2><span class="num">3.</span>비즈니스 로직 (정책)</h2>
+    <div class="lead">화면을 만들기 전에 프론트가 알아야 하는 규칙들</div>
+
+    <div class="policy-block">
+      <h3>투표 정책 <span class="tag">확정</span></h3>
+      <ul>
+        <li>카카오 로그인 필수, <b>1인 1표</b></li>
+        <li>표 이동 가능 — 새 가게에 투표하면 이전 가게 표는 -1, 새 가게 +1</li>
+        <li>표 이동 히스토리를 마이페이지에 시간순으로 표시</li>
+        <li>동시성: 여러 사람이 동시에 투표해도 카운트가 안 깨지도록 서버에서 처리 (낙관적 락)</li>
+      </ul>
+    </div>
+
+    <div class="policy-block">
+      <h3>가게 데이터 정책 <span class="tag">확정</span></h3>
+      <ul>
+        <li>초기 20곳은 운영자가 수동 등록, 이후 사용자가 카카오맵 검색으로 추가</li>
+        <li>카테고리 화이트리스트: "돈까스·돈가스·경양식" 키워드가 있어야 등록 가능 (검증 통과 시 즉시 ACTIVE)</li>
+        <li><b>체인점 = 지점마다 별개 가게.</b> 본점·분점을 합치지 않음 (지점마다 맛이 다르다고 보기 때문)</li>
+        <li><b>하드 삭제 없음.</b> 가게는 절대 안 지우고 상태로만 관리 (ACTIVE / CLOSED / RELOCATED / PENDING / REJECTED)</li>
+      </ul>
+    </div>
+
+    <div class="policy-block">
+      <h3>폐업 · 이전 정책 <span class="tag">확정</span></h3>
+      <ul>
+        <li><b>폐업 = 박제.</b> 투표는 막지만 기존 표·히스토리는 보존, 랭킹에서만 제외. 마이페이지엔 "폐업한 ○○"로 표시</li>
+        <li><b>이전 = 승계.</b> 같은 가게가 자리만 옮긴 것이므로 표를 새 레코드로 이관</li>
+        <li>감지는 MVP에서는 운영자 수동 (자동 감지·사용자 신고는 이후 버전)</li>
+      </ul>
+      <div class="discuss">
+        <b>[논의 필요]</b> "폐업한 ○○"처럼 죽은 가게가 화면에 어떻게 보여야 자연스러울지 — 리스트에서 흐리게? 별도 섹션? UI 톤 상의 필요.
+      </div>
+    </div>
+
+    <div class="policy-block">
+      <h3>랭킹 로직 <span class="tag">확정</span></h3>
+      <ul>
+        <li>랭킹은 <b>서울 전체 단일 랭킹 하나뿐</b>. 지도를 확대/축소해도 랭킹은 안 바뀜</li>
+        <li>정렬 기준: 표 수(vote_count) 내림차순, ACTIVE 상태만 포함</li>
+        <li>30초 폴링으로 자동 갱신 (실시간 WebSocket 아님, 백그라운드 탭은 폴링 중지)</li>
+      </ul>
+    </div>
+
+    <div class="policy-block">
+      <h3>인증 방식 <span class="tag">확정</span></h3>
+      <ul>
+        <li>카카오 OAuth2 로그인만 지원. 이메일 없이 닉네임·프로필 이미지만 수집</li>
+        <li>JWT 대신 <b>서버 세션 쿠키</b> 사용 (어뷰징 계정을 즉시 차단하기 위함)</li>
+        <li>프론트는 API 요청 시 쿠키를 항상 동봉(<code>credentials: 'include'</code>), CSRF 토큰 처리 필요</li>
+      </ul>
+    </div>
+  </section>
+
+  <section id="flows">
+    <h2><span class="num">4.</span>주요 플로우</h2>
+    <div class="lead">사용자 행동 → 데이터 변화 → 화면 반영까지 흐름</div>
+
+    <div class="flow-title">4.1 로그인</div>
+    <div class="flow">
+      <div class="step"><span class="n">1</span><b>로그인 버튼 클릭</b><span>프론트 어느 화면에서든</span></div>
+      <div class="arrow">→</div>
+      <div class="step"><span class="n">2</span><b>카카오 인증 페이지</b><span>window.location 이동</span></div>
+      <div class="arrow">→</div>
+      <div class="step"><span class="n">3</span><b>로그인 + 동의</b><span>카카오 쪽에서 처리</span></div>
+      <div class="arrow">→</div>
+      <div class="step"><span class="n">4</span><b>백엔드 콜백</b><span>User upsert, 세션쿠키 발급</span></div>
+      <div class="arrow">→</div>
+      <div class="step"><span class="n">5</span><b>프론트로 리다이렉트</b><span>로그인 완료 상태</span></div>
+    </div>
+
+    <div class="flow-title">4.2 투표 / 표 이동</div>
+    <div class="flow">
+      <div class="step"><span class="n">1</span><b>가게 상세 페이지</b><span>투표하기 버튼</span></div>
+      <div class="arrow">→</div>
+      <div class="step"><span class="n">2</span><b>로그인 여부 확인</b><span>비로그인 시 로그인 유도</span></div>
+      <div class="arrow">→</div>
+      <div class="step"><span class="n">3</span><b>기존 표 있는지 확인</b><span>없으면 신규, 있으면 이동</span></div>
+      <div class="arrow">→</div>
+      <div class="step"><span class="n">4</span><b>표 반영 (트랜잭션)</b><span>이전 -1 / 신규 +1</span></div>
+      <div class="arrow">→</div>
+      <div class="step"><span class="n">5</span><b>랭킹·마이페이지 갱신</b><span>다음 폴링에 반영</span></div>
+    </div>
+
+    <div class="flow-title">4.3 가게 추가</div>
+    <div class="flow">
+      <div class="step"><span class="n">1</span><b>카카오맵 검색</b><span>가게 추가 화면</span></div>
+      <div class="arrow">→</div>
+      <div class="step"><span class="n">2</span><b>검색 결과 선택</b><span>place_id 확보</span></div>
+      <div class="arrow">→</div>
+      <div class="step"><span class="n">3</span><b>중복·카테고리 검증</b><span>돈까스/돈가스/경양식만 통과</span></div>
+      <div class="arrow">→</div>
+      <div class="branch-wrap">
+        <div class="step branch-a"><span class="n">4a</span><b>통과 → 즉시 ACTIVE</b><span>바로 랭킹에 노출</span></div>
+        <div class="step branch-b"><span class="n">4b</span><b>실패 → REJECTED</b><span>사유 안내 후 종료</span></div>
+      </div>
+    </div>
+    <div class="discuss">
+      <b>[논의 필요]</b> REJECTED 됐을 때 사용자에게 어떤 화면/문구를 보여줄지 아직 안 정해짐.
+    </div>
+
+    <div class="flow-title">4.4 폐업 / 이전 처리 (운영자)</div>
+    <div class="flow">
+      <div class="step"><span class="n">1</span><b>폐업/이전 감지</b><span>MVP는 운영자 수동 확인</span></div>
+      <div class="arrow">→</div>
+      <div class="branch-wrap">
+        <div class="step branch-a"><span class="n">2a</span><b>폐업 → CLOSED</b><span>투표 막힘, 표·히스토리 보존, 랭킹 제외</span></div>
+        <div class="step branch-b"><span class="n">2b</span><b>이전 → RELOCATED</b><span>새 레코드 생성, relocated_to_id로 표 승계</span></div>
+      </div>
+    </div>
+  </section>
+
+  <section id="screens">
+    <h2><span class="num">5.</span>화면 구성 (와이어프레임 — 로우파이)</h2>
+    <div class="lead">레이아웃과 정보 배치 중심. 실제 픽셀 디자인은 아님</div>
+
+    <div class="screens-grid">
+      <div>
+        <div class="frame">
+          <div class="bar">메인 — 데스크탑</div>
+          <div class="inner" style="display:flex; gap:10px; height:220px;">
+            <div class="block" style="flex:2;"><b>지도 (카카오맵 SDK)</b>핀 표시 · 1위 강조 · 2~10위 강조 · 나머지 일반. 탐색 전용, 랭킹 산출 기준 아님</div>
+            <div class="block" style="flex:1; display:flex; flex-direction:column; gap:6px;">
+              <div><b>서울 단일 랭킹</b>TOP N 리스트</div>
+              <span class="badge">1</span> 1위 가게명 · 표 수<br>
+              <span class="badge b2">2</span> ...<br>
+              <span class="badge b3">3</span> ...<br>
+              <span class="badge b4">4</span> ...
+            </div>
+          </div>
+        </div>
+        <div class="screen-caption">우측 사이드바에 TOP N 랭킹, 1위는 배지로 강조. 30초마다 자동 갱신.</div>
+      </div>
+
+      <div>
+        <div class="frame">
+          <div class="bar">메인 — 모바일</div>
+          <div class="inner" style="height:220px; display:flex; flex-direction:column; gap:6px;">
+            <div class="block" style="flex:1;"><b>지도 전체 화면</b>핀 탐색</div>
+            <div class="block" style="height:64px;"><b>하단 시트 (랭킹)</b>끌어올리면 TOP N 펼쳐짐</div>
+          </div>
+        </div>
+        <div class="screen-caption">모바일은 지도가 전체를 차지하고, 랭킹은 하단 시트로 끌어올려 보는 구조.</div>
+      </div>
+
+      <div>
+        <div class="frame">
+          <div class="bar">가게 상세</div>
+          <div class="inner" style="height:220px; display:flex; flex-direction:column; gap:6px;">
+            <div class="block" style="flex:1;"><b>가게 정보</b>이름 · 주소 · 카테고리 · 영업시간/전화 · 카카오맵 링크</div>
+            <div class="block"><b>현재 표 수 · 서울 순위</b></div>
+            <div class="block" style="border-color:var(--red); color:var(--red);"><b style="color:var(--red);">투표하기 / 투표 변경 버튼</b>브랜드 가이드상 유일한 빨강 CTA</div>
+          </div>
+        </div>
+        <div class="screen-caption">투표 버튼은 브랜드 가이드상 "빨간색은 진짜 정점에만" 원칙에 따라 페이지에서 가장 강조되는 요소.</div>
+      </div>
+
+      <div>
+        <div class="frame">
+          <div class="bar">마이페이지</div>
+          <div class="inner" style="height:220px; display:flex; flex-direction:column; gap:6px;">
+            <div class="block" style="flex:1;"><b>현재 내 1순위 가게</b></div>
+            <div class="block" style="flex:1;"><b>표 이동 히스토리</b>시간순 리스트</div>
+            <div class="block"><b>로그아웃</b></div>
+          </div>
+        </div>
+        <div class="screen-caption">마이페이지는 정보량이 적어 단순 리스트 구조로 충분할 것으로 예상.</div>
+      </div>
+
+      <div>
+        <div class="frame">
+          <div class="bar">가게 추가</div>
+          <div class="inner" style="height:220px; display:flex; flex-direction:column; gap:6px;">
+            <div class="block"><b>검색창</b>카카오맵 로컬 API로 가게 이름 실시간 검색</div>
+            <div class="block" style="flex:1; display:flex; flex-direction:column; gap:4px;">
+              <b>검색 결과 리스트</b>
+              가게명 · 주소 · 카테고리 · [선택]<br>
+              가게명 · 주소 · 카테고리 · [선택]<br>
+              가게명 · 주소 · 카테고리 · [선택]
+            </div>
+            <div class="block" style="border-color:var(--red); color:var(--red);"><b style="color:var(--red);">선택 → 등록하기 버튼</b>카테고리(돈까스/돈가스/경양식) 검증 통과 시 즉시 ACTIVE, 실패 시 REJECTED 안내</div>
+          </div>
+        </div>
+        <div class="screen-caption">검색 → 리스트에서 선택 → 자동 카테고리 검증 후 즉시 등록. 사전 승인 절차 없음. REJECTED 문구는 <a href="#open">6장 미정 사항</a> 참고.</div>
+      </div>
+    </div>
+
+    <div class="discuss">
+      <b>[논의 필요]</b> 이 배치가 실제 화면으로 갔을 때 프론트 관점에서 이상한 지점이 있는지, 데스크탑/모바일 우선순위(반응형 브레이크포인트)를 어떻게 잡을지.
+    </div>
+  </section>
+
+  <section id="open">
+    <h2><span class="num">6.</span>아직 안 정해진 것 — 같이 정해야 할 것들</h2>
+    <div class="lead">여기가 이 문서의 핵심 목적입니다. 이견이 있으면 바로 적어주세요.</div>
+    <ul class="oq-list">
+      <li>
+        API 응답 포맷 — 공통 <code>ApiResponse</code> 래퍼로 감쌀지, 순수 데이터 + HTTP 상태코드로 갈지
+        <span class="status">프론트 개발 시작 전 결정 필요</span>
+      </li>
+      <li>
+        프론트 최종 배포 위치 — Vercel이 유력하지만 확정 아님
+        <span class="status">M4 시작 전 결정</span>
+      </li>
+      <li>
+        개인정보처리방침 페이지 — 카카오 로그인 심사에 필수, 내용/디자인 담당 미정
+        <span class="status">출시 전 필수</span>
+      </li>
+      <li>
+        REJECTED(카테고리 검증 실패) 시 사용자 경험 — 문구, 재시도 유도 방식
+        <span class="status">가게 추가 화면 설계 시 결정</span>
+      </li>
+      <li>
+        폐업한 가게의 리스트/지도 표현 방식 — 완전히 숨길지, 흐리게 남길지
+        <span class="status">디자인 톤 관련, 프론트와 상의 필요</span>
+      </li>
+    </ul>
+  </section>
+
+</main>
+
+<footer>
+  출처: docs/01_product_spec.md · 02_mvp_scope.md · 03_data_model_and_tech.md · 04_brand_design_guide.md (2026-07-02 기준 스냅샷)<br>
+  이 문서 자체는 SSOT가 아닙니다 — 논의 후 합의된 내용은 원본 문서와 옵시디언 노트에 반영하세요.
+</footer>
+
+</body>
+</html>
