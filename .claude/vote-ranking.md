@@ -7,7 +7,7 @@ paths:
 
 # 투표 · 랭킹 · 가게 규칙
 
-상세 모델은 `docs/03_data_model_and_tech_v0.2.md`의 2 / 3 / 6 섹션 참조.
+상세 모델은 `docs/03_data_model_and_tech.md`의 2 / 3 / 6 섹션 참조.
 
 ## 1인 1표 · 표 이동 (핵심 정합성 — 가장 신중하게)
 

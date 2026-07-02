@@ -1,10 +1,10 @@
 # 데이터 모델 & 기술 결정
 
-- **버전**: v0.3
-- **작성일**: 2026-07-01
+- **버전**: v0.4
+- **작성일**: 2026-07-02
 - **상태**: 백엔드 아키텍처 방향 확정 (REST API 전환, 단일 서울 랭킹, 식별·상태 정책 확정)
 
-> v0.1 대비 주요 변경: 프론트가 React(Next.js) + 순수 REST API로 전환됨에 따라 인증·화면·API 구조가 바뀌었고, "서울 단일 랭킹" 확정으로 뷰포트 기반 랭킹 설계가 폐기됨. Restaurant 상태 모델·폐업/이전 정책이 추가됨. 자세한 변경은 맨 아래 변경 이력 참조.
+> v0.1 대비 주요 변경: 프론트가 React(Vite + React Router) + 순수 REST API로 전환됨에 따라 인증·화면·API 구조가 바뀌었고, "서울 단일 랭킹" 확정으로 뷰포트 기반 랭킹 설계가 폐기됨. Restaurant 상태 모델·폐업/이전 정책이 추가됨. 자세한 변경은 맨 아래 변경 이력 참조.
 
 ---
 
@@ -16,13 +16,13 @@
 | ORM | JPA (Hibernate) | Spring Boot 표준 |
 | DB | PostgreSQL | 무료 호스팅 무난, JSON 지원 |
 | DB 마이그레이션 | Flyway | 협업·배포 환경 스키마 안정성 (ddl-auto 의존 제거) |
-| 프론트 | React (Next.js, TypeScript, Tailwind) | 별도 프론트 개발자 협업, Vercel 배포 |
+| 프론트 | React (Vite, React Router v7, TypeScript, Tailwind) | 별도 프론트 개발자 협업, Vercel 배포 |
 | HTTP 클라이언트 | RestClient (Spring 6.1+) | 동기 호출에 단순·최신, RestTemplate 대체 |
 | 지도 | 카카오맵 JS SDK | 한국 데이터 최강, 무료 한도 충분 |
 | 가게 검색 API | 카카오 로컬 API | 일 30만 건 무료 |
 | 인증 | 카카오 OAuth2 + 외부저장소 세션 (Spring Security / Spring Session) | 가입 마찰 최소, 즉시 무효화 가능, 수평 확장 대응 |
-| 백엔드 호스팅 | Railway | 무료 티어, 배포 편의 |
-| 프론트 호스팅 | Vercel | Next.js 최적, 무료 티어 |
+| 백엔드 호스팅 | AWS EC2 | t2.micro, Nginx + systemd (최종 확정, Railway·Oracle Cloud 거쳐 변경) |
+| 프론트 호스팅 | Vercel | Vite SPA 정적 배포, 무료 티어 |
 | 도메인 (예정) | katsurank.kr | 1.5만원/년 정도 |
 
 ### 1.1 인증 방식 — 외부저장소 세션 (확정, JWT 아님)
@@ -149,7 +149,7 @@ INDEX idx_restaurant_current (restaurant_id, is_current)
 
 ## 4. 화면 구성 (MVP)
 
-> 프론트는 React(Next.js) SPA. 아래는 라우트(프론트) 기준이며 백엔드는 REST API만 제공.
+> 프론트는 React(Vite) SPA. 아래는 라우트(프론트) 기준이며 백엔드는 REST API만 제공.
 
 1. **메인** (`/`) — 지도(핀) + **서울 단일 랭킹** 패널 (1위 강조). 지도는 탐색·핀 보기 용도, 랭킹의 주인공은 서울 전체 단일 랭킹.
 2. **가게 상세** (`/restaurants/{id}`) — 정보 + 투표
@@ -263,3 +263,4 @@ INDEX idx_restaurant_current (restaurant_id, is_current)
   - 식별 정책(`kakao_place_id` UNIQUE) 근거·한계 명문화.
   - 기술 스택 갱신: Java 21·가상 스레드·RestClient·Flyway·UTC 저장·API 버저닝.
   - 관측 초기 풀세팅 방침(섹션 7) 신설.
+- **v0.4 (2026-07-02)**: 프론트 스택 표기 정정 (Next.js → Vite + React Router v7, 실제 구현 기준). 백엔드 호스팅 표기 정정 (Railway → AWS EC2, 실제 배포 기준 — 06_deployment_guide.md·07_roadmap.md와 일치).

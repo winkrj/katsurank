@@ -6,7 +6,7 @@ paths:
 
 # 인증 · 보안 규칙
 
-상세 흐름은 `docs/03_data_model_and_tech_v0.2.md`의 1.1 / 1.2 섹션 참조.
+상세 흐름은 `docs/03_data_model_and_tech.md`의 1.1 / 1.2 섹션 참조.
 
 - 카카오 OAuth2 로그인 성공 후 **세션 쿠키**(HttpOnly, SameSite) 발급. JWT 금지.
 - 세션은 톰캣 인메모리가 아니라 **외부 저장소**(spring-session-jdbc, PostgreSQL)에 저장.

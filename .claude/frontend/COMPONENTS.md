@@ -31,7 +31,7 @@
 
 ---
 
-## 1. 레이아웃 (Next.js layout과 동일 개념)
+## 1. 레이아웃 (Next.js layout과 유사한 개념 — AppLayout이 공통 shell 역할)
 
 ```
 AppLayout (shared/ui/AppLayout.tsx)

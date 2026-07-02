@@ -8,12 +8,18 @@
 - 슬랙·디스코드 채팅, 카톡, 머릿속은 **공식 결정이 아닙니다**
 - 새 결정이 나오면 → 해당 문서 갱신 → PR → 머지. 그 다음 코드로 갑니다
 
+## OpenSpec과 docs/의 관계
+
+기능 개발에 OpenSpec(SDD, `/opsx:propose` 등)을 쓰는 경우, `openspec/specs/`는 기능별 최신 요구사항(빠르게 바뀌는 세부 스펙)을 담당하고, `openspec/changes/`는 백엔드·프론트가 코드를 쓰기 전에 기능 계약(요구사항·API 모양)에 합의하는 단계로 쓴다. `docs/`의 권한은 그대로다 — 이미 `03_data_model_and_tech.md`가 "정확한 최신 API 스펙은 Swagger UI를 참고"라며 세부사항을 다른 곳에 위임한 전례가 있듯, OpenSpec의 두 폴더는 그 세부사항 계층의 확장이지 대체가 아니다. change proposal 안에서 **오래 남을 결정**(새 아키텍처 선택, 스코프 변경 등)이 나오면 그 결정만 기존 흐름대로 `docs/`에도 반영한다 (결정 → 문서 갱신 → PR → 머지). `openspec/`도 PR 대상이지만 `docs/` 갱신을 대신하지 않는다.
+
+사전 준비: Node 20.19+ 확인 후 `npm install -g @fission-ai/openspec@latest`로 각자 로컬에 글로벌 설치 (레포에 루트 `package.json`이 없어 devDependency로 못 넣음 — 백엔드·프론트 담당 둘 다 설치 필요).
+
 ## 역할 분담
 
 | 영역 | 1차 담당 | 결정권 |
 |---|---|---|
 | 백엔드 (Spring Boot, API, DB) | 본인 | 본인 |
-| 프론트 (Next.js, UI) | 협업자 | 협업자 |
+| 프론트 (Vite+React, UI) | 협업자 | 협업자 |
 | 기획·우선순위 | 본인 (PM) | 본인 |
 | 디자인 가이드 | 같이 | 합의 (안 되면 본인 결정권) |
 | DevOps·배포 | 본인 | 본인 |

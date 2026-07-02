@@ -13,7 +13,7 @@
 | 한 줄 컨셉 | 1인 1표, 표 이동 가능, 서울 단일 랭킹 |
 | 인증 | 카카오 OAuth2 + 외부저장소 세션 |
 | 일정 | 4주 MVP, 하루 1~2시간 |
-| 상태 | 🚧 백엔드 개발 중 |
+| 상태 | 🚧 개발 중 (백엔드 API v1 완료·배포됨, 프론트 진행 중) |
 
 ## 기술 스택
 
@@ -21,12 +21,12 @@
 |---|---|
 | 백엔드 | Spring Boot 4.0.x · Java 21 (가상 스레드) · JPA · PostgreSQL · Flyway |
 | HTTP 클라이언트 | RestClient (Spring 6.1+) |
-| 프론트 | Next.js (App Router) · TypeScript · Tailwind CSS |
+| 프론트 | Vite · React Router v7 · TypeScript · Tailwind CSS |
 | 지도 | 카카오맵 JS SDK · 카카오 로컬 검색 API |
 | 인증 | 카카오 OAuth2 + 외부저장소 세션 (spring-session-jdbc) |
-| 호스팅 | Railway (백엔드) · Vercel (프론트) |
+| 호스팅 | AWS EC2 (백엔드) · Vercel 예정 (프론트) |
 
-> 프론트 세부 스택(상태관리·폼 등)은 협업자와 미팅 후 확정.
+> 상태관리는 Zustand, 서버 상태는 TanStack Query 사용.
 
 ## 레포 구조
 
@@ -41,10 +41,10 @@ katsurank/
 │   ├── 05_week1_setup_guide.md
 │   └── setup/             # 로컬 셋업 파일
 ├── backend/               # Spring Boot
-├── frontend/              # Next.js (예정)
+├── frontend/              # Vite + React (진행 중)
 ├── .github/workflows/     # GitHub Actions
-├── README.md
-└── CONTRIBUTING.md        # 협업 규칙
+├── .claude/CONTRIBUTING.md # 협업 규칙
+└── README.md
 ```
 
 ## 시작하기
@@ -59,7 +59,7 @@ docker compose up -d              # PostgreSQL 실행
 
 상세 셋업: [`docs/05_week1_setup_guide.md`](docs/05_week1_setup_guide.md)
 
-### 프론트 (예정)
+### 프론트
 
 ```bash
 cd frontend

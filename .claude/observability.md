@@ -7,7 +7,7 @@ paths:
 
 # 관측(Observability) 규칙
 
-방침: 기능은 MVP로 얇게, **관측은 처음부터 두껍게.** 상세는 `docs/03_data_model_and_tech_v0.2.md` 7섹션.
+방침: 기능은 MVP로 얇게, **관측은 처음부터 두껍게.** 상세는 `docs/03_data_model_and_tech.md` 7섹션.
 
 ## Day 1 필수 (나중에 넣기 비싼 것)
 
