@@ -1,7 +1,7 @@
 # 카츠랭 — 개발 로드맵 & 진행 상황
 
-- **버전**: v0.1
-- **갱신일**: 2026-06-28
+- **버전**: v0.2
+- **갱신일**: 2026-07-02
 
 > 이 파일이 개발 진행의 진실 기록이다.
 > 완료되면 `[x]`, 진행 중이면 `[~]`, 미정이면 `[ ]`.
@@ -14,7 +14,7 @@
 | 단계 | 이름 | 상태 | 완료일 |
 |---|---|---|---|
 | M1 | 백엔드 API v1 | ✅ 완료 | 2026-06 |
-| M2 | 서버 배포 (백엔드) | 🔄 진행 중 | - |
+| M2 | 서버 배포 (백엔드, 수동) | ✅ 완료 (자동 배포는 다음 단계) | 2026-07-02 |
 | M3 | 프론트엔드 개발 | ⬜ 대기 | - |
 | M4 | 프론트엔드 배포 | ⬜ 대기 | - |
 | M5 | 데이터 시딩 (가게 20곳) | ⬜ 대기 | - |
@@ -39,59 +39,62 @@
 
 ---
 
-## M2. 서버 배포 (백엔드) 🔄
+## M2. 서버 배포 (백엔드) ✅ — 수동 배포 완료, CI/CD 자동화는 의도적으로 다음 단계로 미룸
+
+> 실무에서 널리 쓰는 EC2로 인프라를 직접 손으로 구성해보는 학습 목적. 자동 배포(GitHub Actions)는
+> 처음부터 만들지 않고, 수동 배포 흐름을 완전히 익힌 뒤에 도입하기로 결정함 (의도된 단계적 전환).
 
 ### 사전 준비
-- [ ] AWS 계정 생성
-- [ ] Cloudflare 계정 생성
-- [ ] 로컬 SSH 키 확인/생성
+- [x] AWS 계정 생성
+- [x] Cloudflare 계정 생성
+- [x] 로컬 SSH 키 확인/생성
 
 ### 1단계 — 도메인
-- [ ] `katsurank.kr` 도메인 구매 (Gabia)
-- [ ] Cloudflare에 도메인 추가
-- [ ] Gabia 네임서버 → Cloudflare로 변경
-- [ ] Cloudflare Active 확인
+- [x] `katsurank.kr` 도메인 구매 (Gabia)
+- [x] Cloudflare에 도메인 추가
+- [x] Gabia 네임서버 → Cloudflare로 변경
+- [x] Cloudflare Active 확인
 
 ### 2단계 — 서버 프로비저닝
-- [ ] AWS EC2 인스턴스 생성 (t2.micro, Ubuntu 24.04)
-- [ ] Security Group: 22/80/443 포트 허용
-- [ ] Elastic IP 할당 + 연결
-- [ ] SSH 접속 확인
+- [x] AWS EC2 인스턴스 생성 (t2.micro, Ubuntu 24.04)
+- [x] Security Group: 22/80/443 포트 허용
+- [x] Elastic IP 할당 + 연결
+- [x] SSH 접속 확인
 
 ### 3단계 — 서버 초기 설정
-- [ ] Java 21 설치
-- [ ] PostgreSQL 16 설치
-- [ ] DB + 유저 생성
-- [ ] Nginx 설치
-- [ ] Certbot 설치
-- [ ] /opt/katsurank 디렉토리 생성
+- [x] Java 21 설치
+- [x] PostgreSQL 설치
+- [x] DB + 유저 생성
+- [x] Nginx 설치
+- [x] Certbot 설치
+- [x] 앱 배포 디렉토리 생성
 
 ### 4단계 — 앱 실행 환경
-- [ ] /etc/katsurank/env 환경변수 파일 생성
-- [ ] /etc/systemd/system/katsurank.service 등록
-- [ ] systemctl enable katsurank
+- [x] 환경변수 설정 (DB·카카오 OAuth 시크릿 등)
+- [x] /etc/systemd/system/katsurank.service 등록
+- [x] systemctl enable katsurank (재부팅 후 자동 기동 확인됨)
 
 ### 5단계 — CI/CD
-- [ ] GitHub Secrets 14개 등록
-- [ ] 첫 수동 배포 + 헬스체크 확인
-- [ ] deploy.yml push → Actions 자동 실행 확인
+- [ ] GitHub Secrets 14개 등록 — **미착수, 다음 단계**
+- [x] 첫 수동 배포 + 헬스체크 확인
+- [ ] deploy.yml push → Actions 자동 실행 확인 — **미착수, 다음 단계**
 
 ### 6단계 — HTTPS + 도메인
-- [ ] DNS A 레코드 추가 (Elastic IP, DNS only 상태로)
-- [ ] DNS 전파 확인 (dig api.katsurank.kr)
-- [ ] API 문서(Swagger UI) Basic Auth 계정 생성 (htpasswd)
-- [ ] Nginx 설정 파일 작성 (Swagger UI/OpenAPI 경로 포함)
-- [ ] Certbot SSL 인증서 발급
-- [ ] Cloudflare Proxy 활성화 (주황 구름)
+- [x] DNS A 레코드 추가 (Elastic IP)
+- [x] DNS 전파 확인
+- [x] API 문서(Swagger UI) Basic Auth 계정 생성 (htpasswd)
+- [x] Nginx 설정 파일 작성 (Swagger UI/OpenAPI 경로 포함)
+- [x] Certbot SSL 인증서 발급
+- [x] Cloudflare 연결 상태 확인 — **현재 DNS only(회색 구름), Proxy(주황 구름) 미사용**
 
 ### 7단계 — 카카오 연동
-- [ ] 카카오 디벨로퍼스: 사이트 도메인 추가
-- [ ] 카카오 디벨로퍼스: Redirect URI 추가
-- [ ] 카카오 로그인 종단 간 테스트
+- [x] 카카오 디벨로퍼스: 사이트 도메인 추가
+- [x] 카카오 디벨로퍼스: Redirect URI 추가
+- [x] 카카오 로그인 종단 간 테스트 (401 이슈는 쿠키 도메인 수정으로 해결)
 
 ### 완료 확인
-- [ ] `curl https://api.katsurank.kr/actuator/health` → `{"status":"UP"}`
-- [ ] `curl https://api.katsurank.kr/api/v1/ranking` → 정상 응답
+- [x] `curl https://api.katsurank.kr/actuator/health` → `{"status":"UP"}`
+- [x] `curl https://api.katsurank.kr/api/v1/ranking` → 200 응답, 빈 배열 (가게 데이터가 아직 없어서 정상 — M5 데이터 시딩 전이라 예상된 결과)
 
 ---
 
@@ -148,3 +151,4 @@
 
 - **v0.1 (2026-06-28)**: 최초 작성. M1 완료 기록, M2 체크리스트 상세화.
 - **v0.2 (2026-07-01)**: M2 인프라 변경 — Oracle Cloud → AWS EC2, CloudFlare 표기 통일. 프론트 전달용 API 문서(springdoc-openapi/Swagger UI) 도입, Nginx Basic Auth로 문서 경로 보호.
+- **v0.3 (2026-07-02)**: M2(서버 배포) 실제 완료 상태 반영 — EC2/Nginx/systemd/HTTPS/DNS/카카오 OAuth 전부 동작 확인. CI/CD(5단계)는 의도적으로 미착수 상태(수동 배포 먼저 → 자동 배포 순서로 진행 예정). Cloudflare는 DNS only(Proxy 미사용) 확인. `/api/v1/ranking` curl 확인 — 200 + 빈 배열(가게 데이터 미시딩 상태라 정상).
