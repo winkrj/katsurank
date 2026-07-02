@@ -1,0 +1,697 @@
+{
+  "info": {
+    "name": "katsurank API",
+    "_postman_id": "katsurank-local-collection",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json",
+    "description": "배포 전 로컬 테스트용. 순서: Phase 1 → 2 → 3(브라우저) → 4 → 5 → 6"
+  },
+  "variable": [
+    {
+      "key": "BASE_URL",
+      "value": "http://localhost:8080",
+      "type": "string"
+    },
+    {
+      "key": "CSRF_TOKEN",
+      "value": "",
+      "type": "string",
+      "description": "GET /api/v1/auth/csrf 실행 후 자동 저장됨"
+    },
+    {
+      "key": "RESTAURANT_ID",
+      "value": "",
+      "type": "string",
+      "description": "POST /api/v1/restaurants 실행 후 자동 저장됨"
+    }
+  ],
+  "item": [
+    {
+      "name": "Phase 1 — 서버 기동 확인",
+      "item": [
+        {
+          "name": "Health Check",
+          "request": {
+            "method": "GET",
+            "url": "{{BASE_URL}}/actuator/health",
+            "description": "status: UP 확인"
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('서버 기동 정상', () => {",
+                  "    pm.response.to.have.status(200);",
+                  "    const body = pm.response.json();",
+                  "    pm.expect(body.status).to.eql('UP');",
+                  "});"
+                ]
+              }
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "Phase 2 — 공개 API (인증 불필요)",
+      "item": [
+        {
+          "name": "CSRF 토큰 발급",
+          "request": {
+            "method": "GET",
+            "url": "{{BASE_URL}}/api/v1/auth/csrf",
+            "description": "반드시 먼저 호출. XSRF-TOKEN 쿠키가 Set-Cookie로 내려옴. 이후 POST/PATCH에 X-XSRF-TOKEN 헤더 필요."
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('200 응답', () => pm.response.to.have.status(200));",
+                  "",
+                  "// XSRF-TOKEN 쿠키 값을 컬렉션 변수에 저장",
+                  "const csrfCookie = pm.cookies.get('XSRF-TOKEN');",
+                  "if (csrfCookie) {",
+                  "    pm.collectionVariables.set('CSRF_TOKEN', decodeURIComponent(csrfCookie));",
+                  "    console.log('CSRF 토큰 저장됨:', decodeURIComponent(csrfCookie));",
+                  "} else {",
+                  "    // 쿠키 매니저 미사용 시 응답 바디에서 추출",
+                  "    const body = pm.response.json();",
+                  "    if (body && body.token) {",
+                  "        pm.collectionVariables.set('CSRF_TOKEN', body.token);",
+                  "        console.log('CSRF 토큰 바디에서 저장:', body.token);",
+                  "    }",
+                  "}"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "랭킹 목록",
+          "request": {
+            "method": "GET",
+            "url": {
+              "raw": "{{BASE_URL}}/api/v1/ranking?limit=20&offset=0",
+              "host": ["{{BASE_URL}}"],
+              "path": ["api", "v1", "ranking"],
+              "query": [
+                { "key": "limit", "value": "20" },
+                { "key": "offset", "value": "0" }
+              ]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('200 응답', () => pm.response.to.have.status(200));",
+                  "pm.test('배열 포함', () => {",
+                  "    const body = pm.response.json();",
+                  "    pm.expect(body).to.have.property('items');",
+                  "});"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "랭킹 1위 (왕좌)",
+          "request": {
+            "method": "GET",
+            "url": "{{BASE_URL}}/api/v1/ranking/top",
+            "description": "데이터 없으면 204, 있으면 200 + RankingItem"
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('200 또는 204', () => {",
+                  "    pm.expect(pm.response.code).to.be.oneOf([200, 204]);",
+                  "});"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "지도 핀 목록",
+          "request": {
+            "method": "GET",
+            "url": "{{BASE_URL}}/api/v1/ranking/map-pins"
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('200 응답', () => pm.response.to.have.status(200));",
+                  "pm.test('배열', () => pm.expect(pm.response.json()).to.be.an('array'));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "가게 검색",
+          "request": {
+            "method": "GET",
+            "url": {
+              "raw": "{{BASE_URL}}/api/v1/restaurants/search?q=돈까스&limit=20",
+              "host": ["{{BASE_URL}}"],
+              "path": ["api", "v1", "restaurants", "search"],
+              "query": [
+                { "key": "q", "value": "돈까스" },
+                { "key": "limit", "value": "20" }
+              ]
+            },
+            "description": "카카오 로컬 API 프록시. 실제 카카오 검색 결과 반환."
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('200 응답', () => pm.response.to.have.status(200));",
+                  "pm.test('배열', () => pm.expect(pm.response.json()).to.be.an('array'));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "[에러] 가게 검색 — q 없음",
+          "request": {
+            "method": "GET",
+            "url": "{{BASE_URL}}/api/v1/restaurants/search",
+            "description": "400 에러 기대"
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('400 Bad Request', () => pm.response.to.have.status(400));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "[에러] 없는 가게 조회",
+          "request": {
+            "method": "GET",
+            "url": "{{BASE_URL}}/api/v1/restaurants/999999",
+            "description": "404 에러 기대"
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('404 Not Found', () => pm.response.to.have.status(404));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "카카오 장소 검색 (프록시)",
+          "request": {
+            "method": "GET",
+            "url": {
+              "raw": "{{BASE_URL}}/api/v1/kakao-places/search?query=돈까스",
+              "host": ["{{BASE_URL}}"],
+              "path": ["api", "v1", "kakao-places", "search"],
+              "query": [
+                { "key": "query", "value": "돈까스" }
+              ]
+            },
+            "description": "가게 등록 전 카카오 장소 검색. 응답의 kakaoPlaceId 등을 POST /restaurants 바디에 사용."
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('200 응답', () => pm.response.to.have.status(200));",
+                  "",
+                  "const body = pm.response.json();",
+                  "pm.test('배열', () => pm.expect(body).to.be.an('array'));",
+                  "",
+                  "// 첫 번째 결과를 콘솔에 출력 (가게 등록 바디 작성용)",
+                  "if (body.length > 0) {",
+                  "    console.log('첫 번째 검색 결과 (가게 등록에 활용):', JSON.stringify(body[0], null, 2));",
+                  "}"
+                ]
+              }
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "Phase 3 — 카카오 로그인 (브라우저 필수)",
+      "description": "⚠️ 이 폴더는 Postman으로 실행 불가. 브라우저에서 직접 수행 후 SESSION 쿠키를 복사해 Postman Cookie Manager에 등록할 것.",
+      "item": [
+        {
+          "name": "⚠️ [브라우저] 카카오 로그인 시작",
+          "request": {
+            "method": "GET",
+            "url": "{{BASE_URL}}/oauth2/authorization/kakao",
+            "description": "브라우저에서 직접 열 것. Postman으로 보내면 리다이렉트 루프 발생.\n\n1. 브라우저에서 http://localhost:8080/oauth2/authorization/kakao 접속\n2. 카카오 로그인 완료\n3. http://localhost:3000 으로 리다이렉트 확인\n4. 개발자도구 > Application > Cookies > localhost:8080 에서 SESSION 쿠키 값 복사\n5. Postman > Cookies > localhost:8080 에 SESSION 추가"
+          }
+        }
+      ]
+    },
+    {
+      "name": "Phase 4 — 인증 확인 (SESSION 쿠키 필요)",
+      "description": "Phase 3 완료 후 Postman Cookie Manager에 SESSION 쿠키 등록 필요",
+      "item": [
+        {
+          "name": "내 인증 정보 조회",
+          "request": {
+            "method": "GET",
+            "url": "{{BASE_URL}}/api/v1/auth/me",
+            "description": "로그인된 사용자 정보. 미인증 시 401."
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('200 응답 (로그인 성공)', () => pm.response.to.have.status(200));",
+                  "pm.test('userId 존재', () => {",
+                  "    const body = pm.response.json();",
+                  "    pm.expect(body).to.have.property('userId');",
+                  "});"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "마이페이지",
+          "request": {
+            "method": "GET",
+            "url": "{{BASE_URL}}/api/v1/me"
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('200 응답', () => pm.response.to.have.status(200));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "투표 히스토리",
+          "request": {
+            "method": "GET",
+            "url": "{{BASE_URL}}/api/v1/me/vote-history",
+            "description": "첫 로그인이면 빈 배열"
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('200 응답', () => pm.response.to.have.status(200));",
+                  "pm.test('배열', () => pm.expect(pm.response.json()).to.be.an('array'));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "[에러] 미인증 — 401 확인",
+          "request": {
+            "method": "GET",
+            "url": "{{BASE_URL}}/api/v1/auth/me",
+            "description": "SESSION 쿠키 없이 보낼 것. Postman Cookie Manager에서 SESSION 일시적으로 비활성화 후 테스트.",
+            "header": [
+              {
+                "key": "Cookie",
+                "value": "",
+                "description": "SESSION 쿠키를 의도적으로 제거"
+              }
+            ]
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('401 Unauthorized (302 아님)', () => pm.response.to.have.status(401));"
+                ]
+              }
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "Phase 5 — 핵심 비즈니스 로직 (SESSION + CSRF 필요)",
+      "description": "POST/PATCH 요청에 X-XSRF-TOKEN 헤더 필수. Phase 2의 'CSRF 토큰 발급'을 먼저 실행할 것.",
+      "item": [
+        {
+          "name": "가게 등록",
+          "request": {
+            "method": "POST",
+            "url": "{{BASE_URL}}/api/v1/restaurants",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "X-XSRF-TOKEN",
+                "value": "{{CSRF_TOKEN}}",
+                "description": "Phase 2 CSRF 토큰 발급 실행 시 자동 저장됨"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"kakaoPlaceId\": \"12345678\",\n  \"name\": \"테스트돈까스\",\n  \"address\": \"서울 마포구 어딘가\",\n  \"roadAddress\": \"서울 마포구 와우산로 00\",\n  \"latitude\": 37.5509,\n  \"longitude\": 126.9243,\n  \"kakaoCategory\": \"음식점 > 일식 > 돈까스\",\n  \"phone\": \"02-0000-0000\",\n  \"placeUrl\": \"https://place.map.kakao.com/12345678\"\n}",
+              "options": { "raw": { "language": "json" } }
+            },
+            "description": "⚠️ kakaoPlaceId는 GET /api/v1/kakao-places/search 결과에서 실제 값으로 교체할 것.\nX-XSRF-TOKEN 값이 비어있으면 Phase 2의 CSRF 토큰 발급을 먼저 실행."
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('201 Created', () => pm.response.to.have.status(201));",
+                  "",
+                  "// 다음 요청(투표)에서 사용할 restaurantId 자동 저장",
+                  "const body = pm.response.json();",
+                  "if (body && body.id) {",
+                  "    pm.collectionVariables.set('RESTAURANT_ID', body.id);",
+                  "    console.log('RESTAURANT_ID 저장됨:', body.id);",
+                  "}"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "가게 상세 조회",
+          "request": {
+            "method": "GET",
+            "url": "{{BASE_URL}}/api/v1/restaurants/{{RESTAURANT_ID}}",
+            "description": "가게 등록 후 자동 저장된 RESTAURANT_ID 사용"
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('200 응답', () => pm.response.to.have.status(200));",
+                  "pm.test('id 일치', () => {",
+                  "    const body = pm.response.json();",
+                  "    pm.expect(String(body.id)).to.eql(pm.collectionVariables.get('RESTAURANT_ID').toString());",
+                  "});"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "투표 (첫 투표)",
+          "request": {
+            "method": "POST",
+            "url": "{{BASE_URL}}/api/v1/votes",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "X-XSRF-TOKEN",
+                "value": "{{CSRF_TOKEN}}"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"restaurantId\": {{RESTAURANT_ID}}\n}",
+              "options": { "raw": { "language": "json" } }
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('200 응답', () => pm.response.to.have.status(200));",
+                  "pm.test('restaurantId 일치', () => {",
+                  "    const body = pm.response.json();",
+                  "    pm.expect(String(body.restaurantId)).to.eql(pm.collectionVariables.get('RESTAURANT_ID').toString());",
+                  "});"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "투표 후 히스토리 확인",
+          "request": {
+            "method": "GET",
+            "url": "{{BASE_URL}}/api/v1/me/vote-history",
+            "description": "방금 투표한 내역이 포함되어야 함"
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('200 응답', () => pm.response.to.have.status(200));",
+                  "pm.test('히스토리 1건 이상', () => {",
+                  "    const body = pm.response.json();",
+                  "    pm.expect(body.length).to.be.above(0);",
+                  "});"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "투표 후 랭킹 반영 확인",
+          "request": {
+            "method": "GET",
+            "url": "{{BASE_URL}}/api/v1/ranking?limit=20&offset=0",
+            "description": "투표한 가게가 랭킹에 나타나야 함"
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('200 응답', () => pm.response.to.have.status(200));",
+                  "pm.test('랭킹 1건 이상', () => {",
+                  "    const body = pm.response.json();",
+                  "    pm.expect(body.items.length).to.be.above(0);",
+                  "});"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "표 이동 (다른 가게로)",
+          "request": {
+            "method": "POST",
+            "url": "{{BASE_URL}}/api/v1/votes",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "X-XSRF-TOKEN",
+                "value": "{{CSRF_TOKEN}}"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"restaurantId\": 2\n}",
+              "options": { "raw": { "language": "json" } }
+            },
+            "description": "⚠️ restaurantId를 실제로 존재하는 다른 가게 id로 교체할 것.\n기존 표가 새 가게로 이동해야 함."
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('200 응답', () => pm.response.to.have.status(200));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "가게 폐업 처리",
+          "request": {
+            "method": "PATCH",
+            "url": "{{BASE_URL}}/api/v1/restaurants/{{RESTAURANT_ID}}/close",
+            "header": [
+              {
+                "key": "X-XSRF-TOKEN",
+                "value": "{{CSRF_TOKEN}}"
+              }
+            ],
+            "description": "폐업 후 랭킹에서 제외되는지 '랭킹 목록' 요청으로 확인할 것"
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('200 응답', () => pm.response.to.have.status(200));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "가게 이전 처리",
+          "request": {
+            "method": "PATCH",
+            "url": "{{BASE_URL}}/api/v1/restaurants/{{RESTAURANT_ID}}/relocate",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "X-XSRF-TOKEN",
+                "value": "{{CSRF_TOKEN}}"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"newKakaoPlaceId\": \"99999999\"\n}",
+              "options": { "raw": { "language": "json" } }
+            },
+            "description": "⚠️ newKakaoPlaceId는 실제 카카오 장소 ID로 교체할 것.\n이전 후 표가 새 레코드로 승계되는지 확인."
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('200 응답', () => pm.response.to.have.status(200));"
+                ]
+              }
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "Phase 6 — 엣지 케이스 & 보안",
+      "item": [
+        {
+          "name": "[보안] CSRF 토큰 없이 POST → 403",
+          "request": {
+            "method": "POST",
+            "url": "{{BASE_URL}}/api/v1/votes",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"restaurantId\": 1\n}",
+              "options": { "raw": { "language": "json" } }
+            },
+            "description": "X-XSRF-TOKEN 헤더 없이 전송. 403 Forbidden 기대."
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('403 Forbidden (CSRF 차단)', () => pm.response.to.have.status(403));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "[보안] 로그아웃",
+          "request": {
+            "method": "POST",
+            "url": "{{BASE_URL}}/api/v1/auth/logout",
+            "header": [
+              {
+                "key": "X-XSRF-TOKEN",
+                "value": "{{CSRF_TOKEN}}"
+              }
+            ]
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('204 No Content', () => pm.response.to.have.status(204));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "[보안] 로그아웃 후 인증 API → 401",
+          "request": {
+            "method": "GET",
+            "url": "{{BASE_URL}}/api/v1/auth/me",
+            "description": "로그아웃 후 SESSION이 무효화되어 401이어야 함"
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('401 Unauthorized', () => pm.response.to.have.status(401));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "[에러] 존재하지 않는 가게 투표",
+          "request": {
+            "method": "POST",
+            "url": "{{BASE_URL}}/api/v1/votes",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" },
+              { "key": "X-XSRF-TOKEN", "value": "{{CSRF_TOKEN}}" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"restaurantId\": 999999\n}",
+              "options": { "raw": { "language": "json" } }
+            },
+            "description": "존재하지 않는 restaurantId. 404 기대."
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('404 Not Found', () => pm.response.to.have.status(404));"
+                ]
+              }
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}
