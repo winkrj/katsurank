@@ -1,0 +1,22 @@
+schema: spec-driven
+
+# Project context (optional)
+# This is shown to AI when creating artifacts.
+context: |
+  카츠랭(katsurank) — 서울 돈까스 1인 1표 랭킹 서비스. 서울 전체 단일 랭킹 하나뿐, 뷰포트 랭킹 없음.
+  백엔드: Spring Boot 4.0.x / Java 21, JPA+PostgreSQL+Flyway, REST API(/api/v1), 카카오 OAuth2 + 외부저장소 세션(JWT 금지).
+  프론트: Vite + React 19 + React Router v7 + TanStack Query + Zustand + Tailwind v4 (Next.js 아님).
+  협업자 2명: 백엔드/기획/인프라 담당, 프론트 담당(oljyee).
+  확정된 결정·트레이드오프의 SSOT는 이 저장소의 `docs/`(00~08 문서)다 — 여기 specs/changes는
+  세부 요구사항 계층이며 `docs/`를 대체하지 않는다. 협업 규칙은 `.claude/CONTRIBUTING.md` 참조.
+  절대 제약: Restaurant는 hard delete 금지(status로만 관리), CSRF는 처음부터 켜짐, 모든 시각은 UTC 저장.
+
+# Per-artifact rules (optional)
+# Add custom rules for specific artifacts.
+# Example:
+#   rules:
+#     proposal:
+#       - Keep proposals under 500 words
+#       - Always include a "Non-goals" section
+#     tasks:
+#       - Break tasks into chunks of max 2 hours
