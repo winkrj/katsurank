@@ -9,8 +9,8 @@ export function useCreateVoteMutation() {
   return useMutation({
     mutationFn: (body: VoteRequest) => createVote(body),
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: queryKeys.restaurants.all })
-      queryClient.invalidateQueries({ queryKey: queryKeys.votes.all })
+      queryClient.invalidateQueries({ queryKey: queryKeys.ranking.all })
+      queryClient.invalidateQueries({ queryKey: queryKeys.me.all })
     },
   })
 }

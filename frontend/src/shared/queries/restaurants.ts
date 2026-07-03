@@ -1,19 +1,18 @@
 import { useQuery } from '@tanstack/react-query'
-import { fetchRestaurants, searchRestaurants } from '../api/restaurants'
-import type { RestaurantListParams } from '../types/restaurant'
+import { fetchRestaurant, searchRestaurants } from '../api/restaurants'
 import { queryKeys } from './queryKeys'
 
-export function useRestaurantsQuery(params?: RestaurantListParams) {
+export function useRestaurantQuery(id: number) {
   return useQuery({
-    queryKey: queryKeys.restaurants.list(params),
-    queryFn: () => fetchRestaurants(params),
+    queryKey: queryKeys.restaurants.detail(id),
+    queryFn: () => fetchRestaurant(id),
   })
 }
 
-export function useRestaurantSearchQuery(query: string) {
+export function useRestaurantSearchQuery(q: string, limit?: number) {
   return useQuery({
-    queryKey: queryKeys.restaurants.search(query),
-    queryFn: () => searchRestaurants(query),
-    enabled: query.trim().length > 0,
+    queryKey: queryKeys.restaurants.search(q),
+    queryFn: () => searchRestaurants(q, limit),
+    enabled: q.trim().length > 0,
   })
 }

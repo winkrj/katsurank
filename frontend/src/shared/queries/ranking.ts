@@ -1,0 +1,24 @@
+import { useQuery } from '@tanstack/react-query'
+import { fetchRanking, fetchRankingTop, fetchMapPins } from '../api/ranking'
+import { queryKeys } from './queryKeys'
+
+export function useRankingQuery(limit = 20, offset = 0) {
+  return useQuery({
+    queryKey: queryKeys.ranking.list(limit, offset),
+    queryFn: () => fetchRanking(limit, offset),
+  })
+}
+
+export function useRankingTopQuery() {
+  return useQuery({
+    queryKey: queryKeys.ranking.top,
+    queryFn: fetchRankingTop,
+  })
+}
+
+export function useMapPinsQuery() {
+  return useQuery({
+    queryKey: queryKeys.ranking.mapPins,
+    queryFn: fetchMapPins,
+  })
+}

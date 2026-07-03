@@ -1,18 +1,31 @@
 import { apiClient } from './client'
-import type { Restaurant, RestaurantListParams } from '../types/restaurant'
-
-export function fetchRestaurants(params?: RestaurantListParams) {
-  const search = new URLSearchParams()
-  if (params?.bounds) search.set('bounds', params.bounds)
-  if (params?.sort) search.set('sort', params.sort)
-  const query = search.toString()
-  return apiClient<Restaurant[]>(`/api/restaurants${query ? `?${query}` : ''}`)
-}
+import type { RestaurantResponse, RestaurantRegisterRequest, RelocateRequest } from '../types/restaurant'
 
 export function fetchRestaurant(id: number) {
-  return apiClient<Restaurant>(`/api/restaurants/${id}`)
+  return apiClient<RestaurantResponse>(`/api/v1/restaurants/${id}`)
 }
 
-export function searchRestaurants(q: string) {
-  return apiClient<Restaurant[]>(`/api/restaurants/search?q=${encodeURIComponent(q)}`)
+export function searchRestaurants(q: string, limit = 10) {
+  const params = new URLSearchParams({ q, limit: String(limit) })
+  return apiClient<RestaurantResponse[]>(`/api/v1/restaurants/search?${params}`)
+}
+
+export function registerRestaurant(body: RestaurantRegisterRequest) {
+  return apiClient<RestaurantResponse>('/api/v1/restaurants', {
+    method: 'POST',
+    body: JSON.stringify(body),
+  })
+}
+
+export function closeRestaurant(id: number) {
+  return apiClient<RestaurantResponse>(`/api/v1/restaurants/${id}/close`, {
+    method: 'POST',
+  })
+}
+
+export function relocateRestaurant(id: number, body: RelocateRequest) {
+  return apiClient<RestaurantResponse>(`/api/v1/restaurants/${id}/relocate`, {
+    method: 'PUT',
+    body: JSON.stringify(body),
+  })
 }
