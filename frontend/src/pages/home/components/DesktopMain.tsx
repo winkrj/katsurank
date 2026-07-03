@@ -1,4 +1,3 @@
-import { useAuthStore } from '../../../shared/stores/authStore'
 import { MAP_PIN_POSITIONS } from '../constants'
 import { HeroHeading } from './HeroHeading'
 import { MapPin } from './MapPin'
@@ -6,8 +5,6 @@ import { RankingList } from './RankingList'
 import { VoteButtons } from './VoteButtons'
 
 export function DesktopMain() {
-  const isLoggedIn = useAuthStore((s) => s.isLoggedIn())
-
   return (
     <section className="relative grid min-h-screen grid-cols-[minmax(var(--width-left-section),var(--width-left-section))_1fr] pt-[64px]">
       <div className="relative z-10 flex items-center px-6 py-[30px] lg:px-12 xl:px-20">
@@ -15,7 +12,7 @@ export function DesktopMain() {
           <HeroHeading variant="desktop" />
 
           <div className="mb-9">
-            <VoteButtons isLoggedIn={isLoggedIn} />
+            <VoteButtons />
           </div>
 
           <RankingList />
