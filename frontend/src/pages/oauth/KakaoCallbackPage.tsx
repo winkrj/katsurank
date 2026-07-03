@@ -1,3 +1,12 @@
+import { useEffect } from 'react'
+import { useNavigate } from 'react-router-dom'
+
 export function KakaoCallbackPage() {
-  return <p className="page__placeholder">카카오 OAuth 콜백 (구현 예정)</p>;
+  const navigate = useNavigate()
+
+  useEffect(() => {
+    navigate('/', { replace: true })
+  }, [navigate])
+
+  return null
 }

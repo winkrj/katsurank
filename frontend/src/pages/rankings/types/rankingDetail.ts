@@ -4,11 +4,11 @@ export type RankingDetailItem = {
   name: string
   address: string
   votes: number
-  weeklyDelta: number
-  isOpen: boolean
-  hours: string
-  breakTime: string
-  image: string
+  weeklyDelta?: number
+  isOpen?: boolean
+  hours?: string
+  breakTime?: string
+  image?: string
 }
 
 export type RegionFilterKey =

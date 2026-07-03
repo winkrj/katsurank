@@ -59,6 +59,7 @@ export function SearchResultCard({ item, layout = 'desktop' }: SearchResultCardP
             상세보기
           </Button>
           <RestaurantVoteConfirmButton
+            restaurantId={item.id}
             restaurantName={item.name}
             label="투표하기"
             className={

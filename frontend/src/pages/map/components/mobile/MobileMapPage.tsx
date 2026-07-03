@@ -1,19 +1,36 @@
-import { useState } from 'react';
-import { MOCK_MAP_RESTAURANTS } from '../../mocks/map.mock';
-import type { MapFilterKey, MapRestaurant } from '../../types/map';
-import { MapFilterTabs } from '../MapFilterTabs';
-import { MapKakaoMap } from '../MapKakaoMap';
-import { MapSearchBar } from '../MapSearchBar';
-import { MapSelectedMiniCard } from '../MapSelectedMiniCard';
+import { useState } from 'react'
+import { useMapPinsQuery } from '../../../../shared/queries/ranking'
+import type { MapFilterKey, MapRestaurant } from '../../types/map'
+import { MapFilterTabs } from '../MapFilterTabs'
+import { MapKakaoMap } from '../MapKakaoMap'
+import { MapSearchBar } from '../MapSearchBar'
+import { MapSelectedMiniCard } from '../MapSelectedMiniCard'
 
-const HEADER_HEIGHT = 56;
-const BOTTOM_NAV_HEIGHT = 68;
+const HEADER_HEIGHT = 56
+const BOTTOM_NAV_HEIGHT = 68
 
 export function MobileMapPage() {
-  const [activeFilter, setActiveFilter] = useState<MapFilterKey>('all');
-  const [selected, setSelected] = useState<MapRestaurant | null>(null);
+  const [activeFilter, setActiveFilter] = useState<MapFilterKey>('all')
+  const [selected, setSelected] = useState<MapRestaurant | null>(null)
 
-  const restaurants = MOCK_MAP_RESTAURANTS;
+  const { data: pins = [] } = useMapPinsQuery()
+
+  const restaurants: MapRestaurant[] = pins.map((pin) => ({
+    id: pin.restaurantId,
+    rank: pin.rank,
+    name: pin.name,
+    address: '',
+    shortAddress: '',
+    votes: pin.voteCount,
+    weeklyVoteDelta: 0,
+    lat: pin.latitude,
+    lng: pin.longitude,
+    hours: '',
+    breakTime: '',
+    tags: [],
+    isOpen: true,
+    image: '/images/shop_default_img.png',
+  }))
 
   return (
     <div
@@ -29,7 +46,7 @@ export function MobileMapPage() {
         <MapFilterTabs active={activeFilter} onChange={setActiveFilter} />
       </div>
 
-      {/* 지도 — 나머지 공간 전부 (zoom 버튼은 MapKakaoMap 내부) */}
+      {/* 지도 */}
       <div className="relative flex-1">
         <MapKakaoMap
           restaurants={restaurants}
@@ -43,5 +60,5 @@ export function MobileMapPage() {
         )}
       </div>
     </div>
-  );
+  )
 }

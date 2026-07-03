@@ -1,8 +1,8 @@
 import { useState } from 'react'
 import { Link } from 'react-router-dom'
+import { useMapPinsQuery } from '../../../../shared/queries/ranking'
 import { useAuthStore } from '../../../../shared/stores/authStore'
 import { RankingList } from '../../../home/components/RankingList'
-import { MOCK_MAP_RESTAURANTS } from '../../mocks/map.mock'
 import type { MapFilterKey, MapRestaurant } from '../../types/map'
 import { MapFilterTabs } from '../MapFilterTabs'
 import { MapKakaoMap } from '../MapKakaoMap'
@@ -15,7 +15,24 @@ export function DesktopMapPage() {
   const [selected, setSelected] = useState<MapRestaurant | null>(null)
   const isLoggedIn = useAuthStore((s) => s.isLoggedIn())
 
-  const restaurants = MOCK_MAP_RESTAURANTS
+  const { data: pins = [] } = useMapPinsQuery()
+
+  const restaurants: MapRestaurant[] = pins.map((pin) => ({
+    id: pin.restaurantId,
+    rank: pin.rank,
+    name: pin.name,
+    address: '',
+    shortAddress: '',
+    votes: pin.voteCount,
+    weeklyVoteDelta: 0,
+    lat: pin.latitude,
+    lng: pin.longitude,
+    hours: '',
+    breakTime: '',
+    tags: [],
+    isOpen: true,
+    image: '/images/shop_default_img.png',
+  }))
 
   return (
     <div className="flex h-screen pt-20">
@@ -60,7 +77,6 @@ export function DesktopMapPage() {
         {/* 필터 바 */}
         <div className="absolute inset-x-0 top-0 z-10 flex items-center gap-3 bg-white/90 px-4 py-3 shadow-sm backdrop-blur-sm">
           <MapFilterTabs active={activeFilter} onChange={setActiveFilter} className="flex-1" />
-
           <button
             type="button"
             onClick={() => setShowList((v) => !v)}
@@ -84,4 +100,3 @@ export function DesktopMapPage() {
     </div>
   )
 }
-

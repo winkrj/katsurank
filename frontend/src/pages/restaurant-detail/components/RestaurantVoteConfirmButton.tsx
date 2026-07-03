@@ -1,16 +1,20 @@
 import { useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { KAKAO_LOGIN_URL } from '../../../shared/constant/api';
+import { useCreateVoteMutation } from '../../../shared/mutations/votes';
 import { useAuthStore } from '../../../shared/stores/authStore';
 import { Button } from '../../../shared/ui/Button';
 import { AlertDialog, ConfirmDialog } from '../../../shared/ui/dialog';
 
 type RestaurantVoteConfirmButtonProps = {
+  restaurantId: number
   restaurantName: string
   className?: string
   label?: string
 }
 
 export function RestaurantVoteConfirmButton({
+  restaurantId,
   restaurantName,
   className,
   label = '내 인생 돈까스로 투표하기',
@@ -18,9 +22,19 @@ export function RestaurantVoteConfirmButton({
   const isLoggedIn = useAuthStore((s) => s.isLoggedIn());
   const [confirmOpen, setConfirmOpen] = useState(false);
   const [successOpen, setSuccessOpen] = useState(false);
+  const navigate = useNavigate();
+  const { mutate: vote, isPending } = useCreateVoteMutation();
 
   function handleVote() {
-    setSuccessOpen(true);
+    vote(
+      { restaurantId },
+      {
+        onSuccess: () => {
+          setConfirmOpen(false);
+          setSuccessOpen(true);
+        },
+      },
+    );
   }
 
   if (!isLoggedIn) {
@@ -49,12 +63,15 @@ export function RestaurantVoteConfirmButton({
           </>
         }
         description="표는 언제든 옮길 수 있어요."
-        confirmLabel="투표하기"
+        confirmLabel={isPending ? '투표 중...' : '투표하기'}
       />
 
       <AlertDialog
         open={successOpen}
-        onClose={() => setSuccessOpen(false)}
+        onClose={() => {
+          setSuccessOpen(false);
+          navigate('/me');
+        }}
         title="투표가 완료되었어요!"
         description="마이페이지에서 내 표를 확인할 수 있어요."
         confirmLabel="확인"

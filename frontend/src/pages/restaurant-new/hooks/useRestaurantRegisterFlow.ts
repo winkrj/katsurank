@@ -1,5 +1,5 @@
 import { useState } from 'react'
-import { MOCK_REGISTERED_RESTAURANT_ID } from '../constants'
+import { useRegisterRestaurantMutation } from '../../../shared/mutations/restaurants'
 import type {
   KakaoPlace,
   RegisterCompleteResult,
@@ -14,9 +14,10 @@ export function useRestaurantRegisterFlow() {
   const [draft, setDraft] = useState<RegisterDraft | null>(null)
   const [completeResult, setCompleteResult] = useState<RegisterCompleteResult | null>(null)
   const [duplicateAlertOpen, setDuplicateAlertOpen] = useState(false)
-  const [isSubmitting, setIsSubmitting] = useState(false)
+  const [registerError, setRegisterError] = useState<string | null>(null)
 
   const { results, hasSearched, isSearching, searchError, search } = useKakaoPlaceSearch()
+  const { mutateAsync: registerRestaurant, isPending: isSubmitting } = useRegisterRestaurantMutation()
 
   function handleSelectPlace(place: KakaoPlace) {
     if (place.isRegistered) {
@@ -32,17 +33,26 @@ export function useRestaurantRegisterFlow() {
     setDraft({ ...draft, photoPreview: preview })
   }
 
-  function handleSubmitRegister() {
+  async function handleSubmitRegister() {
     if (!draft) return
-    setIsSubmitting(true)
-    window.setTimeout(() => {
+    setRegisterError(null)
+
+    try {
+      const result = await registerRestaurant({
+        kakaoPlaceId: draft.place.kakaoPlaceId,
+        name: draft.place.name,
+        address: draft.place.address,
+        latitude: draft.place.latitude,
+        longitude: draft.place.longitude,
+      })
       setCompleteResult({
-        restaurantId: MOCK_REGISTERED_RESTAURANT_ID,
-        restaurantName: draft.place.name,
+        restaurantId: result.id,
+        restaurantName: result.name,
       })
       setStep('complete')
-      setIsSubmitting(false)
-    }, 600)
+    } catch {
+      setRegisterError('가게 등록에 실패했어요. 다시 시도해주세요.')
+    }
   }
 
   return {
@@ -52,6 +62,7 @@ export function useRestaurantRegisterFlow() {
     hasSearched,
     isSearching,
     searchError,
+    registerError,
     draft,
     completeResult,
     duplicateAlertOpen,

@@ -3,9 +3,9 @@ import { Link } from 'react-router-dom';
 type MyVoteTicketProps = {
   restaurantId: number;
   restaurantName: string;
-  restaurantImage: string;
-  rank: number;
-  votes: number;
+  restaurantImage?: string;
+  rank: number | null;
+  votes: number | null;
   votedAt: string;
   layout: 'desktop' | 'mobile';
 };
@@ -13,7 +13,7 @@ type MyVoteTicketProps = {
 export function MyVoteTicket({
   restaurantId,
   restaurantName,
-  restaurantImage,
+  restaurantImage = '/images/shop_default_img.png',
   rank,
   votes,
   votedAt,
@@ -95,10 +95,10 @@ function RestaurantImage({ src, name, size }: { src: string; name: string; size:
   );
 }
 
-function RankBadge({ rank, votes }: { rank: number; votes: number }) {
+function RankBadge({ rank, votes }: { rank: number | null; votes: number | null }) {
   return (
     <div className="rounded-full bg-[#D88A24] px-5 py-2 text-[14px] font-black text-white shadow-[0_3px_0_#A86010]">
-      현재 {rank}위 · {votes.toLocaleString()}표
+      {rank != null ? `현재 ${rank}위 · ` : ''}{votes != null ? `${votes.toLocaleString()}표` : '집계 중'}
     </div>
   );
 }
@@ -116,14 +116,6 @@ function CrownIcon() {
       <circle cx="6" cy="8" r="2" fill="#C78316" />
       <circle cx="16" cy="4" r="2" fill="#C78316" />
       <circle cx="26" cy="8" r="2" fill="#C78316" />
-    </svg>
-  );
-}
-function CornerDeco({ className }: { className?: string }) {
-  return (
-    <svg width="16" height="16" viewBox="0 0 16 16" fill="none" className={className} aria-hidden>
-      <path d="M1 8V2h6" stroke="#C78316" strokeWidth="1.5" strokeLinecap="round" />
-      <circle cx="1" cy="1" r="1.5" fill="#C78316" />
     </svg>
   );
 }

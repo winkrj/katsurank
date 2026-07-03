@@ -1,7 +1,7 @@
-import { useMemo, useState } from 'react'
-import { MOCK_SEARCH_TOTAL_COUNT, SEARCH_RESULTS_PER_PAGE } from '../constants'
-import { MOCK_SEARCH_RESULTS } from '../mocks/searchResults.mock'
-import type { SearchSortOption } from '../types/searchResult'
+import { useState } from 'react'
+import { SEARCH_RESULTS_PER_PAGE } from '../constants'
+import { useRestaurantSearchQuery } from '../../../shared/queries/restaurants'
+import type { SearchResultItem, SearchSortOption } from '../types/searchResult'
 import { SearchBanner } from './SearchBanner'
 import { SearchForm } from './SearchForm'
 import { SearchPagination } from './SearchPagination'
@@ -10,45 +10,38 @@ import { SearchResultList } from './SearchResultList'
 import { SearchResultsHeader } from './SearchResultsHeader'
 
 export function MobileSearchPage() {
-  const [query, setQuery] = useState('')
+  const [inputQuery, setInputQuery] = useState('')
+  const [submittedQuery, setSubmittedQuery] = useState('')
   const [selectedTag, setSelectedTag] = useState<string | null>(null)
   const [sort, setSort] = useState<SearchSortOption>('rank')
   const [page, setPage] = useState(1)
 
-  const filteredResults = useMemo(() => {
-    let results = [...MOCK_SEARCH_RESULTS]
+  const { data: apiResults = [], isLoading } = useRestaurantSearchQuery(submittedQuery)
 
-    if (query.trim()) {
-      const keyword = query.trim().toLowerCase()
-      results = results.filter(
-        (item) =>
-          item.name.toLowerCase().includes(keyword) ||
-          item.address.toLowerCase().includes(keyword),
-      )
-    }
+  const results: SearchResultItem[] = apiResults.map((r) => ({
+    id: r.id,
+    rank: r.rank ?? 0,
+    name: r.name,
+    address: r.address,
+    category: '일식 돈까스',
+    votes: r.voteCount,
+    image: '/images/shop_default_img.png',
+  }))
 
-    if (selectedTag) {
-      results = results.filter((item) => item.address.includes(selectedTag))
-    }
+  const sorted = [...results].sort((a, b) => {
+    if (sort === 'votes') return b.votes - a.votes
+    if (sort === 'name') return a.name.localeCompare(b.name, 'ko')
+    return (a.rank || 9999) - (b.rank || 9999)
+  })
 
-    if (sort === 'votes') {
-      results.sort((a, b) => b.votes - a.votes)
-    } else if (sort === 'name') {
-      results.sort((a, b) => a.name.localeCompare(b.name, 'ko'))
-    } else {
-      results.sort((a, b) => a.rank - b.rank)
-    }
-
-    return results
-  }, [query, selectedTag, sort])
-
-  const totalPages = Math.max(1, Math.ceil(filteredResults.length / SEARCH_RESULTS_PER_PAGE))
-  const paginatedResults = filteredResults.slice(
+  const totalPages = Math.max(1, Math.ceil(sorted.length / SEARCH_RESULTS_PER_PAGE))
+  const paginatedResults = sorted.slice(
     (page - 1) * SEARCH_RESULTS_PER_PAGE,
     page * SEARCH_RESULTS_PER_PAGE,
   )
 
   function handleSearch() {
+    setSubmittedQuery(inputQuery)
     setPage(1)
   }
 
@@ -58,23 +51,24 @@ export function MobileSearchPage() {
 
       <div className="space-y-4 px-4 py-5">
         <SearchForm
-          query={query}
+          query={inputQuery}
           selectedTag={selectedTag}
-          onQueryChange={setQuery}
+          onQueryChange={setInputQuery}
           onTagSelect={setSelectedTag}
           onSubmit={handleSearch}
           layout="mobile"
         />
         <SearchRegisterCard layout="mobile" />
         <SearchResultsHeader
-          total={query || selectedTag ? filteredResults.length : MOCK_SEARCH_TOTAL_COUNT}
+          total={sorted.length}
           sort={sort}
           onSortChange={setSort}
         />
         <SearchResultList
           items={paginatedResults}
           layout="mobile"
-          hasQuery={Boolean(query.trim() || selectedTag)}
+          hasQuery={Boolean(submittedQuery.trim() || selectedTag)}
+          isLoading={isLoading}
         />
         <SearchPagination currentPage={page} totalPages={totalPages} onPageChange={setPage} />
       </div>

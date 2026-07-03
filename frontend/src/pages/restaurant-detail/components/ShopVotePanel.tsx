@@ -12,6 +12,7 @@ export function ShopVotePanel({ restaurant }: ShopVotePanelProps) {
     <ShopVoteStatsCard restaurant={restaurant}>
       <div className="mt-5 space-y-3">
         <RestaurantVoteConfirmButton
+          restaurantId={restaurant.id}
           restaurantName={restaurant.name}
           className="w-full rounded-xl"
         />
