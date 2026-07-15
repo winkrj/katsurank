@@ -201,7 +201,7 @@ INDEX idx_restaurant_current (restaurant_id, is_current)
 ### 6.2 카테고리 화이트리스트
 
 가게 등록 시 카카오 카테고리 검사:
-- "돈까스", "돈가스", "경양식" 중 하나라도 포함하면 ACTIVE
+- "돈까스", "돈가스", "돈카츠", "경양식" 중 하나라도 포함하면 ACTIVE
 - 아니면 REJECTED + 사용자에게 사유 안내
 
 ### 6.3 실시간 = 30초 폴링

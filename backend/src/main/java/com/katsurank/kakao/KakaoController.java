@@ -2,14 +2,14 @@ package com.katsurank.kakao;
 
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
+import jakarta.validation.constraints.Max;
+import jakarta.validation.constraints.Min;
 import jakarta.validation.constraints.NotBlank;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
-
-import java.util.List;
 
 /**
  * 카카오 로컬 API 프록시 — 가게 추가 화면에서 장소를 검색한다.
@@ -30,8 +30,12 @@ public class KakaoController {
     @GetMapping("/search")
     @Operation(summary = "카카오 장소 키워드 검색",
             description = "카카오 로컬 API를 그대로 프록시한다. 인증 불필요. 결과의 kakaoPlaceId를 "
-                    + "POST /api/v1/restaurants 요청에 그대로 넣어 등록한다.")
-    public List<KakaoPlace> search(@RequestParam @NotBlank String query) {
-        return kakaoLocalClient.searchByKeyword(query.trim());
+                    + "POST /api/v1/restaurants 요청에 그대로 넣어 등록한다. "
+                    + "size는 15건 고정이며 카카오 정책상 page*size<=45라 page는 1~3만 유효하다.")
+    public KakaoPlaceSearchResponse search(
+            @RequestParam @NotBlank String query,
+            @RequestParam(defaultValue = "1") @Min(1) @Max(3) int page) {
+        KakaoSearchResult result = kakaoLocalClient.searchByKeyword(query.trim(), page);
+        return KakaoPlaceSearchResponse.of(result, page);
     }
 }

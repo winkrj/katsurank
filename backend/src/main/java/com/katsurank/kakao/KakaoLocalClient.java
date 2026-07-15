@@ -32,13 +32,14 @@ public class KakaoLocalClient {
         this.restClient = restClient;
     }
 
-    @Cacheable(cacheNames = "kakaoPlaceSearch", key = "#query")
-    public List<KakaoPlace> searchByKeyword(String query) {
-        log.info("카카오 로컬 검색 호출 query={}", query);
+    @Cacheable(cacheNames = "kakaoPlaceSearch", key = "#query + '_' + #page")
+    public KakaoSearchResult searchByKeyword(String query, int page) {
+        log.info("카카오 로컬 검색 호출 query={} page={}", query, page);
         try {
             KakaoKeywordSearchResponse response = restClient.get()
                     .uri(uri -> uri.path("/v2/local/search/keyword.json")
                             .queryParam("query", query)
+                            .queryParam("page", page)
                             .queryParam("size", SEARCH_SIZE)
                             .queryParam("category_group_code", FOOD_CATEGORY_GROUP)
                             .build())
@@ -48,9 +49,27 @@ public class KakaoLocalClient {
                     })
                     .body(KakaoKeywordSearchResponse.class);
 
-            return response == null ? List.of() : response.toPlaces();
+            return toSearchResult(response);
         } catch (RestClientException ex) {
             throw new KakaoApiException("카카오 로컬 API 호출 실패: " + ex.getMessage());
         }
+    }
+
+    private static KakaoSearchResult toSearchResult(KakaoKeywordSearchResponse response) {
+        if (response == null || response.meta() == null) {
+            return new KakaoSearchResult(List.of(), 0, 0, true);
+        }
+        KakaoKeywordSearchResponse.Meta meta = response.meta();
+        return new KakaoSearchResult(
+                response.toPlaces(), meta.totalCount(), calculateTotalPages(meta.pageableCount()), meta.isEnd());
+    }
+
+    /** 카카오가 실제 열람을 허용하는 건수({@code pageable_count}, 최대 45) 기준으로 계산한다.
+     * {@code total_count} 기준으로 계산하면 실제로는 존재하지 않는 페이지 번호가 나올 수 있다. */
+    private static int calculateTotalPages(int pageableCount) {
+        if (pageableCount <= 0) {
+            return 0;
+        }
+        return (int) Math.ceil((double) pageableCount / SEARCH_SIZE);
     }
 }

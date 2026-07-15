@@ -13,7 +13,7 @@ public class CategoryNotAllowedException extends ApiException {
 
     public CategoryNotAllowedException(String kakaoCategory) {
         super(HttpStatus.UNPROCESSABLE_ENTITY, "CATEGORY_NOT_ALLOWED",
-                "돈까스(돈가스)·경양식 카테고리만 등록할 수 있어요. (카카오 분류: "
+                "돈까스(돈가스·돈카츠)·경양식 카테고리만 등록할 수 있어요. (카카오 분류: "
                         + (kakaoCategory == null ? "없음" : kakaoCategory) + ")");
     }
 }

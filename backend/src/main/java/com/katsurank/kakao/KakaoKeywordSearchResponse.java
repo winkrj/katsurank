@@ -12,7 +12,14 @@ import java.util.List;
  * 우리가 쓰는 필드만 추출하고 나머지는 무시한다.
  */
 @JsonIgnoreProperties(ignoreUnknown = true)
-public record KakaoKeywordSearchResponse(List<Document> documents) {
+public record KakaoKeywordSearchResponse(List<Document> documents, Meta meta) {
+
+    @JsonIgnoreProperties(ignoreUnknown = true)
+    public record Meta(
+            @JsonProperty("total_count") int totalCount,
+            @JsonProperty("pageable_count") int pageableCount,
+            @JsonProperty("is_end") boolean isEnd) {
+    }
 
     @JsonIgnoreProperties(ignoreUnknown = true)
     public record Document(
