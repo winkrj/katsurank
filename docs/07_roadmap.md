@@ -1,7 +1,7 @@
 # 카츠랭 — 개발 로드맵 & 진행 상황
 
-- **버전**: v0.4
-- **갱신일**: 2026-07-02
+- **버전**: v0.5
+- **갱신일**: 2026-07-15
 
 > 이 파일이 개발 진행의 진실 기록이다.
 > 완료되면 `[x]`, 진행 중이면 `[~]`, 미정이면 `[ ]`.
@@ -39,10 +39,11 @@
 
 ---
 
-## M2. 서버 배포 (백엔드) ✅ — 수동 배포 완료, CI/CD 자동화는 의도적으로 다음 단계로 미룸
+## M2. 서버 배포 (백엔드) ✅ — 수동 배포 → CI/CD 자동 배포 전환 완료
 
 > 실무에서 널리 쓰는 EC2로 인프라를 직접 손으로 구성해보는 학습 목적. 자동 배포(GitHub Actions)는
 > 처음부터 만들지 않고, 수동 배포 흐름을 완전히 익힌 뒤에 도입하기로 결정함 (의도된 단계적 전환).
+> 2026-07-15 GitHub Secrets 등록 후 자동 배포 파이프라인 검증 완료.
 
 ### 사전 준비
 - [x] AWS 계정 생성
@@ -153,3 +154,4 @@
 - **v0.2 (2026-07-01)**: M2 인프라 변경 — Oracle Cloud → AWS EC2, CloudFlare 표기 통일. 프론트 전달용 API 문서(springdoc-openapi/Swagger UI) 도입, Nginx Basic Auth로 문서 경로 보호.
 - **v0.3 (2026-07-02)**: M2(서버 배포) 실제 완료 상태 반영 — EC2/Nginx/systemd/HTTPS/DNS/카카오 OAuth 전부 동작 확인. CI/CD(5단계)는 의도적으로 미착수 상태(수동 배포 먼저 → 자동 배포 순서로 진행 예정). Cloudflare는 DNS only(Proxy 미사용) 확인. `/api/v1/ranking` curl 확인 — 200 + 빈 배열(가게 데이터 미시딩 상태라 정상).
 - **v0.4 (2026-07-02)**: M3(프론트엔드 개발) 상태를 "대기"→"진행 중"으로 정정 — 협업자(oljyee)가 이미 Vite+React Router로 페이지 대부분을 마크업하고 일부는 실제 API 연동까지 진행함. "Next.js 프로젝트 세팅" 항목을 실제 스택(Vite+React Router) 기준으로 정정.
+- **v0.5 (2026-07-15)**: M2 5단계(CI/CD) 완료 — GitHub Secrets(`PROD_HOST`/`PROD_USER`/`PROD_SSH_KEY`) 등록 후 기존 실패 run 재실행으로 `deploy.yml` 전 단계(Build→Upload→Restart→Health check) 성공 확인. `06_deployment_guide.md`의 "14개 시크릿" 안내는 실제로 필요한 3개보다 과다 산정되어 있었음을 확인 — 나머지 11개(DB/카카오 등)는 서버 `/etc/katsurank/env`에 이미 수동 설정되어 있어 CI/CD가 관여하지 않음.

@@ -1,6 +1,6 @@
 # 카츠랭 — 배포 가이드 (백엔드)
 
-- **버전**: v0.2
+- **버전**: v0.3
 - **작성일**: 2026-07-01
 - **대상**: AWS EC2 + Nginx + GitHub Actions CI/CD
 - **전제**: API v1 로컬 테스트 완료, `main` 브랜치 안정
@@ -282,6 +282,11 @@ sudo systemctl enable katsurank
 
 ## 5단계. GitHub Secrets 등록
 
+> **2026-07-15 정정**: `deploy.yml`은 실제로 아래 3개 Secret만 참조한다. DB/카카오/앱 설정 등 나머지 값은
+> GitHub Secrets가 아니라 4-1단계에서 서버의 `/etc/katsurank/env`에 직접 넣어 관리하며, CI/CD 파이프라인은
+> 이 파일을 건드리지 않는다 (재배포 시에도 기존 env 파일 그대로 사용). 따라서 앱 설정값을 바꿀 때는
+> GitHub Secrets가 아니라 서버의 `/etc/katsurank/env`를 직접 수정하고 `systemctl restart katsurank`.
+
 GitHub 리포지토리 → **Settings** → **Secrets and variables** → **Actions** → **New repository secret**
 
 | Secret 이름 | 값 |
@@ -289,19 +294,9 @@ GitHub 리포지토리 → **Settings** → **Secrets and variables** → **Acti
 | `PROD_HOST` | Elastic IP 주소 |
 | `PROD_USER` | `ubuntu` |
 | `PROD_SSH_KEY` | `katsurank-key.pem` 파일 전체 내용 |
-| `DATABASE_URL` | `jdbc:postgresql://localhost:5432/katsurank` |
-| `DATABASE_USERNAME` | `katsurankapp` |
-| `DATABASE_PASSWORD` | 3-4에서 설정한 비밀번호 |
-| `KAKAO_CLIENT_ID` | 카카오 디벨로퍼스 앱 키 |
-| `KAKAO_CLIENT_SECRET` | 카카오 로그인 보안 → Client Secret |
-| `KAKAO_REST_API_KEY` | 카카오 디벨로퍼스 REST API 키 |
-| `APP_FRONTEND_URL` | `https://katsurank.kr` |
-| `APP_CORS_ALLOWED_ORIGINS` | `https://katsurank.kr` |
-| `APP_COOKIE_DOMAIN` | `katsurank.kr` |
-| `APP_COOKIE_SECURE` | `true` |
-| `APP_COOKIE_SAME_SITE` | `Lax` |
 
 > `PROD_SSH_KEY`는 `cat ~/Downloads/katsurank-key.pem`으로 복사. `-----BEGIN OPENSSH PRIVATE KEY-----`로 시작하는 전체 내용.
+> `gh secret set PROD_HOST --body "<Elastic IP>"` 처럼 `gh` CLI로도 등록 가능.
 
 ---
 
@@ -563,3 +558,4 @@ AWS 콘솔 → EC2 → Security Groups → `katsurank-prod` 보안 그룹 → In
 
 - **v0.1 (2026-06-28)**: 최초 작성. Oracle Cloud Free Tier 기준.
 - **v0.2 (2026-07-01)**: AWS EC2 (t2.micro) + Cloudflare + Gabia 기준으로 전면 재작성.
+- **v0.3 (2026-07-15)**: 5단계 GitHub Secrets 표 정정 — `deploy.yml`이 실제로 참조하는 건 `PROD_HOST`/`PROD_USER`/`PROD_SSH_KEY` 3개뿐임을 확인(기존 14개 안내는 과다 산정). CI/CD 자동 배포 파이프라인 실제 검증 완료.
