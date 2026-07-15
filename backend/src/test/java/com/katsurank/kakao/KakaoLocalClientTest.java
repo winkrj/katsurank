@@ -31,6 +31,7 @@ class KakaoLocalClientTest {
                 .andExpect(queryParam("page", "2"))
                 .andExpect(queryParam("size", "15"))
                 .andExpect(queryParam("category_group_code", "FD6"))
+                .andExpect(queryParam("rect", "126.734086,37.413294,127.269311,37.715133"))
                 .andRespond(withSuccess("""
                         {"documents":[],"meta":{"total_count":30,"pageable_count":30,"is_end":false}}
                         """, MediaType.APPLICATION_JSON));
@@ -62,6 +63,55 @@ class KakaoLocalClientTest {
         KakaoSearchResult result = client.searchByKeyword("돈까스", 1);
 
         assertThat(result.totalPages()).isEqualTo(expectedTotalPages);
+    }
+
+    @Test
+    void 돈까스와_무관한_카테고리_이름은_걸러낸다() {
+        RestClient.Builder builder = newBuilder();
+        MockRestServiceServer server = MockRestServiceServer.bindTo(builder).build();
+        KakaoLocalClient client = new KakaoLocalClient(builder.build());
+
+        server.expect(requestTo(startsWith(SEARCH_PATH)))
+                .andRespond(withSuccess("""
+                        {
+                          "documents": [
+                            {"id":"1","place_name":"동경돈까스","category_name":"음식점 > 일식 > 돈까스,우동","address_name":"서울 마포구 망원동","x":"127.0","y":"37.5"},
+                            {"id":"2","place_name":"청담수 경양식돈까스","category_name":"음식점 > 양식","address_name":"서울 서초구 서초동","x":"127.0","y":"37.5"},
+                            {"id":"3","place_name":"마초 스테이크","category_name":"음식점 > 양식 > 스테이크,립","address_name":"서울 강남구 논현동","x":"127.0","y":"37.5"}
+                          ],
+                          "meta": {"total_count":3,"pageable_count":3,"is_end":true}
+                        }
+                        """, MediaType.APPLICATION_JSON));
+
+        KakaoSearchResult result = client.searchByKeyword("돈까스", 1);
+
+        assertThat(result.places())
+                .extracting(KakaoPlace::name)
+                .containsExactly("동경돈까스", "청담수 경양식돈까스");
+    }
+
+    @Test
+    void 서울이_아닌_주소는_걸러낸다() {
+        RestClient.Builder builder = newBuilder();
+        MockRestServiceServer server = MockRestServiceServer.bindTo(builder).build();
+        KakaoLocalClient client = new KakaoLocalClient(builder.build());
+
+        server.expect(requestTo(startsWith(SEARCH_PATH)))
+                .andRespond(withSuccess("""
+                        {
+                          "documents": [
+                            {"id":"1","place_name":"서울돈까스","category_name":"음식점 > 일식 > 돈까스,우동","address_name":"서울 마포구 망원동","x":"127.0","y":"37.5"},
+                            {"id":"2","place_name":"부산돈까스","category_name":"음식점 > 일식 > 돈까스,우동","address_name":"부산 금정구 장전동","x":"129.0","y":"35.2"}
+                          ],
+                          "meta": {"total_count":2,"pageable_count":2,"is_end":true}
+                        }
+                        """, MediaType.APPLICATION_JSON));
+
+        KakaoSearchResult result = client.searchByKeyword("돈까스", 1);
+
+        assertThat(result.places())
+                .extracting(KakaoPlace::name)
+                .containsExactly("서울돈까스");
     }
 
     @Test

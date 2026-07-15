@@ -66,6 +66,19 @@ class RestaurantServiceTest {
     }
 
     @Test
+    @DisplayName("서울 밖 주소로 가게 등록 → RegionNotAllowedException")
+    void regionNotAllowed() {
+        User user = TestFixtures.createUser(userRepository);
+        RestaurantRegisterRequest request = new RestaurantRegisterRequest(
+                "busan-place-1", "부산돈까스", "부산 금정구 장전동", "부산 금정구 장전로 1",
+                new BigDecimal("35.2000000"), new BigDecimal("129.0000000"),
+                "음식점 > 일식 > 돈까스,우동", null, null);
+
+        assertThatThrownBy(() -> restaurantService.register(request, user.getId()))
+                .isInstanceOf(RegionNotAllowedException.class);
+    }
+
+    @Test
     @DisplayName("존재하지 않는 가게 조회 → RestaurantNotFoundException")
     void getByIdNotFound() {
         assertThatThrownBy(() -> restaurantService.getById(999999L))
