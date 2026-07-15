@@ -36,17 +36,28 @@ jobs:
           target: /opt/katsurank/
           strip_components: 3
 
-      - name: Restart service
+      - name: Backup previous JAR and restart service
+        id: restart
         uses: appleboy/ssh-action@v1.0.3
         with:
           host: ${{ secrets.PROD_HOST }}
           username: ${{ secrets.PROD_USER }}
           key: ${{ secrets.PROD_SSH_KEY }}
           script: |
-            sudo mv /opt/katsurank/*.jar /opt/katsurank/app.jar
+            cd /opt/katsurank
+            NEW_JAR=$(ls -t *.jar 2>/dev/null | grep -v -e '^app\.jar$' -e '^app\.jar\.bak$' | head -1)
+            if [ -z "$NEW_JAR" ]; then
+              echo "새로 업로드된 JAR을 찾지 못함"
+              exit 1
+            fi
+            if [ -f app.jar ]; then
+              sudo cp app.jar app.jar.bak
+            fi
+            sudo mv "$NEW_JAR" app.jar
             sudo systemctl restart katsurank
 
       - name: Health check
+        id: health
         uses: appleboy/ssh-action@v1.0.3
         with:
           host: ${{ secrets.PROD_HOST }}
@@ -65,3 +76,45 @@ jobs:
             echo "Health check failed after 60s"
             sudo journalctl -u katsurank -n 50
             exit 1
+
+      - name: Rollback to previous JAR on failed health check
+        id: rollback
+        if: failure() && steps.restart.outcome == 'success'
+        uses: appleboy/ssh-action@v1.0.3
+        with:
+          host: ${{ secrets.PROD_HOST }}
+          username: ${{ secrets.PROD_USER }}
+          key: ${{ secrets.PROD_SSH_KEY }}
+          script: |
+            if [ -f /opt/katsurank/app.jar.bak ]; then
+              sudo cp /opt/katsurank/app.jar.bak /opt/katsurank/app.jar
+              sudo systemctl restart katsurank
+              echo "이전 JAR로 롤백 완료"
+            else
+              echo "백업된 이전 JAR이 없어 롤백 불가 — 서버 직접 확인 필요"
+              exit 1
+            fi
+
+      - name: Notify Slack
+        if: always()
+        env:
+          SLACK_WEBHOOK: ${{ secrets.SLACK_WEBHOOK }}
+        run: |
+          SHA_SHORT=$(git rev-parse --short HEAD)
+          SUBJECT=$(git log -1 --pretty=format:'%s')
+          RUN_URL="${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}"
+
+          if [ "${{ job.status }}" = "success" ]; then
+            TEXT="✅ *배포 성공* — \`$SHA_SHORT\` $SUBJECT"
+          elif [ "${{ steps.restart.outcome }}" != "success" ]; then
+            TEXT="🚨 *배포 실패* (빌드/업로드/재시작 단계) — 서버는 이전 버전 그대로 동작 중, 코드 반영은 안 됐음"
+          elif [ "${{ steps.rollback.outcome }}" = "success" ]; then
+            TEXT="⚠️ *배포 실패 — 헬스체크 통과 못해 이전 버전으로 롤백함*"
+          else
+            TEXT="🚨 *배포 실패 + 롤백도 실패* — 서버 직접 확인 필요"
+          fi
+
+          curl -H "Content-Type: application/json" \
+               -X POST \
+               -d "$(jq -n --arg text "$TEXT ($RUN_URL)" '{text: $text}')" \
+               "$SLACK_WEBHOOK"
