@@ -88,9 +88,11 @@ public class KakaoLocalClient {
                 .filter(KakaoLocalClient::isInSeoul)
                 .filter(KakaoLocalClient::isLikelyTonkatsu)
                 .toList();
-        // totalCount/totalPages/isEnd 는 필터링 전 카카오 원본 페이지 기준 — 위 places 개수와 정확히 일치하지 않을 수 있다.
+        // totalCount는 카카오 원본 total_count(필터 전, 수만 건 단위로 커질 수 있음)가 아니라
+        // 실제로 이번 응답에 담긴 place 개수를 반영한다 — 그래야 화면에 보이는 결과 수와 일치한다.
+        // totalPages/isEnd는 필터와 무관한 카카오 원본 페이지네이션 한계(최대 3페이지)이므로 그대로 둔다.
         return new KakaoSearchResult(
-                places, meta.totalCount(), calculateTotalPages(meta.pageableCount()), meta.isEnd());
+                places, places.size(), calculateTotalPages(meta.pageableCount()), meta.isEnd());
     }
 
     private static boolean isInSeoul(KakaoPlace place) {
