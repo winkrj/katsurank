@@ -115,6 +115,30 @@ class KakaoLocalClientTest {
     }
 
     @Test
+    void totalCount는_카카오_원본이_아니라_필터링_후_실제_반환_개수다() {
+        RestClient.Builder builder = newBuilder();
+        MockRestServiceServer server = MockRestServiceServer.bindTo(builder).build();
+        KakaoLocalClient client = new KakaoLocalClient(builder.build());
+
+        server.expect(requestTo(startsWith(SEARCH_PATH)))
+                .andRespond(withSuccess("""
+                        {
+                          "documents": [
+                            {"id":"1","place_name":"동경돈까스","category_name":"음식점 > 일식 > 돈까스,우동","address_name":"서울 마포구 망원동","x":"127.0","y":"37.5"},
+                            {"id":"2","place_name":"강남맛집식당","category_name":"음식점 > 한식","address_name":"서울 강남구 논현동","x":"127.0","y":"37.5"}
+                          ],
+                          "meta": {"total_count":24018,"pageable_count":45,"is_end":false}
+                        }
+                        """, MediaType.APPLICATION_JSON));
+
+        KakaoSearchResult result = client.searchByKeyword("강남 맛집", 1);
+
+        assertThat(result.places()).hasSize(1);
+        assertThat(result.totalCount()).isEqualTo(1);
+        assertThat(result.totalPages()).isEqualTo(3);
+    }
+
+    @Test
     void meta가_없는_응답도_안전하게_처리한다() {
         RestClient.Builder builder = newBuilder();
         MockRestServiceServer server = MockRestServiceServer.bindTo(builder).build();

@@ -33,7 +33,8 @@ public class KakaoController {
                     + "서버에서 걸러낸다(느슨한 사전 필터 — 최종 판단은 등록 시점 화이트리스트가 한다). 인증 불필요. 결과의 kakaoPlaceId를 "
                     + "POST /api/v1/restaurants 요청에 그대로 넣어 등록한다. "
                     + "size는 15건 고정이며 카카오 정책상 page*size<=45라 page는 1~3만 유효하다. "
-                    + "totalCount/totalPages는 필터링 전 카카오 원본 페이지 기준이라 실제 반환 건수와 다를 수 있다.")
+                    + "totalCount는 필터링 후 이번 응답에 실제로 담긴 place 개수(=places.size())이고, "
+                    + "totalPages/isEnd는 필터와 무관한 카카오 원본 페이지네이션 한계(최대 3페이지) 기준이다.")
     public KakaoPlaceSearchResponse search(
             @RequestParam @NotBlank String query,
             @RequestParam(defaultValue = "1") @Min(1) @Max(3) int page) {
