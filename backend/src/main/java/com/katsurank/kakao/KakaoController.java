@@ -29,9 +29,11 @@ public class KakaoController {
 
     @GetMapping("/search")
     @Operation(summary = "카카오 장소 키워드 검색",
-            description = "카카오 로컬 API를 그대로 프록시한다. 인증 불필요. 결과의 kakaoPlaceId를 "
+            description = "카카오 로컬 API를 프록시하되, 서울 지역이 아니거나 돈까스 관련 카테고리·이름이 아닌 결과는 "
+                    + "서버에서 걸러낸다(느슨한 사전 필터 — 최종 판단은 등록 시점 화이트리스트가 한다). 인증 불필요. 결과의 kakaoPlaceId를 "
                     + "POST /api/v1/restaurants 요청에 그대로 넣어 등록한다. "
-                    + "size는 15건 고정이며 카카오 정책상 page*size<=45라 page는 1~3만 유효하다.")
+                    + "size는 15건 고정이며 카카오 정책상 page*size<=45라 page는 1~3만 유효하다. "
+                    + "totalCount/totalPages는 필터링 전 카카오 원본 페이지 기준이라 실제 반환 건수와 다를 수 있다.")
     public KakaoPlaceSearchResponse search(
             @RequestParam @NotBlank String query,
             @RequestParam(defaultValue = "1") @Min(1) @Max(3) int page) {

@@ -47,6 +47,9 @@ public class RestaurantService {
         if (!CategoryValidator.isTonkatsu(request.kakaoCategory())) {
             throw new CategoryNotAllowedException(request.kakaoCategory());
         }
+        if (!SeoulAddressValidator.isSeoul(request.address(), request.roadAddress())) {
+            throw new RegionNotAllowedException(request.address());
+        }
 
         Restaurant restaurant = Restaurant.register(
                 request.kakaoPlaceId(),

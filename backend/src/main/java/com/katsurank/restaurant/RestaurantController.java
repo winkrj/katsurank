@@ -39,12 +39,12 @@ public class RestaurantController {
     @PostMapping
     @Operation(summary = "가게 등록",
             description = "카카오 로컬 검색(GET /api/v1/kakao-places/search) 결과를 그대로 body로 보내 등록한다. "
-                    + "돈까스/돈가스/경양식 카테고리만 허용되며, 등록자는 body가 아니라 로그인 세션에서 식별한다.")
+                    + "돈까스/돈가스/경양식 카테고리 + 서울 지역만 허용되며, 등록자는 body가 아니라 로그인 세션에서 식별한다.")
     @ApiResponse(responseCode = "201", description = "등록 성공")
     @ApiResponse(responseCode = "401", description = "로그인 필요")
     @ApiResponse(responseCode = "409", description = "이미 등록된 kakaoPlaceId (DUPLICATE_PLACE)",
             content = @Content(schema = @Schema(implementation = ApiError.class)))
-    @ApiResponse(responseCode = "422", description = "허용되지 않는 카테고리 (CATEGORY_NOT_ALLOWED)",
+    @ApiResponse(responseCode = "422", description = "허용되지 않는 카테고리 (CATEGORY_NOT_ALLOWED) 또는 서울 밖 주소 (REGION_NOT_ALLOWED)",
             content = @Content(schema = @Schema(implementation = ApiError.class)))
     public ResponseEntity<RestaurantResponse> register(@Valid @RequestBody RestaurantRegisterRequest request,
                                                        @LoginUser AuthPrincipal principal) {
