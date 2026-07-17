@@ -16,7 +16,7 @@ import org.springframework.web.client.RestClientException;
  * 별도 빈으로 분리했다.
  */
 @Component
-class KakaoRawPageFetcher {
+public class KakaoRawPageFetcher {
 
     static final int SEARCH_SIZE = 15;
 
@@ -32,12 +32,17 @@ class KakaoRawPageFetcher {
 
     private final RestClient restClient;
 
-    KakaoRawPageFetcher(@Qualifier("kakaoLocalRestClient") RestClient restClient) {
+    public KakaoRawPageFetcher(@Qualifier("kakaoLocalRestClient") RestClient restClient) {
         this.restClient = restClient;
     }
 
+    /**
+     * public이어야 한다 — Spring의 기본 프록시 기반 캐싱은 {@code @Cacheable}을 public 메서드에서만
+     * 인식한다({@code AnnotationCacheOperationSource}가 public 메서드만 캐시 대상으로 스캔). package-private로
+     * 두면 예외 없이 조용히 캐싱이 적용되지 않아 매 호출이 카카오 API를 실제로 때린다.
+     */
     @Cacheable(cacheNames = "kakaoPlaceSearch", key = "#query + '_' + #rawPage")
-    KakaoKeywordSearchResponse fetch(String query, int rawPage) {
+    public KakaoKeywordSearchResponse fetch(String query, int rawPage) {
         try {
             return restClient.get()
                     .uri(uri -> uri.path("/v2/local/search/keyword.json")
@@ -53,7 +58,7 @@ class KakaoRawPageFetcher {
                     })
                     .body(KakaoKeywordSearchResponse.class);
         } catch (RestClientException ex) {
-            throw new KakaoApiException("카카오 로컬 API 호출 실패: " + ex.getMessage());
+            throw new KakaoApiException("카카오 로컬 API 호출 실패: " + ex.getMessage(), ex);
         }
     }
 }
