@@ -20,20 +20,30 @@ class KakaoLocalClientTest {
         return RestClient.builder().baseUrl(BASE_URL);
     }
 
+    private KakaoLocalClient newClient(RestClient.Builder builder) {
+        return new KakaoLocalClient(new KakaoRawPageFetcher(builder.build()));
+    }
+
+    private String place(String id, String name, String category, String address) {
+        return """
+                {"id":"%s","place_name":"%s","category_name":"%s","address_name":"%s","x":"127.0","y":"37.5"}
+                """.formatted(id, name, category, address);
+    }
+
     @Test
-    void page_파라미터를_카카오_요청에_그대로_전달한다() {
+    void 클라이언트가_요청한_page와_무관하게_원본은_1페이지부터_순서대로_요청한다() {
         RestClient.Builder builder = newBuilder();
         MockRestServiceServer server = MockRestServiceServer.bindTo(builder).build();
-        KakaoLocalClient client = new KakaoLocalClient(builder.build());
+        KakaoLocalClient client = newClient(builder);
 
         server.expect(requestTo(startsWith(SEARCH_PATH)))
                 .andExpect(queryParam("query", "tonkatsu"))
-                .andExpect(queryParam("page", "2"))
+                .andExpect(queryParam("page", "1"))
                 .andExpect(queryParam("size", "15"))
                 .andExpect(queryParam("category_group_code", "FD6"))
                 .andExpect(queryParam("rect", "126.734086,37.413294,127.269311,37.715133"))
                 .andRespond(withSuccess("""
-                        {"documents":[],"meta":{"total_count":30,"pageable_count":30,"is_end":false}}
+                        {"documents":[],"meta":{"total_count":0,"pageable_count":0,"is_end":true}}
                         """, MediaType.APPLICATION_JSON));
 
         client.searchByKeyword("tonkatsu", 2);
@@ -42,34 +52,109 @@ class KakaoLocalClientTest {
     }
 
     @Test
-    void pageable_count_기준으로_totalPages를_계산한다() {
-        assertTotalPages(0, 0);
-        assertTotalPages(1, 1);
-        assertTotalPages(15, 1);
-        assertTotalPages(20, 2);
-        assertTotalPages(45, 3);
-    }
-
-    private void assertTotalPages(int pageableCount, int expectedTotalPages) {
+    void 카카오가_isEnd라고_할때까지만_원본_페이지를_이어서_요청한다() {
         RestClient.Builder builder = newBuilder();
         MockRestServiceServer server = MockRestServiceServer.bindTo(builder).build();
-        KakaoLocalClient client = new KakaoLocalClient(builder.build());
+        KakaoLocalClient client = newClient(builder);
 
         server.expect(requestTo(startsWith(SEARCH_PATH)))
+                .andExpect(queryParam("page", "1"))
                 .andRespond(withSuccess("""
-                        {"documents":[],"meta":{"total_count":%d,"pageable_count":%d,"is_end":true}}
-                        """.formatted(pageableCount, pageableCount), MediaType.APPLICATION_JSON));
+                        {"documents":[%s],"meta":{"total_count":20,"pageable_count":20,"is_end":false}}
+                        """.formatted(place("1", "동경돈까스", "음식점 > 일식 > 돈까스,우동", "서울 마포구 망원동")),
+                        MediaType.APPLICATION_JSON));
+        server.expect(requestTo(startsWith(SEARCH_PATH)))
+                .andExpect(queryParam("page", "2"))
+                .andRespond(withSuccess("""
+                        {"documents":[%s],"meta":{"total_count":20,"pageable_count":20,"is_end":true}}
+                        """.formatted(place("2", "강남돈까스", "음식점 > 일식 > 돈까스,우동", "서울 강남구 역삼동")),
+                        MediaType.APPLICATION_JSON));
 
         KakaoSearchResult result = client.searchByKeyword("돈까스", 1);
 
-        assertThat(result.totalPages()).isEqualTo(expectedTotalPages);
+        assertThat(result.places()).extracting(KakaoPlace::name).containsExactly("동경돈까스", "강남돈까스");
+        server.verify();
+    }
+
+    @Test
+    void 여러_원본_페이지에_흩어진_결과를_모아_우리_페이지_단위로_다시_나눈다() {
+        RestClient.Builder builder = newBuilder();
+        MockRestServiceServer server = MockRestServiceServer.bindTo(builder).build();
+        KakaoLocalClient client = newClient(builder);
+
+        StringBuilder page1Docs = new StringBuilder();
+        for (int i = 1; i <= 15; i++) {
+            if (i > 1) page1Docs.append(",");
+            page1Docs.append(place(String.valueOf(i), "돈까스" + i, "음식점 > 일식 > 돈까스,우동", "서울 마포구 망원동"));
+        }
+        StringBuilder page2Docs = new StringBuilder();
+        for (int i = 16; i <= 20; i++) {
+            if (i > 16) page2Docs.append(",");
+            page2Docs.append(place(String.valueOf(i), "돈까스" + i, "음식점 > 일식 > 돈까스,우동", "서울 마포구 망원동"));
+        }
+
+        server.expect(requestTo(startsWith(SEARCH_PATH)))
+                .andExpect(queryParam("page", "1"))
+                .andRespond(withSuccess(
+                        "{\"documents\":[" + page1Docs + "],\"meta\":{\"total_count\":20,\"pageable_count\":20,\"is_end\":false}}",
+                        MediaType.APPLICATION_JSON));
+        server.expect(requestTo(startsWith(SEARCH_PATH)))
+                .andExpect(queryParam("page", "2"))
+                .andRespond(withSuccess(
+                        "{\"documents\":[" + page2Docs + "],\"meta\":{\"total_count\":20,\"pageable_count\":20,\"is_end\":true}}",
+                        MediaType.APPLICATION_JSON));
+
+        KakaoSearchResult result = client.searchByKeyword("돈까스", 1);
+
+        assertThat(result.places()).hasSize(15);
+        assertThat(result.places().get(0).name()).isEqualTo("돈까스1");
+        assertThat(result.totalCount()).isEqualTo(20);
+        assertThat(result.totalPages()).isEqualTo(2);
+        assertThat(result.isEnd()).isFalse();
+    }
+
+    @Test
+    void 두번째_페이지를_요청하면_필터링된_결과의_다음_15건을_돌려준다() {
+        RestClient.Builder builder = newBuilder();
+        MockRestServiceServer server = MockRestServiceServer.bindTo(builder).build();
+        KakaoLocalClient client = newClient(builder);
+
+        StringBuilder page1Docs = new StringBuilder();
+        for (int i = 1; i <= 15; i++) {
+            if (i > 1) page1Docs.append(",");
+            page1Docs.append(place(String.valueOf(i), "돈까스" + i, "음식점 > 일식 > 돈까스,우동", "서울 마포구 망원동"));
+        }
+        StringBuilder page2Docs = new StringBuilder();
+        for (int i = 16; i <= 20; i++) {
+            if (i > 16) page2Docs.append(",");
+            page2Docs.append(place(String.valueOf(i), "돈까스" + i, "음식점 > 일식 > 돈까스,우동", "서울 마포구 망원동"));
+        }
+
+        server.expect(requestTo(startsWith(SEARCH_PATH)))
+                .andExpect(queryParam("page", "1"))
+                .andRespond(withSuccess(
+                        "{\"documents\":[" + page1Docs + "],\"meta\":{\"total_count\":20,\"pageable_count\":20,\"is_end\":false}}",
+                        MediaType.APPLICATION_JSON));
+        server.expect(requestTo(startsWith(SEARCH_PATH)))
+                .andExpect(queryParam("page", "2"))
+                .andRespond(withSuccess(
+                        "{\"documents\":[" + page2Docs + "],\"meta\":{\"total_count\":20,\"pageable_count\":20,\"is_end\":true}}",
+                        MediaType.APPLICATION_JSON));
+
+        KakaoSearchResult result = client.searchByKeyword("돈까스", 2);
+
+        assertThat(result.places()).hasSize(5);
+        assertThat(result.places().get(0).name()).isEqualTo("돈까스16");
+        assertThat(result.totalCount()).isEqualTo(20);
+        assertThat(result.totalPages()).isEqualTo(2);
+        assertThat(result.isEnd()).isTrue();
     }
 
     @Test
     void 돈까스와_무관한_카테고리_이름은_걸러낸다() {
         RestClient.Builder builder = newBuilder();
         MockRestServiceServer server = MockRestServiceServer.bindTo(builder).build();
-        KakaoLocalClient client = new KakaoLocalClient(builder.build());
+        KakaoLocalClient client = newClient(builder);
 
         server.expect(requestTo(startsWith(SEARCH_PATH)))
                 .andRespond(withSuccess("""
@@ -94,7 +179,7 @@ class KakaoLocalClientTest {
     void 서울이_아닌_주소는_걸러낸다() {
         RestClient.Builder builder = newBuilder();
         MockRestServiceServer server = MockRestServiceServer.bindTo(builder).build();
-        KakaoLocalClient client = new KakaoLocalClient(builder.build());
+        KakaoLocalClient client = newClient(builder);
 
         server.expect(requestTo(startsWith(SEARCH_PATH)))
                 .andRespond(withSuccess("""
@@ -118,7 +203,7 @@ class KakaoLocalClientTest {
     void totalCount는_카카오_원본이_아니라_필터링_후_실제_반환_개수다() {
         RestClient.Builder builder = newBuilder();
         MockRestServiceServer server = MockRestServiceServer.bindTo(builder).build();
-        KakaoLocalClient client = new KakaoLocalClient(builder.build());
+        KakaoLocalClient client = newClient(builder);
 
         server.expect(requestTo(startsWith(SEARCH_PATH)))
                 .andRespond(withSuccess("""
@@ -127,7 +212,7 @@ class KakaoLocalClientTest {
                             {"id":"1","place_name":"동경돈까스","category_name":"음식점 > 일식 > 돈까스,우동","address_name":"서울 마포구 망원동","x":"127.0","y":"37.5"},
                             {"id":"2","place_name":"강남맛집식당","category_name":"음식점 > 한식","address_name":"서울 강남구 논현동","x":"127.0","y":"37.5"}
                           ],
-                          "meta": {"total_count":24018,"pageable_count":45,"is_end":false}
+                          "meta": {"total_count":24018,"pageable_count":45,"is_end":true}
                         }
                         """, MediaType.APPLICATION_JSON));
 
@@ -135,14 +220,14 @@ class KakaoLocalClientTest {
 
         assertThat(result.places()).hasSize(1);
         assertThat(result.totalCount()).isEqualTo(1);
-        assertThat(result.totalPages()).isEqualTo(3);
+        assertThat(result.totalPages()).isEqualTo(1);
     }
 
     @Test
     void meta가_없는_응답도_안전하게_처리한다() {
         RestClient.Builder builder = newBuilder();
         MockRestServiceServer server = MockRestServiceServer.bindTo(builder).build();
-        KakaoLocalClient client = new KakaoLocalClient(builder.build());
+        KakaoLocalClient client = newClient(builder);
 
         server.expect(requestTo(startsWith(SEARCH_PATH)))
                 .andRespond(withSuccess("""
