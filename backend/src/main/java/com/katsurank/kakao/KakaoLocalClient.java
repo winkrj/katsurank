@@ -2,36 +2,30 @@ package com.katsurank.kakao;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.springframework.beans.factory.annotation.Qualifier;
-import org.springframework.cache.annotation.Cacheable;
-import org.springframework.http.HttpStatusCode;
 import org.springframework.stereotype.Component;
-import org.springframework.web.client.RestClient;
-import org.springframework.web.client.RestClientException;
 
+import java.util.ArrayList;
 import java.util.List;
 
 /**
- * 카카오 로컬 API 키워드 검색 클라이언트.
+ * 카카오 로컬 API 키워드 검색 — 서울·돈까스 관련 결과만 골라 우리 쪽 페이지 단위(15건)로 다시 나눈다.
  *
- * <p>가게 등록 시에만 호출하고, 동일 질의는 Caffeine 캐시({@code kakaoPlaceSearch})로 응답을 재사용해
- * 외부 호출을 줄인다(03 문서 6.4). 등록 이후 조회는 자체 DB 가 담당한다.
+ * <p>카카오는 원본 페이지를 최대 3장(45건)까지만 열람을 허용한다. 그 45건 중 서울·돈까스 필터를
+ * 통과하는 것만 추려야 하므로, 클라이언트가 요청한 page를 카카오 {@code page} 파라미터에 그대로
+ * 전달하면 안 된다 — 카카오 1페이지에서 걸러지고 남은 게 2건뿐이어도 2페이지엔 우리가 찾는 진짜
+ * 돈까스집이 더 있을 수 있다. 그래서 원본 1~3페이지를 전부 모아 필터링한 뒤, 그 결과를 우리가
+ * 다시 {@link KakaoRawPageFetcher#SEARCH_SIZE}건 단위로 나눠 돌려준다.
+ *
+ * <p>가게 등록 시에만 호출하고, 원본 페이지 호출 자체는 {@link KakaoRawPageFetcher}가 캐싱해
+ * 재사용한다(03 문서 6.4). 등록 이후 조회는 자체 DB가 담당한다.
  */
 @Component
 public class KakaoLocalClient {
 
     private static final Logger log = LoggerFactory.getLogger(KakaoLocalClient.class);
 
-    /** 음식점 카테고리 그룹 코드 — 검색 노이즈를 줄인다. */
-    private static final String FOOD_CATEGORY_GROUP = "FD6";
-    private static final int SEARCH_SIZE = 15;
-
-    /**
-     * 서울 전체를 넉넉히 덮는 사각 영역(좌하x,좌하y,우상x,우상y) — 카카오 {@code rect} 파라미터로
-     * 부산·제주 등 서울과 무관한 결과를 API 호출 단계에서부터 줄인다. 사각형이라 서울 경계와 딱 맞지
-     * 않고 인접 경기·인천 일부가 걸치므로, 최종 판단은 아래 {@link #isInSeoul}(주소 접두어)이 한다.
-     */
-    private static final String SEOUL_RECT = "126.734086,37.413294,127.269311,37.715133";
+    /** 카카오 정책상 page*size&lt;=45 — 원본 페이지는 최대 3장까지만 열람 가능하다. */
+    private static final int MAX_RAW_PAGES = 3;
 
     private static final String SEOUL_PREFIX = "서울";
 
@@ -49,50 +43,45 @@ public class KakaoLocalClient {
      */
     private static final List<String> NAME_KEYWORDS = List.of("돈까스", "돈가스", "돈카츠", "카츠", "경양식");
 
-    private final RestClient restClient;
+    private final KakaoRawPageFetcher rawPageFetcher;
 
-    public KakaoLocalClient(@Qualifier("kakaoLocalRestClient") RestClient restClient) {
-        this.restClient = restClient;
+    public KakaoLocalClient(KakaoRawPageFetcher rawPageFetcher) {
+        this.rawPageFetcher = rawPageFetcher;
     }
 
-    @Cacheable(cacheNames = "kakaoPlaceSearch", key = "#query + '_' + #page")
     public KakaoSearchResult searchByKeyword(String query, int page) {
         log.info("카카오 로컬 검색 호출 query={} page={}", query, page);
-        try {
-            KakaoKeywordSearchResponse response = restClient.get()
-                    .uri(uri -> uri.path("/v2/local/search/keyword.json")
-                            .queryParam("query", query)
-                            .queryParam("page", page)
-                            .queryParam("size", SEARCH_SIZE)
-                            .queryParam("category_group_code", FOOD_CATEGORY_GROUP)
-                            .queryParam("rect", SEOUL_RECT)
-                            .build())
-                    .retrieve()
-                    .onStatus(HttpStatusCode::isError, (req, res) -> {
-                        throw new KakaoApiException("카카오 로컬 API 응답 오류: " + res.getStatusCode());
-                    })
-                    .body(KakaoKeywordSearchResponse.class);
-
-            return toSearchResult(response);
-        } catch (RestClientException ex) {
-            throw new KakaoApiException("카카오 로컬 API 호출 실패: " + ex.getMessage());
-        }
+        List<KakaoPlace> filtered = fetchAllFiltered(query);
+        return paginate(filtered, page);
     }
 
-    private static KakaoSearchResult toSearchResult(KakaoKeywordSearchResponse response) {
-        if (response == null || response.meta() == null) {
-            return new KakaoSearchResult(List.of(), 0, 0, true);
+    /** 원본 1~3페이지를 카카오가 isEnd라고 할 때까지(또는 3페이지까지) 모아 서울·돈까스 필터를 적용한다. */
+    private List<KakaoPlace> fetchAllFiltered(String query) {
+        List<KakaoPlace> merged = new ArrayList<>();
+        for (int rawPage = 1; rawPage <= MAX_RAW_PAGES; rawPage++) {
+            KakaoKeywordSearchResponse response = rawPageFetcher.fetch(query, rawPage);
+            if (response == null || response.meta() == null) {
+                break;
+            }
+            merged.addAll(response.toPlaces());
+            if (response.meta().isEnd()) {
+                break;
+            }
         }
-        KakaoKeywordSearchResponse.Meta meta = response.meta();
-        List<KakaoPlace> places = response.toPlaces().stream()
+        return merged.stream()
                 .filter(KakaoLocalClient::isInSeoul)
                 .filter(KakaoLocalClient::isLikelyTonkatsu)
                 .toList();
-        // totalCount는 카카오 원본 total_count(필터 전, 수만 건 단위로 커질 수 있음)가 아니라
-        // 실제로 이번 응답에 담긴 place 개수를 반영한다 — 그래야 화면에 보이는 결과 수와 일치한다.
-        // totalPages/isEnd는 필터와 무관한 카카오 원본 페이지네이션 한계(최대 3페이지)이므로 그대로 둔다.
-        return new KakaoSearchResult(
-                places, places.size(), calculateTotalPages(meta.pageableCount()), meta.isEnd());
+    }
+
+    private static KakaoSearchResult paginate(List<KakaoPlace> filtered, int page) {
+        int totalCount = filtered.size();
+        int size = KakaoRawPageFetcher.SEARCH_SIZE;
+        int totalPages = (int) Math.ceil(totalCount / (double) size);
+        int fromIndex = Math.min((page - 1) * size, totalCount);
+        int toIndex = Math.min(fromIndex + size, totalCount);
+        List<KakaoPlace> pageItems = filtered.subList(fromIndex, toIndex);
+        return new KakaoSearchResult(pageItems, totalCount, totalPages, toIndex >= totalCount);
     }
 
     private static boolean isInSeoul(KakaoPlace place) {
@@ -111,14 +100,5 @@ public class KakaoLocalClient {
 
     private static boolean containsAny(String text, List<String> keywords) {
         return text != null && keywords.stream().anyMatch(text::contains);
-    }
-
-    /** 카카오가 실제 열람을 허용하는 건수({@code pageable_count}, 최대 45) 기준으로 계산한다.
-     * {@code total_count} 기준으로 계산하면 실제로는 존재하지 않는 페이지 번호가 나올 수 있다. */
-    private static int calculateTotalPages(int pageableCount) {
-        if (pageableCount <= 0) {
-            return 0;
-        }
-        return (int) Math.ceil((double) pageableCount / SEARCH_SIZE);
     }
 }

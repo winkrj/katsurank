@@ -32,9 +32,9 @@ public class KakaoController {
             description = "카카오 로컬 API를 프록시하되, 서울 지역이 아니거나 돈까스 관련 카테고리·이름이 아닌 결과는 "
                     + "서버에서 걸러낸다(느슨한 사전 필터 — 최종 판단은 등록 시점 화이트리스트가 한다). 인증 불필요. 결과의 kakaoPlaceId를 "
                     + "POST /api/v1/restaurants 요청에 그대로 넣어 등록한다. "
-                    + "size는 15건 고정이며 카카오 정책상 page*size<=45라 page는 1~3만 유효하다. "
-                    + "totalCount는 필터링 후 이번 응답에 실제로 담긴 place 개수(=places.size())이고, "
-                    + "totalPages/isEnd는 필터와 무관한 카카오 원본 페이지네이션 한계(최대 3페이지) 기준이다.")
+                    + "카카오 원본 페이지(최대 3페이지, 45건)를 서버에서 모두 모아 필터링한 뒤 그 결과를 15건 단위로 "
+                    + "다시 나눠 페이징하므로, page는 카카오 원본 페이지가 아니라 필터링된 결과 기준 페이지다(1~3만 유효). "
+                    + "totalCount/totalPages도 필터링 후 실제 결과 개수 기준이다.")
     public KakaoPlaceSearchResponse search(
             @RequestParam @NotBlank String query,
             @RequestParam(defaultValue = "1") @Min(1) @Max(3) int page) {

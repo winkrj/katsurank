@@ -9,4 +9,8 @@ public class KakaoApiException extends ApiException {
     public KakaoApiException(String message) {
         super(HttpStatus.BAD_GATEWAY, "KAKAO_API_ERROR", message);
     }
+
+    public KakaoApiException(String message, Throwable cause) {
+        super(HttpStatus.BAD_GATEWAY, "KAKAO_API_ERROR", message, cause);
+    }
 }
