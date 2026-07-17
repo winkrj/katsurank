@@ -4,6 +4,7 @@ import com.katsurank.restaurant.Restaurant;
 import com.katsurank.restaurant.RestaurantNotFoundException;
 import com.katsurank.restaurant.RestaurantRepository;
 import com.katsurank.user.User;
+import com.katsurank.user.UserNotFoundException;
 import com.katsurank.user.UserRepository;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -116,7 +117,7 @@ public class VoteService {
         target.increaseVoteCount();
         // (6) User 현재 표 캐시 갱신
         User user = userRepository.findById(userId)
-                .orElseThrow(() -> new IllegalStateException("로그인 사용자를 찾을 수 없습니다. userId=" + userId));
+                .orElseThrow(() -> new UserNotFoundException(userId));
         user.pointCurrentVoteTo(newVote.getId());
 
         return VoteResponse.of(newVote, target);
