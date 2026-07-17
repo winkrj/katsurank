@@ -1,5 +1,6 @@
 import { Link } from 'react-router-dom'
 import { KAKAO_LOGIN_URL } from '../../constant/api'
+import { saveLoginRedirect } from '../../lib/loginRedirect'
 import { useAuthStore } from '../../stores/authStore'
 import { KakaoLoginButton } from './KakaoLoginButton'
 
@@ -17,6 +18,7 @@ export function HomeHeaderAuth({ variant = 'desktop' }: HomeHeaderAuthProps) {
       return (
         <a
           href={KAKAO_LOGIN_URL}
+          onClick={saveLoginRedirect}
           className="inline-flex items-center gap-1 rounded-lg border border-[#E8D9BF] bg-[#FFC533] px-2.5 py-1.5 text-[12px] font-bold text-[#2A1A12]"
         >
           <img src="/images/kakao_icon.png" alt="" className="size-4" aria-hidden />
