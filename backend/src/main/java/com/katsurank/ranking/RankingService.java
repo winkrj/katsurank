@@ -15,7 +15,7 @@ import java.util.Optional;
 @Service
 public class RankingService {
 
-    private static final int MAX_LIMIT = 50;
+    private static final int MAX_LIMIT = 100;
 
     private final RestaurantRepository restaurantRepository;
     private final RestaurantQueryRepository restaurantQueryRepository;
