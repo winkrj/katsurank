@@ -31,7 +31,7 @@ class RankingServiceTest {
     @Autowired UserRepository userRepository;
 
     @Test
-    @DisplayName("ACTIVE 가게 3개, vote_count=[10,5,5] → rank [1,2,3] (동점은 id 순)")
+    @DisplayName("ACTIVE 가게 3개, vote_count=[10,5,5] → rank [1,2,2] (동점은 동일 순위, 정렬은 id 순)")
     void rankingOrder() {
         Restaurant r1 = newRestaurant("가게A");
         Restaurant r2 = newRestaurant("가게B");
@@ -49,7 +49,7 @@ class RankingServiceTest {
         assertThat(response.items().get(0).voteCount()).isEqualTo(10);
         assertThat(response.items().get(1).rank()).isEqualTo(2);
         assertThat(response.items().get(1).id()).isEqualTo(r2.getId());
-        assertThat(response.items().get(2).rank()).isEqualTo(3);
+        assertThat(response.items().get(2).rank()).isEqualTo(2);
         assertThat(response.items().get(2).id()).isEqualTo(r3.getId());
         assertThat(response.total()).isEqualTo(3);
     }

@@ -9,7 +9,9 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
 
 @Service
@@ -39,10 +41,13 @@ public class RankingService {
                 RestaurantStatus.ACTIVE,
                 new OffsetPageRequest(offset, limit));
 
-        List<RankingItem> items = new ArrayList<>(page.getNumberOfElements());
         List<Restaurant> content = page.getContent();
-        for (int i = 0; i < content.size(); i++) {
-            items.add(RankingItem.of(content.get(i), offset + i + 1));
+        List<RankingItem> items = new ArrayList<>(content.size());
+        Map<Integer, Long> rankByVoteCount = new HashMap<>();
+        for (Restaurant restaurant : content) {
+            long rank = rankByVoteCount.computeIfAbsent(restaurant.getVoteCount(),
+                    voteCount -> restaurantQueryRepository.countWithVoteCountGreaterThan(voteCount) + 1);
+            items.add(RankingItem.of(restaurant, (int) rank));
         }
 
         return new RankingResponse(items, page.getTotalElements(), offset, limit);
