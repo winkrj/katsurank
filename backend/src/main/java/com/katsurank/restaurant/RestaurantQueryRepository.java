@@ -1,5 +1,6 @@
 package com.katsurank.restaurant;
 
+import com.querydsl.core.types.dsl.BooleanExpression;
 import com.querydsl.jpa.impl.JPAQueryFactory;
 import jakarta.persistence.EntityManager;
 import org.springframework.stereotype.Repository;
@@ -17,13 +18,27 @@ public class RestaurantQueryRepository {
         this.queryFactory = new JPAQueryFactory(em);
     }
 
-    public List<Restaurant> searchByName(String name, int limit) {
+    /** name이 없으면(null/blank) 전체 ACTIVE 가게를 vote_count 순으로 반환. */
+    public List<Restaurant> search(String name, int offset, int limit) {
         return queryFactory.selectFrom(restaurant)
                 .where(restaurant.status.eq(RestaurantStatus.ACTIVE),
-                       restaurant.name.containsIgnoreCase(name))
+                       nameContains(name))
                 .orderBy(restaurant.voteCount.desc(), restaurant.id.asc())
+                .offset(offset)
                 .limit(limit)
                 .fetch();
+    }
+
+    public long countSearch(String name) {
+        return queryFactory.select(restaurant.count())
+                .from(restaurant)
+                .where(restaurant.status.eq(RestaurantStatus.ACTIVE),
+                       nameContains(name))
+                .fetchOne();
+    }
+
+    private BooleanExpression nameContains(String name) {
+        return (name == null || name.isBlank()) ? null : restaurant.name.containsIgnoreCase(name);
     }
 
     public long countWithVoteCountGreaterThan(int voteCount) {

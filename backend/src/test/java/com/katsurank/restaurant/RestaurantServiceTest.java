@@ -86,19 +86,20 @@ class RestaurantServiceTest {
     }
 
     @Test
-    @DisplayName("검색어 없이 검색 → MissingQueryException (컨트롤러에서 던짐)")
+    @DisplayName("검색어가 빈칸뿐이면 q 없는 것으로 취급 — 전체 목록 반환")
     void searchEmptyQuery() {
-        // 서비스는 빈 문자열이 넘어오지 않는다고 가정하지만, 빈칸만 있는 경우 빈 결과 반환 확인
-        var results = restaurantService.search("   ", 20);
-        assertThat(results).isEmpty();
+        var response = restaurantService.search("   ", 0, 20);
+        assertThat(response.items()).isEmpty();
+        assertThat(response.total()).isZero();
     }
 
     @Test
     @DisplayName("limit 상한 초과 → 50으로 클램핑")
     void searchLimitClamped() {
         // limit=100 을 넘겨도 예외 없이 50으로 클램핑
-        var results = restaurantService.search("돈까스", 100);
-        assertThat(results).isEmpty(); // 데이터 없으므로 빈 결과지만 예외 없음
+        var response = restaurantService.search("돈까스", 0, 100);
+        assertThat(response.limit()).isEqualTo(50);
+        assertThat(response.items()).isEmpty(); // 데이터 없으므로 빈 결과지만 예외 없음
     }
 
     // --- helpers ---

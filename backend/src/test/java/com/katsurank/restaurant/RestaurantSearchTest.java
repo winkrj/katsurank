@@ -12,8 +12,6 @@ import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.test.context.jdbc.Sql;
 import org.springframework.transaction.annotation.Transactional;
 
-import java.util.List;
-
 import static org.assertj.core.api.Assertions.assertThat;
 
 @SpringBootTest
@@ -33,11 +31,41 @@ class RestaurantSearchTest {
         Restaurant r2 = newRestaurant("을지돈가스", 5);
         newRestaurant("숨은맛집", 20);
 
-        List<RestaurantSearchResponse> results = restaurantService.search("돈가스", 20);
+        RestaurantSearchPageResponse response = restaurantService.search("돈가스", 0, 20);
 
-        assertThat(results).hasSize(2);
-        assertThat(results.get(0).id()).isEqualTo(r1.getId());
-        assertThat(results.get(1).id()).isEqualTo(r2.getId());
+        assertThat(response.items()).hasSize(2);
+        assertThat(response.items().get(0).id()).isEqualTo(r1.getId());
+        assertThat(response.items().get(1).id()).isEqualTo(r2.getId());
+        assertThat(response.total()).isEqualTo(2);
+    }
+
+    @Test
+    @DisplayName("q 없으면 전체 ACTIVE 가게를 vote_count 순으로 반환")
+    void searchWithoutQueryReturnsAll() {
+        Restaurant r1 = newRestaurant("명동돈가스", 10);
+        Restaurant r2 = newRestaurant("숨은맛집", 20);
+
+        RestaurantSearchPageResponse response = restaurantService.search(null, 0, 20);
+
+        assertThat(response.items()).hasSize(2);
+        assertThat(response.items().get(0).id()).isEqualTo(r2.getId());
+        assertThat(response.items().get(1).id()).isEqualTo(r1.getId());
+        assertThat(response.total()).isEqualTo(2);
+    }
+
+    @Test
+    @DisplayName("offset/limit → 페이징 적용")
+    void searchPaging() {
+        Restaurant r1 = newRestaurant("가게A", 20);
+        newRestaurant("가게B", 10);
+
+        RestaurantSearchPageResponse response = restaurantService.search(null, 0, 1);
+
+        assertThat(response.items()).hasSize(1);
+        assertThat(response.items().get(0).id()).isEqualTo(r1.getId());
+        assertThat(response.total()).isEqualTo(2);
+        assertThat(response.offset()).isZero();
+        assertThat(response.limit()).isEqualTo(1);
     }
 
     @Test
@@ -45,10 +73,10 @@ class RestaurantSearchTest {
     void searchResponseHasRank() {
         newRestaurant("테스트돈가스", 5);
 
-        List<RestaurantSearchResponse> results = restaurantService.search("돈가스", 20);
+        RestaurantSearchPageResponse response = restaurantService.search("돈가스", 0, 20);
 
-        assertThat(results).hasSize(1);
-        assertThat(results.get(0).rank()).isEqualTo(1);
+        assertThat(response.items()).hasSize(1);
+        assertThat(response.items().get(0).rank()).isEqualTo(1);
     }
 
     @Test
@@ -59,9 +87,10 @@ class RestaurantSearchTest {
         r.close();
         restaurantRepository.save(r);
 
-        List<RestaurantSearchResponse> results = restaurantService.search("돈가스", 20);
+        RestaurantSearchPageResponse response = restaurantService.search("돈가스", 0, 20);
 
-        assertThat(results).isEmpty();
+        assertThat(response.items()).isEmpty();
+        assertThat(response.total()).isZero();
     }
 
     @Test

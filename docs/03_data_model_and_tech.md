@@ -176,7 +176,7 @@ INDEX idx_restaurant_current (restaurant_id, is_current)
 | GET | `/api/v1/ranking/map-pins` | 지도 핀용 가게 좌표 목록 (status=ACTIVE) |
 | GET | `/api/v1/restaurants/{id}` | 가게 상세 (status 무관, 폐업/이전된 가게도 조회 가능) |
 | POST | `/api/v1/restaurants` | 가게 등록 (카카오 place_id 기반, 로그인 필요) |
-| GET | `/api/v1/restaurants/search` | 자체 DB 이름 검색 (status=ACTIVE만) |
+| GET | `/api/v1/restaurants/search` | 자체 DB 이름 검색 (status=ACTIVE만, q는 선택 — 없으면 전체 목록, vote_count 순 페이지네이션) |
 | PATCH | `/api/v1/restaurants/{id}/close` | 가게 폐업 처리 (박제, 로그인 필요) |
 | PATCH | `/api/v1/restaurants/{id}/relocate` | 가게 이전 처리 (표 승계, 로그인 필요) |
 | GET | `/api/v1/kakao-places/search` | 카카오 로컬 API 프록시 (가게 추가용) |

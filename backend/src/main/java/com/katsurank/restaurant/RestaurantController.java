@@ -20,8 +20,6 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
-import java.util.List;
-
 /**
  * 가게 API. 등록은 로그인 필요, 조회/검색은 공개(GET permitAll).
  */
@@ -61,16 +59,14 @@ public class RestaurantController {
     }
 
     @GetMapping("/search")
-    @Operation(summary = "가게 이름 검색", description = "자체 DB에서 이름으로 검색. status=ACTIVE인 가게만 반환한다. q는 필수.")
-    @ApiResponse(responseCode = "400", description = "검색어(q) 누락 (MISSING_QUERY)",
-            content = @Content(schema = @Schema(implementation = ApiError.class)))
-    public List<RestaurantSearchResponse> search(
+    @Operation(summary = "가게 이름 검색",
+            description = "자체 DB에서 이름으로 검색. status=ACTIVE인 가게만 반환한다. "
+                    + "q가 없으면 전체 목록을 vote_count 순으로 페이징 반환한다.")
+    public RestaurantSearchPageResponse search(
             @RequestParam(required = false) String q,
+            @RequestParam(defaultValue = "0") int offset,
             @RequestParam(defaultValue = "20") int limit) {
-        if (q == null || q.isBlank()) {
-            throw new MissingQueryException();
-        }
-        return restaurantService.search(q, limit);
+        return restaurantService.search(q, offset, limit);
     }
 
     @PatchMapping("/{id}/close")

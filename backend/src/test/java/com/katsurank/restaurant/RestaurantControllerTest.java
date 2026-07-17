@@ -59,23 +59,45 @@ class RestaurantControllerTest {
 
         mockMvc.perform(get("/api/v1/restaurants/search").param("q", "돈까스"))
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$[0].name").value("명동돈까스"));
+                .andExpect(jsonPath("$.items[0].name").value("명동돈까스"))
+                .andExpect(jsonPath("$.total").value(1))
+                .andExpect(jsonPath("$.offset").value(0));
     }
 
     @Test
-    @DisplayName("GET /api/v1/restaurants/search — q 파라미터 없으면 400")
-    void searchMissingQuery() throws Exception {
+    @DisplayName("GET /api/v1/restaurants/search — q 파라미터 없으면 전체 목록 반환")
+    void searchWithoutQueryReturnsAll() throws Exception {
+        TestFixtures.createRestaurant(restaurantRepository, "명동돈까스");
+        TestFixtures.createRestaurant(restaurantRepository, "을지경양식");
+
         mockMvc.perform(get("/api/v1/restaurants/search"))
-                .andExpect(status().isBadRequest())
-                .andExpect(jsonPath("$.code").value("MISSING_QUERY"));
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.items.length()").value(2))
+                .andExpect(jsonPath("$.total").value(2));
     }
 
     @Test
-    @DisplayName("GET /api/v1/restaurants/search?q= — 빈 문자열도 400")
-    void searchEmptyQuery() throws Exception {
+    @DisplayName("GET /api/v1/restaurants/search?q= — 빈 문자열도 전체 목록 반환")
+    void searchEmptyQueryReturnsAll() throws Exception {
+        TestFixtures.createRestaurant(restaurantRepository, "명동돈까스");
+
         mockMvc.perform(get("/api/v1/restaurants/search").param("q", "  "))
-                .andExpect(status().isBadRequest())
-                .andExpect(jsonPath("$.code").value("MISSING_QUERY"));
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.items.length()").value(1));
+    }
+
+    @Test
+    @DisplayName("GET /api/v1/restaurants/search?offset=1&limit=1 — 페이징 적용")
+    void searchWithPaging() throws Exception {
+        TestFixtures.createRestaurant(restaurantRepository, "가게A");
+        TestFixtures.createRestaurant(restaurantRepository, "가게B");
+
+        mockMvc.perform(get("/api/v1/restaurants/search").param("offset", "1").param("limit", "1"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.items.length()").value(1))
+                .andExpect(jsonPath("$.offset").value(1))
+                .andExpect(jsonPath("$.limit").value(1))
+                .andExpect(jsonPath("$.total").value(2));
     }
 
     // --- POST (인증 필요) ---

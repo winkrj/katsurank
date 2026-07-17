@@ -85,14 +85,21 @@ public class RestaurantService {
     }
 
     @Transactional(readOnly = true)
-    public List<RestaurantSearchResponse> search(String query, int limit) {
+    public RestaurantSearchPageResponse search(String query, int offset, int limit) {
+        int effectiveOffset = Math.max(offset, 0);
         int effectiveLimit = Math.min(Math.max(limit, 1), MAX_SEARCH_LIMIT);
-        List<Restaurant> results = restaurantQueryRepository.searchByName(query.trim(), effectiveLimit);
+        String trimmedQuery = (query == null || query.isBlank()) ? null : query.trim();
+
+        List<Restaurant> results = restaurantQueryRepository.search(trimmedQuery, effectiveOffset, effectiveLimit);
+        long total = restaurantQueryRepository.countSearch(trimmedQuery);
+
         Map<Integer, Long> rankCache = new HashMap<>();
-        return results.stream()
+        List<RestaurantSearchResponse> items = results.stream()
                 .map(r -> RestaurantSearchResponse.of(r,
                         rankCache.computeIfAbsent(r.getVoteCount(), this::computeRank)))
                 .toList();
+
+        return new RestaurantSearchPageResponse(items, total, effectiveOffset, effectiveLimit);
     }
 
     @Transactional
