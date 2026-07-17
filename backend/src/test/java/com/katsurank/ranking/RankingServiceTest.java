@@ -74,9 +74,9 @@ class RankingServiceTest {
     }
 
     @Test
-    @DisplayName("limit=51 → LimitExceededException")
+    @DisplayName("limit=101 → LimitExceededException")
     void limitExceeded() {
-        assertThatThrownBy(() -> rankingService.getRanking(0, 51))
+        assertThatThrownBy(() -> rankingService.getRanking(0, 101))
                 .isInstanceOf(LimitExceededException.class);
     }
 
