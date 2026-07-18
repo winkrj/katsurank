@@ -1,4 +1,5 @@
 import type { FormEvent } from 'react'
+import { Pagination } from '../../../shared/ui/Pagination'
 import { KakaoPlaceResultList } from './KakaoPlaceResultList'
 import type { KakaoPlace } from '../types/registerFlow'
 
@@ -7,9 +8,12 @@ type RegisterStepSearchProps = {
   results: KakaoPlace[]
   isSearching?: boolean
   searchError?: string | null
+  page: number
+  totalPages: number
   onQueryChange: (value: string) => void
   onSearch: (query: string) => void
   onSelect: (place: KakaoPlace) => void
+  onPageChange: (page: number) => void
 }
 
 export function RegisterStepSearch({
@@ -17,9 +21,12 @@ export function RegisterStepSearch({
   results,
   isSearching = false,
   searchError = null,
+  page,
+  totalPages,
   onQueryChange,
   onSearch,
   onSelect,
+  onPageChange,
 }: RegisterStepSearchProps) {
   function handleSubmit(event: FormEvent) {
     event.preventDefault()
@@ -61,7 +68,17 @@ export function RegisterStepSearch({
       )}
 
       {!isSearching && !searchError && (
-        <KakaoPlaceResultList places={results} onSelect={onSelect} />
+        <>
+          <KakaoPlaceResultList places={results} onSelect={onSelect} />
+          {results.length > 0 && totalPages > 1 && (
+            <Pagination
+              currentPage={page}
+              totalPages={totalPages}
+              onPageChange={onPageChange}
+              ariaLabel="검색 결과 페이지"
+            />
+          )}
+        </>
       )}
 
       <p className="text-[12px] leading-relaxed text-[#8A7A6A]">

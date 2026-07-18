@@ -13,11 +13,11 @@ export function MobileRankingsPage() {
 
   const { data, isLoading, isError } = useRankingQuery(100)
 
-  const items = data?.map((item) => ({
-    id: item.restaurantId,
+  const items = data?.items.map((item) => ({
+    id: item.id,
     rank: item.rank,
-    name: item.restaurantName,
-    address: '',
+    name: item.name,
+    address: item.address,
     votes: item.voteCount,
   })) ?? []
 

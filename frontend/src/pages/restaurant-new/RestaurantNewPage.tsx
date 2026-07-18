@@ -35,9 +35,12 @@ export function RestaurantNewPage() {
               results={flow.hasSearched ? flow.results : []}
               isSearching={flow.isSearching}
               searchError={flow.searchError}
+              page={flow.page}
+              totalPages={flow.totalPages}
               onQueryChange={flow.setQuery}
               onSearch={flow.handleSearch}
               onSelect={flow.handleSelectPlace}
+              onPageChange={flow.goToPage}
             />
           )}
 
@@ -52,8 +55,6 @@ export function RestaurantNewPage() {
           {flow.step === 'confirm' && flow.draft && (
             <RegisterStepConfirm
               place={flow.draft.place}
-              photoPreview={flow.draft.photoPreview}
-              onPhotoChange={flow.handlePhotoChange}
               onPrev={flow.goToLocation}
               onSubmit={flow.handleSubmitRegister}
               isSubmitting={flow.isSubmitting}
@@ -67,6 +68,22 @@ export function RestaurantNewPage() {
         onClose={() => flow.setDuplicateAlertOpen(false)}
         title="이미 등록된 가게예요!"
         description="이미 등록된 가게는 다시 등록할 수 없어요. 가게 상세에서 확인해 주세요."
+        confirmLabel="확인"
+      />
+
+      <AlertDialog
+        open={flow.blockedReason !== null}
+        onClose={() => flow.setBlockedReason(null)}
+        title="등록할 수 없는 가게예요"
+        description={flow.blockedReason}
+        confirmLabel="확인"
+      />
+
+      <AlertDialog
+        open={flow.registerError !== null}
+        onClose={() => flow.setRegisterError(null)}
+        title="등록에 실패했어요"
+        description={flow.registerError}
         confirmLabel="확인"
       />
     </main>

@@ -13,13 +13,12 @@ export type RankingDetailItem = {
 
 export type RegionFilterKey =
   | 'all'
-  | 'seoul'
-  | 'gyeonggi'
-  | 'incheon'
-  | 'busan'
-  | 'daegu'
-  | 'gwangju'
-  | 'daejeon'
-  | 'etc'
+  | 'gangnam'
+  | 'seocho'
+  | 'mapo'
+  | 'yongsan'
+  | 'songpa'
+  | 'jongno'
+  | 'seongsu'
 
 export type PeriodKey = 'weekly' | 'monthly' | 'alltime'

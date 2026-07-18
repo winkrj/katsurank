@@ -1,17 +1,16 @@
-import { useState } from 'react'
-import type { RestaurantDetail } from '../types/restaurantDetail'
-import { ShopExtraInfoSection } from './ShopExtraInfoSection'
+import { useState } from 'react';
+import type { RestaurantDetail } from '../types/restaurantDetail';
 
 type ShopDetailTabsProps = {
-  restaurant: RestaurantDetail
-  layout?: 'desktop' | 'mobile'
-}
+  restaurant: RestaurantDetail;
+  layout?: 'desktop' | 'mobile';
+};
 
-type TabId = 'info' | 'reviews'
+type TabId = 'info' | 'reviews';
 
 export function ShopDetailTabs({ restaurant, layout = 'desktop' }: ShopDetailTabsProps) {
-  const [activeTab, setActiveTab] = useState<TabId>('info')
-  const isMobile = layout === 'mobile'
+  const [activeTab, setActiveTab] = useState<TabId>('info');
+  const isMobile = layout === 'mobile';
 
   return (
     <section>
@@ -29,7 +28,11 @@ export function ShopDetailTabs({ restaurant, layout = 'desktop' }: ShopDetailTab
       </div>
 
       <div className={isMobile ? 'pt-6' : 'grid grid-cols-2 gap-10 pt-8'}>
-        {activeTab === 'info' ? (
+        <div className={isMobile ? '' : 'col-span-2'}>
+          <p className="py-10 text-center text-[14px] text-[#8A7A6A]">리뷰 기능은 준비 중입니다.</p>
+        </div>
+        {/* TODO: 2차 */}
+        {/* {activeTab === 'info' ? (
           <ShopExtraInfoSection restaurant={restaurant} />
         ) : (
           <div className={isMobile ? '' : 'col-span-2'}>
@@ -37,10 +40,10 @@ export function ShopDetailTabs({ restaurant, layout = 'desktop' }: ShopDetailTab
               리뷰 기능은 준비 중입니다.
             </p>
           </div>
-        )}
+        )} */}
       </div>
     </section>
-  )
+  );
 }
 
 function TabButton({
@@ -48,9 +51,9 @@ function TabButton({
   onClick,
   label,
 }: {
-  active: boolean
-  onClick: () => void
-  label: string
+  active: boolean;
+  onClick: () => void;
+  label: string;
 }) {
   return (
     <button
@@ -62,9 +65,7 @@ function TabButton({
       ].join(' ')}
     >
       {label}
-      {active && (
-        <span className="absolute inset-x-3 bottom-0 h-[3px] rounded-full bg-[#2A1A12]" />
-      )}
+      {active && <span className="absolute inset-x-3 bottom-0 h-[3px] rounded-full bg-[#2A1A12]" />}
     </button>
-  )
+  );
 }

@@ -74,10 +74,10 @@ export function RankingList({ layout = 'default', limit: limitProp }: RankingLis
 
         {data && (
           <ol>
-            {data.map((item) => (
-              <li key={item.restaurantId}>
+            {data.items.map((item) => (
+              <li key={item.id}>
                 <Link
-                  to={`/restaurants/${item.restaurantId}`}
+                  to={`/restaurants/${item.id}`}
                   className={
                     isMobileLayout
                       ? 'mobile-hero__ranking-row grid grid-cols-[auto_auto_1fr_auto] items-center border-b border-[#F0E3CC] transition last:border-b-0 hover:bg-[#FFF4D8]'
@@ -106,7 +106,7 @@ export function RankingList({ layout = 'default', limit: limitProp }: RankingLis
                         : 'truncate text-[14px] font-bold'
                     }
                   >
-                    {item.restaurantName}
+                    {item.name}
                   </strong>
 
                   <span

@@ -83,6 +83,7 @@ export function MapSelectedCard({ restaurant: r, onClose }: MapSelectedCardProps
         </a>
         <div className="w-px bg-[#E8D9BF]" />
         <RestaurantVoteConfirmButton
+          restaurantId={r.id}
           restaurantName={r.name}
           className="flex flex-1 items-center justify-center rounded-none bg-[#FFC533] py-3 text-[14px] font-black text-[#2A1A12] transition hover:bg-[#D88A24]"
         />

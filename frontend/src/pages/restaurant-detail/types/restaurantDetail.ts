@@ -1,3 +1,5 @@
+import type { RestaurantStatus } from '../../../shared/types/restaurant'
+
 export type VoteTrendPoint = {
   label: string
   value: number
@@ -5,6 +7,7 @@ export type VoteTrendPoint = {
 
 export type RestaurantDetail = {
   id: number
+  status: RestaurantStatus
   name: string
   rank: number
   rankAreaLabel: string

@@ -12,7 +12,7 @@ export function VoteButtons({ layout = 'default' }: VoteButtonsProps) {
   const isMobileLayout = layout === 'mobile'
   const navigate = useNavigate()
   const isLoggedIn = useAuthStore((s) => s.isLoggedIn())
-  const { data: me } = useMeQuery()
+  const { data: me } = useMeQuery(isLoggedIn)
 
   const btnClass = isMobileLayout ? 'mobile-hero__btn' : undefined
   const containerClass = isMobileLayout

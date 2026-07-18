@@ -23,10 +23,12 @@ export function ShopMobileInfo({ restaurant }: ShopMobileInfoProps) {
     <section className="space-y-2">
       <div className="flex flex-wrap items-center gap-2">
         <h1 className="text-[22px] font-black leading-tight text-[#2A1A12]">{restaurant.name}</h1>
-        <span className="inline-flex items-center gap-1 rounded-full border border-[#E8D9BF] bg-[#FFF4D8] px-2 py-0.5 text-[11px] font-bold text-[#7A431D]">
-          <CrownIcon />
-          {restaurant.rankBadgeLabel}
-        </span>
+        {restaurant.rankBadgeLabel && (
+          <span className="inline-flex items-center gap-1 rounded-full border border-[#E8D9BF] bg-[#FFF4D8] px-2 py-0.5 text-[11px] font-bold text-[#7A431D]">
+            <CrownIcon />
+            {restaurant.rankBadgeLabel}
+          </span>
+        )}
       </div>
 
       <p className="flex items-center gap-1.5 text-[13px] text-[#8A7A6A]">

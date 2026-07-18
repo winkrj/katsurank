@@ -1,5 +1,6 @@
 import { Link } from 'react-router-dom'
 import { KAKAO_LOGIN_URL } from '../../constant/api'
+import { useLogoutMutation } from '../../queries/auth'
 import { useAuthStore } from '../../stores/authStore'
 import { KakaoLoginButton } from './KakaoLoginButton'
 
@@ -9,8 +10,8 @@ type HomeHeaderAuthProps = {
 
 export function HomeHeaderAuth({ variant = 'desktop' }: HomeHeaderAuthProps) {
   const user = useAuthStore((s) => s.user)
-  const logout = useAuthStore((s) => s.logout)
   const isLoggedIn = useAuthStore((s) => s.isLoggedIn())
+  const { mutate: logout } = useLogoutMutation()
 
   if (!isLoggedIn || !user) {
     if (variant === 'mobile') {
@@ -49,7 +50,7 @@ export function HomeHeaderAuth({ variant = 'desktop' }: HomeHeaderAuthProps) {
         </Link>
         <button
           type="button"
-          onClick={logout}
+          onClick={() => logout()}
           className="text-[12px] font-bold text-[#8A7A6A] hover:text-[#2A1A12]"
         >
           로그아웃
@@ -80,7 +81,7 @@ export function HomeHeaderAuth({ variant = 'desktop' }: HomeHeaderAuthProps) {
 
       <button
         type="button"
-        onClick={logout}
+        onClick={() => logout()}
         className="shrink-0 text-[13px] font-bold text-[#8A7A6A] underline-offset-2 hover:text-[#2A1A12] hover:underline"
       >
         로그아웃

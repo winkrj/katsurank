@@ -1,16 +1,14 @@
-import { MOCK_SEARCH_TOTAL_COUNT, SEARCH_SORT_OPTIONS } from '../constants'
-import type { SearchSortOption } from '../types/searchResult'
+import { MOCK_SEARCH_TOTAL_COUNT } from '../constants';
+import type { SearchSortOption } from '../types/searchResult';
 
 type SearchResultsHeaderProps = {
-  total?: number
-  sort: SearchSortOption
-  onSortChange: (sort: SearchSortOption) => void
-}
+  total?: number;
+  sort: SearchSortOption;
+  onSortChange: (sort: SearchSortOption) => void;
+};
 
 export function SearchResultsHeader({
   total = MOCK_SEARCH_TOTAL_COUNT,
-  sort,
-  onSortChange,
 }: SearchResultsHeaderProps) {
   return (
     <div className="mb-4 flex flex-wrap items-end justify-between gap-3">
@@ -19,7 +17,8 @@ export function SearchResultsHeader({
         <p className="mt-1 text-[13px] text-[#8A7A6A]">총 {total}개의 검색 결과</p>
       </div>
 
-      <label className="flex items-center gap-2 text-[13px] font-semibold text-[#5F4A3C]">
+      {/* TODO: 2차 */}
+      {/* <label className="flex items-center gap-2 text-[13px] font-semibold text-[#5F4A3C]">
         <span className="sr-only">정렬</span>
         <select
           value={sort}
@@ -32,7 +31,7 @@ export function SearchResultsHeader({
             </option>
           ))}
         </select>
-      </label>
+      </label> */}
     </div>
-  )
+  );
 }

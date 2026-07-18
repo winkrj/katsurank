@@ -1,5 +1,6 @@
 import type { ReactNode } from 'react'
 import type { RestaurantDetail } from '../types/restaurantDetail'
+import { RestaurantVoteConfirmButton } from './RestaurantVoteConfirmButton'
 
 type ShopInfoSectionProps = {
   restaurant: RestaurantDetail
@@ -36,17 +37,19 @@ function InfoRow({
 
 export function ShopInfoSection({ restaurant }: ShopInfoSectionProps) {
   return (
-    <section className="flex flex-col justify-center space-y-5 px-2">
+    <section className="flex flex-col space-y-5 px-2">
       <div className="space-y-3">
         <div className="flex flex-wrap items-center gap-2">
           <CrownIcon />
           <h1 className="font-serif text-[2rem] font-black leading-tight text-[#2A1A12]">
             {restaurant.name}
           </h1>
-          <span className="inline-flex items-center gap-1 rounded-full border border-[#E8D9BF] bg-[#FFF4D8] px-2.5 py-1 text-[12px] font-bold text-[#7A431D]">
-            <CrownIcon />
-            {restaurant.rankAreaLabel}
-          </span>
+          {restaurant.rankAreaLabel && (
+            <span className="inline-flex items-center gap-1 rounded-full border border-[#E8D9BF] bg-[#FFF4D8] px-2.5 py-1 text-[12px] font-bold text-[#7A431D]">
+              <CrownIcon />
+              {restaurant.rankAreaLabel}
+            </span>
+          )}
         </div>
         <p className="text-[14px] text-[#8A7A6A]">{restaurant.tagline}</p>
       </div>
@@ -74,6 +77,12 @@ export function ShopInfoSection({ restaurant }: ShopInfoSectionProps) {
         <MapIcon />
         카카오맵으로 보기
       </a>
+
+      <RestaurantVoteConfirmButton
+        restaurantId={restaurant.id}
+        restaurantName={restaurant.name}
+        className="w-full max-w-sm rounded-lg"
+      />
     </section>
   )
 }
