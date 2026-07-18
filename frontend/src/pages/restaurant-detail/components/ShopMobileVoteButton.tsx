@@ -5,7 +5,10 @@ type ShopMobileVoteButtonProps = {
   restaurantName: string
 }
 
-export function ShopMobileVoteButton({ restaurantId, restaurantName }: ShopMobileVoteButtonProps) {
+export function ShopMobileVoteButton({
+  restaurantId,
+  restaurantName,
+}: ShopMobileVoteButtonProps) {
   return (
     <RestaurantVoteConfirmButton
       restaurantId={restaurantId}

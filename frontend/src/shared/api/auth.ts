@@ -1,10 +1,14 @@
 import { apiClient } from './client'
-import type { MeResponse } from '../types/me'
+import type { AuthMeResponse, CsrfTokenResponse } from '../types/auth'
 
 export function fetchCsrf() {
-  return apiClient<void>('/api/v1/auth/csrf')
+  return apiClient<CsrfTokenResponse>('/api/v1/auth/csrf')
 }
 
 export function fetchAuthMe() {
-  return apiClient<MeResponse>('/api/v1/auth/me')
+  return apiClient<AuthMeResponse>('/api/v1/auth/me')
+}
+
+export function logoutRequest() {
+  return apiClient<void>('/api/v1/auth/logout', { method: 'POST' })
 }

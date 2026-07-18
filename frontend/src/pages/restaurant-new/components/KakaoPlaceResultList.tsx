@@ -1,5 +1,6 @@
 import { Link } from 'react-router-dom'
 import type { KakaoPlace } from '../types/registerFlow'
+import { getRegistrationStatus } from '../utils/getRegistrationStatus'
 
 type KakaoPlaceResultListProps = {
   places: KakaoPlace[]
@@ -22,38 +23,46 @@ export function KakaoPlaceResultList({ places, onSelect }: KakaoPlaceResultListP
 
   return (
     <ul className="space-y-3">
-      {places.map((place) => (
-        <li key={place.kakaoPlaceId}>
-          <div className="rounded-xl border border-[#E8D9BF] bg-[#FFFDF4] p-4">
-            <div className="flex items-start justify-between gap-3">
-              <div className="min-w-0">
-                <p className="truncate text-[15px] font-black text-[#2A1A12]">{place.name}</p>
-                <p className="mt-1 text-[12px] leading-snug text-[#8A7A6A]">{place.roadAddress}</p>
-                {place.isRegistered && (
-                  <p className="mt-1 text-[12px] font-bold text-[#D88A24]">(이미 등록된 가게)</p>
+      {places.map((place) => {
+        const status = getRegistrationStatus(place)
+
+        return (
+          <li key={place.kakaoPlaceId}>
+            <div className="rounded-xl border border-[#E8D9BF] bg-[#FFFDF4] p-4">
+              <div className="flex items-start justify-between gap-3">
+                <div className="min-w-0">
+                  <p className="truncate text-[15px] font-black text-[#2A1A12]">{place.name}</p>
+                  <p className="mt-1 text-[12px] leading-snug text-[#8A7A6A]">{place.roadAddress}</p>
+                  {place.isRegistered && (
+                    <p className="mt-1 text-[12px] font-bold text-[#D88A24]">(이미 등록된 가게)</p>
+                  )}
+                  {!place.isRegistered && !status.canRegister && (
+                    <p className="mt-1 text-[12px] font-bold text-[#B3452F]">{status.reason}</p>
+                  )}
+                </div>
+
+                {place.isRegistered && place.registeredRestaurantId ? (
+                  <Link
+                    to={`/restaurants/${place.registeredRestaurantId}`}
+                    className="shrink-0 rounded-lg border border-[#E8D9BF] bg-white px-3 py-2 text-[12px] font-bold text-[#2A1A12] hover:border-[#D88A24]"
+                  >
+                    바로 보기
+                  </Link>
+                ) : (
+                  <button
+                    type="button"
+                    onClick={() => onSelect(place)}
+                    disabled={!status.canRegister}
+                    className="shrink-0 rounded-lg border-2 border-[#DBBA24] bg-[#FFC533] px-3 py-2 text-[12px] font-bold text-[#2A1A12] disabled:cursor-not-allowed disabled:border-[#E8D9BF] disabled:bg-[#F0EAD9] disabled:text-[#8A7A6A]"
+                  >
+                    선택
+                  </button>
                 )}
               </div>
-
-              {place.isRegistered && place.registeredRestaurantId ? (
-                <Link
-                  to={`/restaurants/${place.registeredRestaurantId}`}
-                  className="shrink-0 rounded-lg border border-[#E8D9BF] bg-white px-3 py-2 text-[12px] font-bold text-[#2A1A12] hover:border-[#D88A24]"
-                >
-                  바로 보기
-                </Link>
-              ) : (
-                <button
-                  type="button"
-                  onClick={() => onSelect(place)}
-                  className="shrink-0 rounded-lg border-2 border-[#DBBA24] bg-[#FFC533] px-3 py-2 text-[12px] font-bold text-[#2A1A12]"
-                >
-                  선택
-                </button>
-              )}
             </div>
-          </div>
-        </li>
-      ))}
+          </li>
+        )
+      })}
     </ul>
   )
 }

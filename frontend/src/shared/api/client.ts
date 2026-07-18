@@ -1,4 +1,5 @@
 const API_BASE = import.meta.env.VITE_API_BASE_URL ?? 'http://localhost:8080'
+const MUTATING = new Set(['POST', 'PUT', 'PATCH', 'DELETE'])
 
 export class ApiError extends Error {
   readonly code: string
@@ -17,8 +18,6 @@ function getCsrfToken(): string {
   return match ? decodeURIComponent(match[1]) : ''
 }
 
-const MUTATING = new Set(['POST', 'PUT', 'PATCH', 'DELETE'])
-
 export async function apiClient<T>(path: string, init: RequestInit = {}): Promise<T> {
   const method = (init.method ?? 'GET').toUpperCase()
 
@@ -28,7 +27,8 @@ export async function apiClient<T>(path: string, init: RequestInit = {}): Promis
   }
 
   if (MUTATING.has(method)) {
-    headers['X-XSRF-TOKEN'] = getCsrfToken()
+    const csrfToken = getCsrfToken()
+    if (csrfToken) headers['X-XSRF-TOKEN'] = csrfToken
   }
 
   const res = await fetch(`${API_BASE}${path}`, {

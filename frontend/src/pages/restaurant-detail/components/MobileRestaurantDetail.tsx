@@ -17,7 +17,10 @@ export function MobileRestaurantDetail({ restaurant }: MobileRestaurantDetailPro
       <div className="space-y-5 px-4 py-5">
         <ShopMobileInfo restaurant={restaurant} />
         <ShopVoteStatsCard restaurant={restaurant} showDots />
-        <ShopMobileVoteButton restaurantName={restaurant.name} />
+        <ShopMobileVoteButton
+          restaurantId={restaurant.id}
+          restaurantName={restaurant.name}
+        />
 
         <hr className="border-[#E8D9BF]" />
 

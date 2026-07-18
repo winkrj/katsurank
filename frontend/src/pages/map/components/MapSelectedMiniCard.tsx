@@ -47,6 +47,7 @@ export function MapSelectedMiniCard({ restaurant: r, onClose }: MapSelectedMiniC
           상세보기
         </Link>
         <RestaurantVoteConfirmButton
+          restaurantId={r.id}
           restaurantName={r.name}
           label="투표하기"
           className="flex flex-1 items-center justify-center rounded-xl py-2.5 text-[13px] font-black"

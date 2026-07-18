@@ -1,4 +1,5 @@
 import { Link } from 'react-router-dom'
+import { useAuthStore } from '../../../shared/stores/authStore'
 
 const GUIDE_ITEMS = [
   {
@@ -19,6 +20,8 @@ const GUIDE_ITEMS = [
 ] as const
 
 export function RankingGuideCard() {
+  const isLoggedIn = useAuthStore((s) => s.isLoggedIn())
+
   return (
     <aside className="flex flex-col gap-4 rounded-xl border border-[#E6D5B8] bg-white p-4 shadow-[0_4px_16px_rgba(58,35,24,0.06)]">
       <p className="flex items-center gap-1.5 text-[13px] font-black text-[#2A1A12]">
@@ -39,12 +42,14 @@ export function RankingGuideCard() {
         ))}
       </ul>
 
-      <Link
-        to="/me"
-        className="mt-1 block w-full rounded-xl border border-[#DBBA24] bg-[#FFC533] py-2.5 text-center text-[14px] font-black text-[#2A1A12] transition hover:bg-[#D88A24]"
-      >
-        내 표 확인하기
-      </Link>
+      {isLoggedIn && (
+        <Link
+          to="/me"
+          className="mt-1 block w-full rounded-xl border border-[#DBBA24] bg-[#FFC533] py-2.5 text-center text-[14px] font-black text-[#2A1A12] transition hover:bg-[#D88A24]"
+        >
+          내 표 확인하기
+        </Link>
+      )}
     </aside>
   )
 }

@@ -1,5 +1,6 @@
 import { useParams } from 'react-router-dom'
 import { useIsMobile } from '../../shared/hooks/useIsMobile'
+import { ClosedRestaurantDetail } from './components/ClosedRestaurantDetail'
 import { DesktopRestaurantDetail } from './components/DesktopRestaurantDetail'
 import { MobileRestaurantDetail } from './components/MobileRestaurantDetail'
 import { useRestaurantDetailQuery } from './queries/useRestaurantDetailQuery'
@@ -23,6 +24,10 @@ export function RestaurantDetailPage() {
         가게를 찾을 수 없습니다.
       </main>
     )
+  }
+
+  if (restaurant.status === 'CLOSED') {
+    return <ClosedRestaurantDetail restaurant={restaurant} layout={isMobile ? 'mobile' : 'desktop'} />
   }
 
   return isMobile ? (

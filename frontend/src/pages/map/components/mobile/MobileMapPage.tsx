@@ -1,6 +1,7 @@
 import { useState } from 'react'
 import { useMapPinsQuery } from '../../../../shared/queries/ranking'
 import type { MapFilterKey, MapRestaurant } from '../../types/map'
+import { mapPinsToRestaurants } from '../../utils/mapPinsToRestaurants'
 import { MapFilterTabs } from '../MapFilterTabs'
 import { MapKakaoMap } from '../MapKakaoMap'
 import { MapSearchBar } from '../MapSearchBar'
@@ -13,24 +14,9 @@ export function MobileMapPage() {
   const [activeFilter, setActiveFilter] = useState<MapFilterKey>('all')
   const [selected, setSelected] = useState<MapRestaurant | null>(null)
 
-  const { data: pins = [] } = useMapPinsQuery()
+  const { data } = useMapPinsQuery()
 
-  const restaurants: MapRestaurant[] = pins.map((pin) => ({
-    id: pin.restaurantId,
-    rank: pin.rank,
-    name: pin.name,
-    address: '',
-    shortAddress: '',
-    votes: pin.voteCount,
-    weeklyVoteDelta: 0,
-    lat: pin.latitude,
-    lng: pin.longitude,
-    hours: '',
-    breakTime: '',
-    tags: [],
-    isOpen: true,
-    image: '/images/shop_default_img.png',
-  }))
+  const restaurants: MapRestaurant[] = mapPinsToRestaurants(data?.items ?? [])
 
   return (
     <div

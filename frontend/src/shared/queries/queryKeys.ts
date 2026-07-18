@@ -1,6 +1,7 @@
 export const queryKeys = {
   auth: {
     me: ['auth', 'me'] as const,
+    csrf: ['auth', 'csrf'] as const,
   },
   restaurants: {
     all: ['restaurants'] as const,

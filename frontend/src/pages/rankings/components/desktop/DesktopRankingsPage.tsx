@@ -14,11 +14,11 @@ export function DesktopRankingsPage() {
 
   const { data, isLoading, isError } = useRankingQuery(100)
 
-  const items = data?.map((item) => ({
-    id: item.restaurantId,
+  const items = data?.items.map((item) => ({
+    id: item.id,
     rank: item.rank,
-    name: item.restaurantName,
-    address: '',
+    name: item.name,
+    address: item.address,
     votes: item.voteCount,
   })) ?? []
 
@@ -34,7 +34,7 @@ export function DesktopRankingsPage() {
       />
 
       <div className="mx-auto flex max-w-[1080px] gap-5 px-6 py-6">
-        <div className="w-[180px] shrink-0">
+        <div className="w-[240px] shrink-0">
           <RankingGuideCard />
         </div>
 

@@ -1,10 +1,10 @@
 import { useState } from 'react'
 import { SEARCH_RESULTS_PER_PAGE } from '../constants'
+import { Pagination } from '../../../shared/ui/Pagination'
 import { useRestaurantSearchQuery } from '../../../shared/queries/restaurants'
 import type { SearchResultItem, SearchSortOption } from '../types/searchResult'
 import { SearchBanner } from './SearchBanner'
 import { SearchForm } from './SearchForm'
-import { SearchPagination } from './SearchPagination'
 import { SearchRegisterCard } from './SearchRegisterCard'
 import { SearchResultList } from './SearchResultList'
 import { SearchResultsHeader } from './SearchResultsHeader'
@@ -16,7 +16,8 @@ export function DesktopSearchPage() {
   const [sort, setSort] = useState<SearchSortOption>('rank')
   const [page, setPage] = useState(1)
 
-  const { data: apiResults = [], isLoading } = useRestaurantSearchQuery(submittedQuery)
+  const { data, isLoading } = useRestaurantSearchQuery(submittedQuery)
+  const apiResults = data?.items ?? []
 
   const results: SearchResultItem[] = apiResults.map((r) => ({
     id: r.id,
@@ -74,10 +75,11 @@ export function DesktopSearchPage() {
               hasQuery={Boolean(submittedQuery.trim() || selectedTag)}
               isLoading={isLoading}
             />
-            <SearchPagination
+            <Pagination
               currentPage={page}
               totalPages={totalPages}
               onPageChange={setPage}
+              ariaLabel="검색 결과 페이지"
             />
           </section>
         </div>

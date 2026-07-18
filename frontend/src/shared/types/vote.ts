@@ -3,8 +3,9 @@ export type VoteRequest = {
 }
 
 export type VoteResponse = {
-  id: number
-  userId: number
+  voteId: number
   restaurantId: number
-  createdAt: string
+  restaurantName: string
+  voteCount: number
+  votedAt: string
 }

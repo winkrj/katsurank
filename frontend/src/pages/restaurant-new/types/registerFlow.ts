@@ -7,6 +7,7 @@ export type KakaoPlace = {
   roadAddress: string
   phone: string
   category: string
+  placeUrl: string
   latitude: number
   longitude: number
   isRegistered: boolean
@@ -15,7 +16,6 @@ export type KakaoPlace = {
 
 export type RegisterDraft = {
   place: KakaoPlace
-  photoPreview: string | null
 }
 
 export type RegisterCompleteResult = {

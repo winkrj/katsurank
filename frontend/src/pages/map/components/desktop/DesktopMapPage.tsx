@@ -1,9 +1,11 @@
 import { useState } from 'react'
 import { Link } from 'react-router-dom'
 import { useMapPinsQuery } from '../../../../shared/queries/ranking'
+import { useMeQuery } from '../../../../shared/queries/me'
 import { useAuthStore } from '../../../../shared/stores/authStore'
 import { RankingList } from '../../../home/components/RankingList'
 import type { MapFilterKey, MapRestaurant } from '../../types/map'
+import { mapPinsToRestaurants } from '../../utils/mapPinsToRestaurants'
 import { MapFilterTabs } from '../MapFilterTabs'
 import { MapKakaoMap } from '../MapKakaoMap'
 import { MapSearchBar } from '../MapSearchBar'
@@ -14,25 +16,12 @@ export function DesktopMapPage() {
   const [showList, setShowList] = useState(false)
   const [selected, setSelected] = useState<MapRestaurant | null>(null)
   const isLoggedIn = useAuthStore((s) => s.isLoggedIn())
+  const { data: me } = useMeQuery(isLoggedIn)
+  const currentVote = me?.currentVote ?? null
 
-  const { data: pins = [] } = useMapPinsQuery()
+  const { data } = useMapPinsQuery()
 
-  const restaurants: MapRestaurant[] = pins.map((pin) => ({
-    id: pin.restaurantId,
-    rank: pin.rank,
-    name: pin.name,
-    address: '',
-    shortAddress: '',
-    votes: pin.voteCount,
-    weeklyVoteDelta: 0,
-    lat: pin.latitude,
-    lng: pin.longitude,
-    hours: '',
-    breakTime: '',
-    tags: [],
-    isOpen: true,
-    image: '/images/shop_default_img.png',
-  }))
+  const restaurants: MapRestaurant[] = mapPinsToRestaurants(data?.items ?? [])
 
   return (
     <div className="flex h-screen pt-20">
@@ -52,21 +41,41 @@ export function DesktopMapPage() {
         <div className="shrink-0 border-t border-[#E8D9BF] p-4">
           <div className="rounded-xl border border-[#E8D9BF] bg-white p-4">
             <p className="text-[13px] font-black text-[#2A1A12]">내 한 표</p>
-            <p className="mt-0.5 text-[12px] text-[#8A7A6A]">아직 투표하지 않았어요.</p>
-            {isLoggedIn ? (
-              <button
-                type="button"
-                className="mt-3 w-full rounded-xl border border-[#DBBA24] bg-[#FFC533] py-2.5 text-[14px] font-black text-[#2A1A12] transition hover:bg-[#D88A24]"
-              >
-                내 한 표 던지기
-              </button>
+            {isLoggedIn && currentVote ? (
+              <>
+                <p className="mt-0.5 truncate text-[13px] font-bold text-[#2A1A12]">
+                  {currentVote.restaurantName}
+                </p>
+                {currentVote.rank && (
+                  <p className="mt-0.5 text-[12px] text-[#8A7A6A]">서울 {currentVote.rank}위</p>
+                )}
+                <Link
+                  to={`/restaurants/${currentVote.restaurantId}`}
+                  className="mt-3 block w-full rounded-xl border border-[#DBBA24] bg-[#FFC533] py-2.5 text-center text-[14px] font-black text-[#2A1A12] transition hover:bg-[#D88A24]"
+                >
+                  내 표 확인하기
+                </Link>
+              </>
+            ) : isLoggedIn ? (
+              <>
+                <p className="mt-0.5 text-[12px] text-[#8A7A6A]">아직 투표하지 않았어요.</p>
+                <Link
+                  to="/search"
+                  className="mt-3 block w-full rounded-xl border border-[#DBBA24] bg-[#FFC533] py-2.5 text-center text-[14px] font-black text-[#2A1A12] transition hover:bg-[#D88A24]"
+                >
+                  내 한 표 던지기
+                </Link>
+              </>
             ) : (
-              <Link
-                to="/"
-                className="mt-3 block w-full rounded-xl border border-[#DBBA24] bg-[#FFC533] py-2.5 text-center text-[14px] font-black text-[#2A1A12] transition hover:bg-[#D88A24]"
-              >
-                로그인 후 투표하기
-              </Link>
+              <>
+                <p className="mt-0.5 text-[12px] text-[#8A7A6A]">아직 투표하지 않았어요.</p>
+                <Link
+                  to="/"
+                  className="mt-3 block w-full rounded-xl border border-[#DBBA24] bg-[#FFC533] py-2.5 text-center text-[14px] font-black text-[#2A1A12] transition hover:bg-[#D88A24]"
+                >
+                  로그인 후 투표하기
+                </Link>
+              </>
             )}
           </div>
         </div>

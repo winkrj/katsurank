@@ -1,20 +1,22 @@
 import type { ReactNode } from 'react'
 
-type SearchPaginationProps = {
+type PaginationProps = {
   currentPage: number
   totalPages: number
   onPageChange: (page: number) => void
+  ariaLabel?: string
 }
 
-export function SearchPagination({
+export function Pagination({
   currentPage,
   totalPages,
   onPageChange,
-}: SearchPaginationProps) {
+  ariaLabel = '페이지',
+}: PaginationProps) {
   const pages = Array.from({ length: totalPages }, (_, index) => index + 1)
 
   return (
-    <nav className="mt-8 flex items-center justify-center gap-1" aria-label="검색 결과 페이지">
+    <nav className="mt-8 flex items-center justify-center gap-1" aria-label={ariaLabel}>
       <PaginationButton
         label="이전"
         disabled={currentPage <= 1}

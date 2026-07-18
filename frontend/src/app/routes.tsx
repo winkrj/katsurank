@@ -24,7 +24,7 @@ export function AppRoutes() {
           <Route path="/me" element={<MyPage />} />
         </Route>
         {/* 레이아웃 없는 페이지 */}
-        <Route path="/oauth/kakao/callback" element={<KakaoCallbackPage />} />
+        <Route path="/oauth/callback" element={<KakaoCallbackPage />} />
       </Routes>
     </BrowserRouter>
   )
