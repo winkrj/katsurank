@@ -1,5 +1,8 @@
 package com.katsurank.user;
 
+import com.katsurank.vote.Vote;
+
+import com.katsurank.common.domain.EntityIdentity;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.GeneratedValue;
@@ -49,29 +52,41 @@ public class User {
     @Column(name = "current_vote_id")
     private Long currentVoteId;
 
-    private User(Long kakaoId, String nickname, String profileImage) {
+    private User(Long kakaoId, String nickname, String profileImage, Instant now) {
         this.kakaoId = kakaoId;
         this.nickname = nickname;
         this.profileImage = profileImage;
-        Instant now = Instant.now();
         this.createdAt = now;
         this.lastLoginAt = now;
     }
 
     /** 카카오 최초 로그인 시 신규 가입. */
-    public static User register(Long kakaoId, String nickname, String profileImage) {
-        return new User(kakaoId, nickname, profileImage);
+    public static User register(Long kakaoId, String nickname, String profileImage, Instant now) {
+        return new User(kakaoId, nickname, profileImage, now);
     }
 
     /** 재로그인 — 카카오에서 받은 최신 프로필로 갱신하고 마지막 로그인 시각을 찍는다. */
-    public void login(String nickname, String profileImage) {
+    public void login(String nickname, String profileImage, Instant now) {
         this.nickname = nickname;
         this.profileImage = profileImage;
-        this.lastLoginAt = Instant.now();
+        this.lastLoginAt = now;
     }
 
     /** 현재 1순위(유효 표)를 가리키도록 캐시를 갱신한다. (투표 도메인 트랜잭션 안에서만 호출) */
     public void pointCurrentVoteTo(Long voteId) {
         this.currentVoteId = voteId;
+    }
+
+    @Override
+    public boolean equals(Object other) {
+        if (this == other) return true;
+        if (other == null || EntityIdentity.effectiveClass(this) != EntityIdentity.effectiveClass(other)) return false;
+        User user = (User) other;
+        return id != null && id.equals(user.getId());
+    }
+
+    @Override
+    public int hashCode() {
+        return EntityIdentity.effectiveClass(this).hashCode();
     }
 }

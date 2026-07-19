@@ -1,5 +1,13 @@
 package com.katsurank.kakao;
 
+import com.katsurank.kakao.dto.KakaoSearchResult;
+
+import com.katsurank.kakao.dto.KakaoPlace;
+
+import com.katsurank.kakao.client.KakaoLocalClient;
+
+import com.katsurank.kakao.client.KakaoRawPageFetcher;
+
 import org.junit.jupiter.api.Test;
 import org.springframework.http.MediaType;
 import org.springframework.test.web.client.MockRestServiceServer;

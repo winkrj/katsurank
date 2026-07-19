@@ -1,10 +1,12 @@
 package com.katsurank.restaurant;
 
+import com.katsurank.restaurant.repository.RestaurantRepository;
+
 import com.katsurank.support.CleanUp;
 import com.katsurank.support.TestAuth;
 import com.katsurank.support.TestFixtures;
 import com.katsurank.user.User;
-import com.katsurank.user.UserRepository;
+import com.katsurank.user.repository.UserRepository;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -40,8 +42,8 @@ class RestaurantControllerTest {
 
         mockMvc.perform(get("/api/v1/restaurants/{id}", r.getId()))
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$.name").value("테스트돈까스"))
-                .andExpect(jsonPath("$.status").value("ACTIVE"));
+                .andExpect(jsonPath("$.data.name").value("테스트돈까스"))
+                .andExpect(jsonPath("$.data.status").value("ACTIVE"));
     }
 
     @Test
@@ -49,7 +51,7 @@ class RestaurantControllerTest {
     void getByIdNotFound() throws Exception {
         mockMvc.perform(get("/api/v1/restaurants/{id}", 999999))
                 .andExpect(status().isNotFound())
-                .andExpect(jsonPath("$.code").value("RESTAURANT_NOT_FOUND"));
+                .andExpect(jsonPath("$.error.code").value("RESTAURANT_NOT_FOUND"));
     }
 
     @Test
@@ -59,9 +61,9 @@ class RestaurantControllerTest {
 
         mockMvc.perform(get("/api/v1/restaurants/search").param("q", "돈까스"))
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$.items[0].name").value("명동돈까스"))
-                .andExpect(jsonPath("$.total").value(1))
-                .andExpect(jsonPath("$.offset").value(0));
+                .andExpect(jsonPath("$.data.items[0].name").value("명동돈까스"))
+                .andExpect(jsonPath("$.data.total").value(1))
+                .andExpect(jsonPath("$.data.offset").value(0));
     }
 
     @Test
@@ -72,8 +74,8 @@ class RestaurantControllerTest {
 
         mockMvc.perform(get("/api/v1/restaurants/search"))
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$.items.length()").value(2))
-                .andExpect(jsonPath("$.total").value(2));
+                .andExpect(jsonPath("$.data.items.length()").value(2))
+                .andExpect(jsonPath("$.data.total").value(2));
     }
 
     @Test
@@ -83,7 +85,7 @@ class RestaurantControllerTest {
 
         mockMvc.perform(get("/api/v1/restaurants/search").param("q", "  "))
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$.items.length()").value(1));
+                .andExpect(jsonPath("$.data.items.length()").value(1));
     }
 
     @Test
@@ -94,10 +96,10 @@ class RestaurantControllerTest {
 
         mockMvc.perform(get("/api/v1/restaurants/search").param("offset", "1").param("limit", "1"))
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$.items.length()").value(1))
-                .andExpect(jsonPath("$.offset").value(1))
-                .andExpect(jsonPath("$.limit").value(1))
-                .andExpect(jsonPath("$.total").value(2));
+                .andExpect(jsonPath("$.data.items.length()").value(1))
+                .andExpect(jsonPath("$.data.offset").value(1))
+                .andExpect(jsonPath("$.data.limit").value(1))
+                .andExpect(jsonPath("$.data.total").value(2));
     }
 
     // --- POST (인증 필요) ---
@@ -117,7 +119,7 @@ class RestaurantControllerTest {
     @Test
     @DisplayName("POST /api/v1/restaurants — 정상 등록 → 201")
     void registerSuccess() throws Exception {
-        User user = userRepository.save(User.register(300L, "등록자", null));
+        User user = userRepository.save(User.register(300L, "등록자", null, java.time.Instant.EPOCH));
 
         mockMvc.perform(post("/api/v1/restaurants")
                         .with(csrf())
@@ -135,14 +137,14 @@ class RestaurantControllerTest {
                                 }
                                 """))
                 .andExpect(status().isCreated())
-                .andExpect(jsonPath("$.name").value("맛있는돈까스"))
-                .andExpect(jsonPath("$.status").value("ACTIVE"));
+                .andExpect(jsonPath("$.data.name").value("맛있는돈까스"))
+                .andExpect(jsonPath("$.data.status").value("ACTIVE"));
     }
 
     @Test
     @DisplayName("POST /api/v1/restaurants — 카테고리 미달 → 422")
     void registerWrongCategory() throws Exception {
-        User user = userRepository.save(User.register(301L, "등록자2", null));
+        User user = userRepository.save(User.register(301L, "등록자2", null, java.time.Instant.EPOCH));
 
         mockMvc.perform(post("/api/v1/restaurants")
                         .with(csrf())
@@ -155,14 +157,14 @@ class RestaurantControllerTest {
                                   "kakaoCategory": "음식점 > 일식 > 초밥,롤"
                                 }
                                 """))
-                .andExpect(status().isUnprocessableEntity())
-                .andExpect(jsonPath("$.code").value("CATEGORY_NOT_ALLOWED"));
+                .andExpect(status().isUnprocessableContent())
+                .andExpect(jsonPath("$.error.code").value("CATEGORY_NOT_ALLOWED"));
     }
 
     @Test
     @DisplayName("POST /api/v1/restaurants — name 누락 → 400")
     void registerValidationError() throws Exception {
-        User user = userRepository.save(User.register(302L, "등록자3", null));
+        User user = userRepository.save(User.register(302L, "등록자3", null, java.time.Instant.EPOCH));
 
         mockMvc.perform(post("/api/v1/restaurants")
                         .with(csrf())
@@ -172,6 +174,6 @@ class RestaurantControllerTest {
                                 {"kakaoPlaceId": "p1"}
                                 """))
                 .andExpect(status().isBadRequest())
-                .andExpect(jsonPath("$.code").value("VALIDATION_ERROR"));
+                .andExpect(jsonPath("$.error.code").value("VALIDATION_ERROR"));
     }
 }

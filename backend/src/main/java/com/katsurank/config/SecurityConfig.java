@@ -1,6 +1,6 @@
 package com.katsurank.config;
 
-import com.katsurank.auth.CustomOAuth2UserService;
+import com.katsurank.auth.service.CustomOAuth2UserService;
 import org.springframework.boot.context.properties.EnableConfigurationProperties;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -10,7 +10,6 @@ import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
 import org.springframework.security.config.http.SessionCreationPolicy;
 import org.springframework.security.web.SecurityFilterChain;
-import org.springframework.security.web.authentication.HttpStatusEntryPoint;
 import org.springframework.security.web.authentication.logout.HttpStatusReturningLogoutSuccessHandler;
 import org.springframework.security.web.csrf.CookieCsrfTokenRepository;
 import org.springframework.security.web.csrf.CsrfTokenRequestAttributeHandler;
@@ -49,7 +48,9 @@ public class SecurityConfig {
     public SecurityFilterChain securityFilterChain(HttpSecurity http,
                                                    CustomOAuth2UserService customOAuth2UserService,
                                                    OAuth2SuccessHandler successHandler,
-                                                   OAuth2FailureHandler failureHandler) throws Exception {
+                                                   OAuth2FailureHandler failureHandler,
+                                                   ApiAuthenticationEntryPoint authenticationEntryPoint,
+                                                   ApiAccessDeniedHandler accessDeniedHandler) throws Exception {
         // SPA 더블 서밋 쿠키: 쿠키 값과 헤더 값을 그대로 비교(XOR 인코딩 없이)
         CsrfTokenRequestAttributeHandler csrfRequestHandler = new CsrfTokenRequestAttributeHandler();
 
@@ -86,9 +87,20 @@ public class SecurityConfig {
                         .invalidateHttpSession(true)
                         .deleteCookies("SESSION"))
                 .exceptionHandling(ex -> ex
-                        .authenticationEntryPoint(new HttpStatusEntryPoint(HttpStatus.UNAUTHORIZED)));
+                        .authenticationEntryPoint(authenticationEntryPoint)
+                        .accessDeniedHandler(accessDeniedHandler));
 
         return http.build();
+    }
+
+    @Bean
+    ApiAuthenticationEntryPoint apiAuthenticationEntryPoint() {
+        return new ApiAuthenticationEntryPoint();
+    }
+
+    @Bean
+    ApiAccessDeniedHandler apiAccessDeniedHandler() {
+        return new ApiAccessDeniedHandler();
     }
 
     @Bean

@@ -1,11 +1,19 @@
 package com.katsurank.restaurant;
 
+import com.katsurank.restaurant.repository.RestaurantRepository;
+
+import com.katsurank.restaurant.dto.RestaurantSearchResponse;
+
+import com.katsurank.restaurant.dto.RestaurantResponse;
+
+import com.katsurank.restaurant.service.RestaurantService;
+
 import com.katsurank.common.web.PageResponse;
 import com.katsurank.support.CleanUp;
 import com.katsurank.support.TestFixtures;
 import com.katsurank.user.User;
-import com.katsurank.user.UserRepository;
-import com.katsurank.vote.VoteService;
+import com.katsurank.user.repository.UserRepository;
+import com.katsurank.vote.service.VoteService;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -85,7 +93,7 @@ class RestaurantSearchTest {
     void closedExcludedFromSearch() {
         Restaurant r = TestFixtures.createRestaurant(restaurantRepository, "폐업돈가스");
         r = restaurantRepository.findById(r.getId()).orElseThrow();
-        r.close();
+        r.close(java.time.Instant.EPOCH);
         restaurantRepository.save(r);
 
         PageResponse<RestaurantSearchResponse> response = restaurantService.search("돈가스", 0, 20);
@@ -110,7 +118,7 @@ class RestaurantSearchTest {
     void getByIdClosedHasNullRank() {
         Restaurant r = TestFixtures.createRestaurant(restaurantRepository, "폐업가게");
         r = restaurantRepository.findById(r.getId()).orElseThrow();
-        r.close();
+        r.close(java.time.Instant.EPOCH);
         restaurantRepository.save(r);
 
         RestaurantResponse response = restaurantService.getById(r.getId());

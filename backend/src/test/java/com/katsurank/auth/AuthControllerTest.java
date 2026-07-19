@@ -1,5 +1,9 @@
 package com.katsurank.auth;
 
+import com.katsurank.auth.controller.AuthController;
+
+import com.katsurank.auth.service.CustomOAuth2UserService;
+
 import com.katsurank.config.OAuth2FailureHandler;
 import com.katsurank.config.OAuth2SuccessHandler;
 import com.katsurank.config.SecurityConfig;

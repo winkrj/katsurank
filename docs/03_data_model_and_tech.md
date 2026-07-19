@@ -255,7 +255,7 @@ INDEX idx_restaurant_current (restaurant_id, is_current)
 
 - [ ] 세션 저장소 구체안: `spring-session-jdbc`(PostgreSQL)로 시작 vs Redis 도입 시점
 - [ ] CI/CD 방법 (GitHub Actions vs 호스팅 자체 빌드)
-- [ ] 응답 포맷: 공통 `ApiResponse` 래퍼 vs 순수 데이터 + HTTP 상태코드 (프론트 개발자와 컨벤션 합의 필요)
+- [x] 응답 포맷: HTTP 상태코드를 유지하면서 성공·실패 본문을 공통 `ApiResponse<T>` 래퍼로 통일
 - [ ] 도메인 최종 등록 시점 (출시 직전)
 
 ---

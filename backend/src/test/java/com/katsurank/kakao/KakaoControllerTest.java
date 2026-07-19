@@ -1,6 +1,14 @@
 package com.katsurank.kakao;
 
-import com.katsurank.auth.CustomOAuth2UserService;
+import com.katsurank.kakao.dto.KakaoSearchResult;
+
+import com.katsurank.kakao.dto.KakaoPlace;
+
+import com.katsurank.kakao.controller.KakaoController;
+
+import com.katsurank.kakao.client.KakaoLocalClient;
+
+import com.katsurank.auth.service.CustomOAuth2UserService;
 import com.katsurank.config.OAuth2FailureHandler;
 import com.katsurank.config.OAuth2SuccessHandler;
 import com.katsurank.config.SecurityConfig;
@@ -45,10 +53,10 @@ class KakaoControllerTest {
 
         mockMvc.perform(get("/api/v1/kakao-places/search").param("query", "돈까스"))
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$.offset").value(0))
-                .andExpect(jsonPath("$.limit").value(15))
-                .andExpect(jsonPath("$.total").value(30))
-                .andExpect(jsonPath("$.items[0].kakaoPlaceId").value("p1"));
+                .andExpect(jsonPath("$.data.offset").value(0))
+                .andExpect(jsonPath("$.data.limit").value(15))
+                .andExpect(jsonPath("$.data.total").value(30))
+                .andExpect(jsonPath("$.data.items[0].kakaoPlaceId").value("p1"));
 
         verify(kakaoLocalClient).searchByKeyword("돈까스", 0, 15);
     }
@@ -62,8 +70,8 @@ class KakaoControllerTest {
         mockMvc.perform(get("/api/v1/kakao-places/search")
                         .param("query", "돈까스").param("offset", "15").param("limit", "15"))
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$.offset").value(15))
-                .andExpect(jsonPath("$.limit").value(15));
+                .andExpect(jsonPath("$.data.offset").value(15))
+                .andExpect(jsonPath("$.data.limit").value(15));
 
         verify(kakaoLocalClient).searchByKeyword("돈까스", 15, 15);
     }

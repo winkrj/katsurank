@@ -1,12 +1,24 @@
 package com.katsurank.restaurant;
 
-import com.katsurank.me.MeService;
-import com.katsurank.me.VoteHistoryItem;
+import com.katsurank.restaurant.repository.RestaurantRepository;
+
+import com.katsurank.restaurant.dto.RelocateResponse;
+
+import com.katsurank.restaurant.dto.CloseResponse;
+
+import com.katsurank.restaurant.service.RestaurantService;
+
+import com.katsurank.restaurant.exception.RestaurantNotFoundException;
+
+import com.katsurank.restaurant.exception.AlreadyClosedException;
+
+import com.katsurank.me.service.MeService;
+import com.katsurank.me.dto.VoteHistoryItem;
 import com.katsurank.support.CleanUp;
 import com.katsurank.support.TestFixtures;
 import com.katsurank.user.User;
-import com.katsurank.user.UserRepository;
-import com.katsurank.vote.VoteService;
+import com.katsurank.user.repository.UserRepository;
+import com.katsurank.vote.service.VoteService;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -69,7 +81,7 @@ class RestaurantLifecycleTest {
         voteN(neo, 3);
 
         RelocateResponse response = restaurantService.relocate(
-                old.getId(), new RelocateRequest(neo.getKakaoPlaceId()));
+                old.getId(), neo.getKakaoPlaceId());
 
         assertThat(response.movedVoteCount()).isEqualTo(5);
 
@@ -86,10 +98,10 @@ class RestaurantLifecycleTest {
         Restaurant old = newRestaurant("기존");
         Restaurant neo = newRestaurant("새곳");
 
-        restaurantService.relocate(old.getId(), new RelocateRequest(neo.getKakaoPlaceId()));
+        restaurantService.relocate(old.getId(), neo.getKakaoPlaceId());
 
         assertThatThrownBy(() -> restaurantService.relocate(
-                old.getId(), new RelocateRequest(neo.getKakaoPlaceId())))
+                old.getId(), neo.getKakaoPlaceId()))
                 .isInstanceOf(AlreadyClosedException.class);
     }
 
@@ -108,7 +120,7 @@ class RestaurantLifecycleTest {
         User user = TestFixtures.createUser(userRepository);
         voteService.vote(user.getId(), old.getId());
 
-        restaurantService.relocate(old.getId(), new RelocateRequest(neo.getKakaoPlaceId()));
+        restaurantService.relocate(old.getId(), neo.getKakaoPlaceId());
 
         List<VoteHistoryItem> history = meService.getVoteHistory(user.getId(), 0, 20).items();
         assertThat(history).hasSize(2);

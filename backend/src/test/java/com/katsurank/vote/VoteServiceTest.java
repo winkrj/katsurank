@@ -1,10 +1,18 @@
 package com.katsurank.vote;
 
+import com.katsurank.vote.service.VoteService;
+
+import com.katsurank.vote.exception.RestaurantNotVotableException;
+
+import com.katsurank.vote.repository.VoteRepository;
+
+import com.katsurank.vote.dto.VoteResponse;
+
 import com.katsurank.restaurant.Restaurant;
-import com.katsurank.restaurant.RestaurantRepository;
+import com.katsurank.restaurant.repository.RestaurantRepository;
 import com.katsurank.support.TestFixtures;
 import com.katsurank.user.User;
-import com.katsurank.user.UserRepository;
+import com.katsurank.user.repository.UserRepository;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -228,7 +236,7 @@ class VoteServiceTest {
         Restaurant r = com.katsurank.restaurant.Restaurant.register(
                 "test-closed-" + java.util.UUID.randomUUID(), "폐업돈까스", null, null, null, null,
                 "음식점 > 일식 > 돈까스,우동", null, null, null);
-        r.close();
+        r.close(java.time.Instant.EPOCH);
         return r;
     }
 

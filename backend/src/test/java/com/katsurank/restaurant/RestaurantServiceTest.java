@@ -1,9 +1,25 @@
 package com.katsurank.restaurant;
 
+import com.katsurank.restaurant.repository.RestaurantRepository;
+
+import com.katsurank.restaurant.dto.RestaurantRegisterRequest;
+
+import com.katsurank.restaurant.dto.RestaurantResponse;
+
+import com.katsurank.restaurant.service.RestaurantService;
+
+import com.katsurank.restaurant.exception.CategoryNotAllowedException;
+
+import com.katsurank.restaurant.exception.DuplicatePlaceException;
+
+import com.katsurank.restaurant.exception.RestaurantNotFoundException;
+
+import com.katsurank.restaurant.exception.RegionNotAllowedException;
+
 import com.katsurank.support.CleanUp;
 import com.katsurank.support.TestFixtures;
 import com.katsurank.user.User;
-import com.katsurank.user.UserRepository;
+import com.katsurank.user.repository.UserRepository;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -31,7 +47,7 @@ class RestaurantServiceTest {
         User user = TestFixtures.createUser(userRepository);
         RestaurantRegisterRequest request = tonkatsuRequest("test-place-1", "맛있는돈까스");
 
-        RestaurantResponse response = restaurantService.register(request, user.getId());
+        RestaurantResponse response = register(request, user.getId());
 
         assertThat(response.id()).isNotNull();
         assertThat(response.name()).isEqualTo("맛있는돈까스");
@@ -46,9 +62,9 @@ class RestaurantServiceTest {
         User user = TestFixtures.createUser(userRepository);
         RestaurantRegisterRequest request = tonkatsuRequest("dup-place-1", "원조돈까스");
 
-        restaurantService.register(request, user.getId());
+        register(request, user.getId());
 
-        assertThatThrownBy(() -> restaurantService.register(request, user.getId()))
+        assertThatThrownBy(() -> register(request, user.getId()))
                 .isInstanceOf(DuplicatePlaceException.class);
     }
 
@@ -61,7 +77,7 @@ class RestaurantServiceTest {
                 new BigDecimal("37.5000000"), new BigDecimal("127.0000000"),
                 "음식점 > 일식 > 초밥,롤", null, null);
 
-        assertThatThrownBy(() -> restaurantService.register(request, user.getId()))
+        assertThatThrownBy(() -> register(request, user.getId()))
                 .isInstanceOf(CategoryNotAllowedException.class);
     }
 
@@ -74,7 +90,7 @@ class RestaurantServiceTest {
                 new BigDecimal("35.2000000"), new BigDecimal("129.0000000"),
                 "음식점 > 일식 > 돈까스,우동", null, null);
 
-        assertThatThrownBy(() -> restaurantService.register(request, user.getId()))
+        assertThatThrownBy(() -> register(request, user.getId()))
                 .isInstanceOf(RegionNotAllowedException.class);
     }
 
@@ -109,5 +125,12 @@ class RestaurantServiceTest {
                 kakaoPlaceId, name, "서울 어딘가", "서울 어딘가로 1",
                 new BigDecimal("37.5000000"), new BigDecimal("127.0000000"),
                 "음식점 > 일식 > 돈까스,우동", null, "https://place.map.kakao.com/test");
+    }
+
+    private RestaurantResponse register(RestaurantRegisterRequest request, Long userId) {
+        return restaurantService.register(
+                request.kakaoPlaceId(), request.name(), request.address(), request.roadAddress(),
+                request.latitude(), request.longitude(), request.kakaoCategory(), request.phone(),
+                request.placeUrl(), userId);
     }
 }

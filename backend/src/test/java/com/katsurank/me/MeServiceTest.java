@@ -1,14 +1,20 @@
 package com.katsurank.me;
 
+import com.katsurank.me.dto.VoteHistoryItem;
+
+import com.katsurank.me.dto.MeResponse;
+
+import com.katsurank.me.service.MeService;
+
 import com.katsurank.common.web.PageResponse;
 import com.katsurank.restaurant.Restaurant;
-import com.katsurank.restaurant.RestaurantRepository;
+import com.katsurank.restaurant.repository.RestaurantRepository;
 import com.katsurank.restaurant.RestaurantStatus;
 import com.katsurank.support.CleanUp;
 import com.katsurank.support.TestFixtures;
 import com.katsurank.user.User;
-import com.katsurank.user.UserRepository;
-import com.katsurank.vote.VoteService;
+import com.katsurank.user.repository.UserRepository;
+import com.katsurank.vote.service.VoteService;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -88,7 +94,7 @@ class MeServiceTest {
         voteService.vote(user.getId(), r.getId());
 
         Restaurant loaded = restaurantRepository.findById(r.getId()).orElseThrow();
-        loaded.close();
+        loaded.close(java.time.Instant.EPOCH);
         restaurantRepository.save(loaded);
 
         MeResponse me = meService.getMe(user.getId());
