@@ -53,11 +53,4 @@ public class RestaurantQueryRepository {
                 .fetchOne();
     }
 
-    public List<Restaurant> findActivePinsWithCoordinates() {
-        return queryFactory.selectFrom(restaurant)
-                .where(restaurant.status.eq(RestaurantStatus.ACTIVE),
-                       restaurant.latitude.isNotNull(),
-                       restaurant.longitude.isNotNull())
-                .fetch();
-    }
 }

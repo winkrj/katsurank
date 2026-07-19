@@ -31,6 +31,18 @@
 
 의존 방향은 위에서 아래로만 향한다. Repository와 Entity는 Controller의 존재를 모른다.
 
+### 1.1 기능(도메인) 간 의존성
+
+기능 패키지는 완전히 고립된 마이크로서비스가 아니다. 하나의 유스케이스가 다른 기능이 소유한 데이터를 읽거나, 여러 엔티티의 정합성을 하나의 트랜잭션으로 유지해야 한다면 해당 Entity와 Repository를 참조할 수 있다. 예를 들어 `Vote`는 `User`·`Restaurant`의 현재 상태를 함께 갱신하고, `Ranking`은 `Restaurant`의 `status`·`voteCount`를 읽어 서울 단일 순위를 만든다.
+
+- 교차 기능 Repository 참조는 **유스케이스의 데이터 조회 또는 단일 트랜잭션 정합성 유지**에 한해 허용한다. 다른 기능의 Service를 호출해 계층을 우회하거나 책임을 떠넘기지 않는다.
+- 화면·API 전용의 정렬, 집계, projection, 여러 기능 데이터 조합 조회는 그 유스케이스를 제공하는 기능의 `XxxQueryRepository`가 소유한다. Spring Data `XxxRepository`에는 해당 Entity의 CRUD·식별 조회만 둔다.
+  - 예: 랭킹 정렬·순위·지도 핀 조회는 `ranking`의 QueryRepository, 마이페이지의 투표 이력 조합 조회는 `me`의 QueryRepository에 둔다.
+- 다른 기능의 Entity를 API 응답으로 직접 노출하지 않는다. 응답 DTO는 조회 기능이 소유하며 필요한 값만 projection 또는 변환한다.
+- 다른 기능 Entity의 상태 변경은 공개 setter나 필드 변경이 아니라 그 Entity의 의미 있는 도메인 메서드로만 수행한다.
+- 기능 간 순환 의존은 새로 만들지 않는다. 단, `Vote`처럼 여러 Entity의 정합성을 보장하는 쓰기 유스케이스는 필요한 Entity·Repository를 직접 참조할 수 있으며, 이 경우 Service 상호 호출 대신 하나의 Service가 트랜잭션을 조율한다.
+- 실제로 두 기능 이상이 공유하는 정책·값 객체만 `common`으로 옮긴다. 장래 사용 가능성만으로 공용화하지 않는다.
+
 ---
 
 ## 2. 패키지 구조

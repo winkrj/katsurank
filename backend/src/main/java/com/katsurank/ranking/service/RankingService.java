@@ -1,20 +1,12 @@
 package com.katsurank.ranking.service;
 
-import com.katsurank.ranking.repository.OffsetPageRequest;
-
 import com.katsurank.ranking.dto.MapPinResponse;
-
 import com.katsurank.ranking.dto.RankingItem;
+import com.katsurank.ranking.dto.RankingRow;
 import com.katsurank.ranking.dto.TopRankingResult;
-
 import com.katsurank.ranking.exception.LimitExceededException;
-
+import com.katsurank.ranking.repository.RankingQueryRepository;
 import com.katsurank.common.web.PageResponse;
-import com.katsurank.restaurant.Restaurant;
-import com.katsurank.restaurant.repository.RestaurantQueryRepository;
-import com.katsurank.restaurant.repository.RestaurantRepository;
-import com.katsurank.restaurant.RestaurantStatus;
-import org.springframework.data.domain.Page;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -28,13 +20,10 @@ public class RankingService {
 
     private static final int MAX_LIMIT = 100;
 
-    private final RestaurantRepository restaurantRepository;
-    private final RestaurantQueryRepository restaurantQueryRepository;
+    private final RankingQueryRepository rankingQueryRepository;
 
-    public RankingService(RestaurantRepository restaurantRepository,
-                          RestaurantQueryRepository restaurantQueryRepository) {
-        this.restaurantRepository = restaurantRepository;
-        this.restaurantQueryRepository = restaurantQueryRepository;
+    public RankingService(RankingQueryRepository rankingQueryRepository) {
+        this.rankingQueryRepository = rankingQueryRepository;
     }
 
     @Transactional(readOnly = true)
@@ -46,34 +35,27 @@ public class RankingService {
             throw new LimitExceededException();
         }
 
-        Page<Restaurant> page = restaurantRepository.findRanking(
-                RestaurantStatus.ACTIVE,
-                new OffsetPageRequest(offset, limit));
-
-        List<Restaurant> content = page.getContent();
+        List<RankingRow> content = rankingQueryRepository.findActiveRanking(offset, limit);
         List<RankingItem> items = new ArrayList<>(content.size());
         Map<Integer, Long> rankByVoteCount = new HashMap<>();
-        for (Restaurant restaurant : content) {
-            long rank = rankByVoteCount.computeIfAbsent(restaurant.getVoteCount(),
-                    voteCount -> restaurantQueryRepository.countWithVoteCountGreaterThan(voteCount) + 1);
-            items.add(RankingItem.from(restaurant, (int) rank));
+        for (RankingRow restaurant : content) {
+            long rank = rankByVoteCount.computeIfAbsent(restaurant.voteCount(),
+                    voteCount -> rankingQueryRepository.countWithVoteCountGreaterThan(voteCount) + 1);
+            items.add(restaurant.toItem((int) rank));
         }
 
-        return new PageResponse<>(items, page.getTotalElements(), offset, limit);
+        return new PageResponse<>(items, rankingQueryRepository.countActiveRestaurants(), offset, limit);
     }
 
     @Transactional(readOnly = true)
     public TopRankingResult getTop() {
-        return restaurantRepository.findFirstByStatusOrderByVoteCountDescIdAsc(RestaurantStatus.ACTIVE)
-                .<TopRankingResult>map(restaurant -> new TopRankingResult.Found(RankingItem.from(restaurant, 1)))
+        return rankingQueryRepository.findTop()
+                .<TopRankingResult>map(restaurant -> new TopRankingResult.Found(restaurant.toItem(1)))
                 .orElseGet(TopRankingResult.Empty::new);
     }
 
     @Transactional(readOnly = true)
     public List<MapPinResponse> getMapPins() {
-        return restaurantQueryRepository.findActivePinsWithCoordinates()
-                .stream()
-                .map(MapPinResponse::from)
-                .toList();
+        return rankingQueryRepository.findActivePinsWithCoordinates();
     }
 }

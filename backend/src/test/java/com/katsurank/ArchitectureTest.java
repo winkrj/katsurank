@@ -35,4 +35,19 @@ class ArchitectureTest {
                 .should().dependOnClassesThat().resideInAPackage("..controller..")
                 .check(classes);
     }
+
+    @Test
+    void repositoriesDoNotDependOnUpperLayers() {
+        noClasses().that().resideInAPackage("..repository..")
+                .should().dependOnClassesThat()
+                .resideInAnyPackage("..controller..", "..service..")
+                .check(classes);
+    }
+
+    @Test
+    void rankingServiceDoesNotDependOnRestaurantFeature() {
+        noClasses().that().resideInAPackage("..ranking.service..")
+                .should().dependOnClassesThat().resideInAPackage("..restaurant..")
+                .check(classes);
+    }
 }
