@@ -118,6 +118,24 @@ class RankingServiceTest {
     }
 
     @Test
+    @DisplayName("동점 그룹 중간 offset도 원래 순위를 유지")
+    void offsetInsideTieKeepsOriginalRank() {
+        Restaurant r1 = newRestaurant("가게1");
+        Restaurant r2 = newRestaurant("가게2");
+        Restaurant r3 = newRestaurant("가게3");
+        vote(r1, 10);
+        vote(r2, 5);
+        vote(r3, 5);
+
+        PageResponse<RankingItem> response = rankingService.getRanking(2, 1);
+
+        assertThat(response.items()).singleElement().satisfies(item -> {
+            assertThat(item.id()).isEqualTo(r3.getId());
+            assertThat(item.rank()).isEqualTo(2);
+        });
+    }
+
+    @Test
     @DisplayName("top → 1위 가게 반환")
     void topReturnsFirst() {
         Restaurant r1 = newRestaurant("1위가게");

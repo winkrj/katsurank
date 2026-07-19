@@ -46,10 +46,6 @@ public class MeService {
 
         List<VoteHistoryItem> items = meQueryRepository.findVoteHistory(userId, effectiveOffset, effectiveLimit);
         long total = meQueryRepository.countVoteHistory(userId);
-        if (items.isEmpty()) {
-            return new PageResponse<>(List.of(), total, effectiveOffset, effectiveLimit);
-        }
-
         return new PageResponse<>(items, total, effectiveOffset, effectiveLimit);
     }
 

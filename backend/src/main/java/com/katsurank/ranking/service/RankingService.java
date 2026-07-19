@@ -11,9 +11,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.util.ArrayList;
-import java.util.HashMap;
 import java.util.List;
-import java.util.Map;
 
 @Service
 public class RankingService {
@@ -36,15 +34,8 @@ public class RankingService {
         }
 
         List<RankingRow> content = rankingQueryRepository.findActiveRanking(offset, limit);
-        List<RankingItem> items = new ArrayList<>(content.size());
-        Map<Integer, Long> rankByVoteCount = new HashMap<>();
-        for (RankingRow restaurant : content) {
-            long rank = rankByVoteCount.computeIfAbsent(restaurant.voteCount(),
-                    voteCount -> rankingQueryRepository.countWithVoteCountGreaterThan(voteCount) + 1);
-            items.add(restaurant.toItem((int) rank));
-        }
-
-        return new PageResponse<>(items, rankingQueryRepository.countActiveRestaurants(), offset, limit);
+        return new PageResponse<>(toRankingItems(content, offset),
+                rankingQueryRepository.countActiveRestaurants(), offset, limit);
     }
 
     @Transactional(readOnly = true)
@@ -57,5 +48,24 @@ public class RankingService {
     @Transactional(readOnly = true)
     public List<MapPinResponse> getMapPins() {
         return rankingQueryRepository.findActivePinsWithCoordinates();
+    }
+
+    private List<RankingItem> toRankingItems(List<RankingRow> rows, int offset) {
+        if (rows.isEmpty()) {
+            return List.of();
+        }
+
+        int rank = (int) rankingQueryRepository.countWithVoteCountGreaterThan(rows.getFirst().voteCount()) + 1;
+        int previousVoteCount = rows.getFirst().voteCount();
+        List<RankingItem> items = new ArrayList<>(rows.size());
+        for (int index = 0; index < rows.size(); index++) {
+            RankingRow row = rows.get(index);
+            if (index > 0 && row.voteCount() != previousVoteCount) {
+                rank = offset + index + 1;
+            }
+            items.add(row.toItem(rank));
+            previousVoteCount = row.voteCount();
+        }
+        return items;
     }
 }
