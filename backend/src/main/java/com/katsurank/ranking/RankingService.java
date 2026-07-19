@@ -1,5 +1,6 @@
 package com.katsurank.ranking;
 
+import com.katsurank.common.web.PageResponse;
 import com.katsurank.restaurant.Restaurant;
 import com.katsurank.restaurant.RestaurantQueryRepository;
 import com.katsurank.restaurant.RestaurantRepository;
@@ -29,7 +30,7 @@ public class RankingService {
     }
 
     @Transactional(readOnly = true)
-    public RankingResponse getRanking(int offset, int limit) {
+    public PageResponse<RankingItem> getRanking(int offset, int limit) {
         if (offset < 0) {
             throw new IllegalArgumentException("offset은 0 이상이어야 합니다.");
         }
@@ -50,7 +51,7 @@ public class RankingService {
             items.add(RankingItem.of(restaurant, (int) rank));
         }
 
-        return new RankingResponse(items, page.getTotalElements(), offset, limit);
+        return new PageResponse<>(items, page.getTotalElements(), offset, limit);
     }
 
     @Transactional(readOnly = true)

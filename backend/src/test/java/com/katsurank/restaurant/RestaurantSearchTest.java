@@ -1,5 +1,6 @@
 package com.katsurank.restaurant;
 
+import com.katsurank.common.web.PageResponse;
 import com.katsurank.support.CleanUp;
 import com.katsurank.support.TestFixtures;
 import com.katsurank.user.User;
@@ -31,7 +32,7 @@ class RestaurantSearchTest {
         Restaurant r2 = newRestaurant("을지돈가스", 5);
         newRestaurant("숨은맛집", 20);
 
-        RestaurantSearchPageResponse response = restaurantService.search("돈가스", 0, 20);
+        PageResponse<RestaurantSearchResponse> response = restaurantService.search("돈가스", 0, 20);
 
         assertThat(response.items()).hasSize(2);
         assertThat(response.items().get(0).id()).isEqualTo(r1.getId());
@@ -45,7 +46,7 @@ class RestaurantSearchTest {
         Restaurant r1 = newRestaurant("명동돈가스", 10);
         Restaurant r2 = newRestaurant("숨은맛집", 20);
 
-        RestaurantSearchPageResponse response = restaurantService.search(null, 0, 20);
+        PageResponse<RestaurantSearchResponse> response = restaurantService.search(null, 0, 20);
 
         assertThat(response.items()).hasSize(2);
         assertThat(response.items().get(0).id()).isEqualTo(r2.getId());
@@ -59,7 +60,7 @@ class RestaurantSearchTest {
         Restaurant r1 = newRestaurant("가게A", 20);
         newRestaurant("가게B", 10);
 
-        RestaurantSearchPageResponse response = restaurantService.search(null, 0, 1);
+        PageResponse<RestaurantSearchResponse> response = restaurantService.search(null, 0, 1);
 
         assertThat(response.items()).hasSize(1);
         assertThat(response.items().get(0).id()).isEqualTo(r1.getId());
@@ -73,7 +74,7 @@ class RestaurantSearchTest {
     void searchResponseHasRank() {
         newRestaurant("테스트돈가스", 5);
 
-        RestaurantSearchPageResponse response = restaurantService.search("돈가스", 0, 20);
+        PageResponse<RestaurantSearchResponse> response = restaurantService.search("돈가스", 0, 20);
 
         assertThat(response.items()).hasSize(1);
         assertThat(response.items().get(0).rank()).isEqualTo(1);
@@ -87,7 +88,7 @@ class RestaurantSearchTest {
         r.close();
         restaurantRepository.save(r);
 
-        RestaurantSearchPageResponse response = restaurantService.search("돈가스", 0, 20);
+        PageResponse<RestaurantSearchResponse> response = restaurantService.search("돈가스", 0, 20);
 
         assertThat(response.items()).isEmpty();
         assertThat(response.total()).isZero();

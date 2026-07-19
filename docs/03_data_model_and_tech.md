@@ -169,23 +169,29 @@ INDEX idx_restaurant_current (restaurant_id, is_current)
 > 배포된 Swagger UI를 참고한다 — `https://api.katsurank.kr/swagger-ui.html` (Basic Auth 필요,
 > 자격증명은 별도 채널로 전달). 로컬은 `http://localhost:8080/swagger-ui.html`.
 
+> **페이지네이션·목록 응답 컨벤션**: 목록을 반환하는 API는 요청 파라미터로 `offset`(기본 0)·`limit`을 받고,
+> 응답은 공통 포맷 `{ items, total, offset, limit }`(`PageResponse<T>`)을 따른다. `items`/`total` 필드명은
+> 모든 목록 API에서 동일하다. 카카오 장소 검색도 카카오 원본은 `page` 기반이지만, 우리 API 표면은
+> 서버에서 offset/limit로 변환해 동일한 컨벤션을 유지한다. 전체를 그대로 보여줘야 하는 지도 핀
+> 목록(`map-pins`)만 예외로 페이지네이션 없이 순수 배열을 반환한다.
+
 | Method | Path | 설명 |
 |---|---|---|
-| GET | `/api/v1/ranking` | **서울 단일 랭킹** 목록 조회 (vote_count DESC, status=ACTIVE, 페이지네이션) |
+| GET | `/api/v1/ranking` | **서울 단일 랭킹** 목록 조회 (vote_count DESC, status=ACTIVE, offset/limit 페이지네이션) |
 | GET | `/api/v1/ranking/top` | 현재 서울 1위 (왕좌) 단건 조회 |
-| GET | `/api/v1/ranking/map-pins` | 지도 핀용 가게 좌표 목록 (status=ACTIVE) |
+| GET | `/api/v1/ranking/map-pins` | 지도 핀용 가게 좌표 목록 (status=ACTIVE, 페이지네이션 없이 전체 반환) |
 | GET | `/api/v1/restaurants/{id}` | 가게 상세 (status 무관, 폐업/이전된 가게도 조회 가능) |
 | POST | `/api/v1/restaurants` | 가게 등록 (카카오 place_id 기반, 로그인 필요) |
-| GET | `/api/v1/restaurants/search` | 자체 DB 이름 검색 (status=ACTIVE만, q는 선택 — 없으면 전체 목록, vote_count 순 페이지네이션) |
+| GET | `/api/v1/restaurants/search` | 자체 DB 이름 검색 (status=ACTIVE만, q는 선택 — 없으면 전체 목록, vote_count 순 offset/limit 페이지네이션) |
 | PATCH | `/api/v1/restaurants/{id}/close` | 가게 폐업 처리 (박제, 로그인 필요) |
 | PATCH | `/api/v1/restaurants/{id}/relocate` | 가게 이전 처리 (표 승계, 로그인 필요) |
-| GET | `/api/v1/kakao-places/search` | 카카오 로컬 API 프록시 (가게 추가용) |
+| GET | `/api/v1/kakao-places/search` | 카카오 로컬 API 프록시 (가게 추가용). offset/limit 페이지네이션(내부적으로 카카오 원본 page로 변환) |
 | POST | `/api/v1/votes` | 투표 / 표 이동 (로그인 필요) |
 | GET | `/api/v1/auth/me` | 로그인 상태 확인 |
 | GET | `/api/v1/auth/csrf` | CSRF 토큰 발급 (SPA 부트스트랩용) |
 | POST | `/api/v1/auth/logout` | 로그아웃 |
 | GET | `/api/v1/me` | 내 정보 + 현재 1순위 |
-| GET | `/api/v1/me/vote-history` | 표 이동 히스토리 |
+| GET | `/api/v1/me/vote-history` | 표 이동 히스토리 (최신순, offset/limit 페이지네이션) |
 
 ---
 

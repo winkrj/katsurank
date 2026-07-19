@@ -81,10 +81,11 @@ class MeControllerTest {
 
         mockMvc.perform(get("/api/v1/me/vote-history").with(TestAuth.oauth2(user)))
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$.length()").value(2))
-                .andExpect(jsonPath("$[0].restaurantName").value("가게B"))
-                .andExpect(jsonPath("$[0].isCurrent").value(true))
-                .andExpect(jsonPath("$[1].restaurantName").value("가게A"))
-                .andExpect(jsonPath("$[1].isCurrent").value(false));
+                .andExpect(jsonPath("$.items.length()").value(2))
+                .andExpect(jsonPath("$.total").value(2))
+                .andExpect(jsonPath("$.items[0].restaurantName").value("가게B"))
+                .andExpect(jsonPath("$.items[0].isCurrent").value(true))
+                .andExpect(jsonPath("$.items[1].restaurantName").value("가게A"))
+                .andExpect(jsonPath("$.items[1].isCurrent").value(false));
     }
 }

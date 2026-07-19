@@ -53,10 +53,14 @@ public class SecurityConfig {
         // SPA 더블 서밋 쿠키: 쿠키 값과 헤더 값을 그대로 비교(XOR 인코딩 없이)
         CsrfTokenRequestAttributeHandler csrfRequestHandler = new CsrfTokenRequestAttributeHandler();
 
+        // SESSION 쿠키와 동일한 SameSite 정책을 따르도록 명시(기본값은 SameSite 미설정 → 브라우저가 Lax로 취급해 크로스도메인에서 누락됨)
+        CookieCsrfTokenRepository csrfTokenRepository = CookieCsrfTokenRepository.withHttpOnlyFalse();
+        csrfTokenRepository.setCookieCustomizer(cookie -> cookie.sameSite(appProperties.cookie().sameSite()));
+
         http
                 .cors(cors -> cors.configurationSource(corsConfigurationSource()))
                 .csrf(csrf -> csrf
-                        .csrfTokenRepository(CookieCsrfTokenRepository.withHttpOnlyFalse())
+                        .csrfTokenRepository(csrfTokenRepository)
                         .csrfTokenRequestHandler(csrfRequestHandler))
                 .formLogin(form -> form.disable())
                 .httpBasic(basic -> basic.disable())

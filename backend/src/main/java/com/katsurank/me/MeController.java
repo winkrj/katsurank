@@ -2,14 +2,14 @@ package com.katsurank.me;
 
 import com.katsurank.auth.AuthPrincipal;
 import com.katsurank.auth.LoginUser;
+import com.katsurank.common.web.PageResponse;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
-
-import java.util.List;
 
 /** 마이페이지 API. 전부 로그인 필요. */
 @RestController
@@ -31,9 +31,13 @@ public class MeController {
     }
 
     @GetMapping("/vote-history")
-    @Operation(summary = "투표 히스토리 조회", description = "표를 던진 순서대로 이력을 반환한다. isCurrent=true인 항목이 현재 유효표.")
+    @Operation(summary = "투표 히스토리 조회",
+            description = "표를 던진 순서대로 이력을 반환한다(최신순). isCurrent=true인 항목이 현재 유효표. offset/limit 페이지네이션.")
     @ApiResponse(responseCode = "401", description = "로그인 필요")
-    public List<VoteHistoryItem> voteHistory(@LoginUser AuthPrincipal principal) {
-        return meService.getVoteHistory(principal.userId());
+    public PageResponse<VoteHistoryItem> voteHistory(
+            @LoginUser AuthPrincipal principal,
+            @RequestParam(defaultValue = "0") int offset,
+            @RequestParam(defaultValue = "20") int limit) {
+        return meService.getVoteHistory(principal.userId(), offset, limit);
     }
 }

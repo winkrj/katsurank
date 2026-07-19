@@ -1,5 +1,6 @@
 package com.katsurank.restaurant;
 
+import com.katsurank.common.web.PageResponse;
 import com.katsurank.user.User;
 import com.katsurank.user.UserRepository;
 import com.katsurank.vote.Vote;
@@ -85,7 +86,7 @@ public class RestaurantService {
     }
 
     @Transactional(readOnly = true)
-    public RestaurantSearchPageResponse search(String query, int offset, int limit) {
+    public PageResponse<RestaurantSearchResponse> search(String query, int offset, int limit) {
         int effectiveOffset = Math.max(offset, 0);
         int effectiveLimit = Math.min(Math.max(limit, 1), MAX_SEARCH_LIMIT);
         String trimmedQuery = (query == null || query.isBlank()) ? null : query.trim();
@@ -99,7 +100,7 @@ public class RestaurantService {
                         rankCache.computeIfAbsent(r.getVoteCount(), this::computeRank)))
                 .toList();
 
-        return new RestaurantSearchPageResponse(items, total, effectiveOffset, effectiveLimit);
+        return new PageResponse<>(items, total, effectiveOffset, effectiveLimit);
     }
 
     @Transactional

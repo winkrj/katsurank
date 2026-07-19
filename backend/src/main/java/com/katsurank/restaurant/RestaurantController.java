@@ -3,6 +3,7 @@ package com.katsurank.restaurant;
 import com.katsurank.auth.AuthPrincipal;
 import com.katsurank.auth.LoginUser;
 import com.katsurank.common.web.ApiError;
+import com.katsurank.common.web.PageResponse;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.media.Content;
 import io.swagger.v3.oas.annotations.media.Schema;
@@ -62,7 +63,7 @@ public class RestaurantController {
     @Operation(summary = "가게 이름 검색",
             description = "자체 DB에서 이름으로 검색. status=ACTIVE인 가게만 반환한다. "
                     + "q가 없으면 전체 목록을 vote_count 순으로 페이징 반환한다.")
-    public RestaurantSearchPageResponse search(
+    public PageResponse<RestaurantSearchResponse> search(
             @RequestParam(required = false) String q,
             @RequestParam(defaultValue = "0") int offset,
             @RequestParam(defaultValue = "20") int limit) {

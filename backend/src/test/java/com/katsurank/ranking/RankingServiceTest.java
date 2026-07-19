@@ -1,5 +1,6 @@
 package com.katsurank.ranking;
 
+import com.katsurank.common.web.PageResponse;
 import com.katsurank.restaurant.Restaurant;
 import com.katsurank.restaurant.RestaurantRepository;
 import com.katsurank.support.CleanUp;
@@ -41,7 +42,7 @@ class RankingServiceTest {
         vote(r2, 5);
         vote(r3, 5);
 
-        RankingResponse response = rankingService.getRanking(0, 20);
+        PageResponse<RankingItem> response = rankingService.getRanking(0, 20);
 
         assertThat(response.items()).hasSize(3);
         assertThat(response.items().get(0).rank()).isEqualTo(1);
@@ -66,7 +67,7 @@ class RankingServiceTest {
         closed.close();
         restaurantRepository.save(closed);
 
-        RankingResponse response = rankingService.getRanking(0, 20);
+        PageResponse<RankingItem> response = rankingService.getRanking(0, 20);
 
         assertThat(response.items()).hasSize(1);
         assertThat(response.items().get(0).id()).isEqualTo(active.getId());
@@ -83,7 +84,7 @@ class RankingServiceTest {
     @Test
     @DisplayName("ACTIVE 가게 0개 → top empty, ranking items=[]")
     void emptyRanking() {
-        RankingResponse response = rankingService.getRanking(0, 20);
+        PageResponse<RankingItem> response = rankingService.getRanking(0, 20);
         assertThat(response.items()).isEmpty();
         assertThat(response.total()).isZero();
 
@@ -101,7 +102,7 @@ class RankingServiceTest {
         vote(r2, 5);
         vote(r3, 3);
 
-        RankingResponse response = rankingService.getRanking(2, 1);
+        PageResponse<RankingItem> response = rankingService.getRanking(2, 1);
 
         assertThat(response.items()).hasSize(1);
         assertThat(response.items().get(0).rank()).isEqualTo(3);

@@ -110,7 +110,7 @@ class RestaurantLifecycleTest {
 
         restaurantService.relocate(old.getId(), new RelocateRequest(neo.getKakaoPlaceId()));
 
-        List<VoteHistoryItem> history = meService.getVoteHistory(user.getId());
+        List<VoteHistoryItem> history = meService.getVoteHistory(user.getId(), 0, 20).items();
         assertThat(history).hasSize(2);
         assertThat(history.get(0).restaurantId()).isEqualTo(neo.getId());
         assertThat(history.get(0).isCurrent()).isTrue();

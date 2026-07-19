@@ -18,10 +18,19 @@ public class MeQueryRepository {
         this.queryFactory = new JPAQueryFactory(em);
     }
 
-    public List<Vote> findVoteHistory(Long userId) {
+    public List<Vote> findVoteHistory(Long userId, int offset, int limit) {
         return queryFactory.selectFrom(vote)
                 .where(vote.userId.eq(userId))
                 .orderBy(vote.votedAt.desc())
+                .offset(offset)
+                .limit(limit)
                 .fetch();
+    }
+
+    public long countVoteHistory(Long userId) {
+        return queryFactory.select(vote.count())
+                .from(vote)
+                .where(vote.userId.eq(userId))
+                .fetchOne();
     }
 }

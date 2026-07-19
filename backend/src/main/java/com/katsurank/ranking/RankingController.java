@@ -1,6 +1,7 @@
 package com.katsurank.ranking;
 
 import com.katsurank.common.web.ApiError;
+import com.katsurank.common.web.PageResponse;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.media.Content;
 import io.swagger.v3.oas.annotations.media.Schema;
@@ -30,9 +31,9 @@ public class RankingController {
     @Operation(summary = "랭킹 목록 조회", description = "vote_count DESC, status=ACTIVE 인 가게만 대상. offset/limit 페이지네이션.")
     @ApiResponse(responseCode = "400", description = "limit이 1~100 범위를 벗어남 (LIMIT_EXCEEDED)",
             content = @Content(schema = @Schema(implementation = ApiError.class)))
-    public RankingResponse ranking(
-            @RequestParam(defaultValue = "20") int limit,
-            @RequestParam(defaultValue = "0") int offset) {
+    public PageResponse<RankingItem> ranking(
+            @RequestParam(defaultValue = "0") int offset,
+            @RequestParam(defaultValue = "20") int limit) {
         return rankingService.getRanking(offset, limit);
     }
 
