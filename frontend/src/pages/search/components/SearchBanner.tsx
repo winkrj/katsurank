@@ -7,11 +7,16 @@ export function SearchBanner({ layout }: SearchBannerProps) {
   const src = isMobile ? '/images/search_banner_mobile.png' : '/images/search_banner_desktop.png';
 
   return (
-    <div className={isMobile ? 'w-full' : 'w-full border-b border-[#E8D9BF]/60'}>
+    <div
+      className={[
+        'relative w-full overflow-hidden',
+        isMobile ? 'aspect-[1778/494]' : 'aspect-[2108/317] border-b border-[#E8D9BF]/60',
+      ].join(' ')}
+    >
       <img
         src={src}
         alt="돈까스집 검색 — 가게명으로 검색해 보세요"
-        className={isMobile ? 'w-full object-cover' : 'h-[200px] w-full'}
+        className="absolute inset-0 size-full object-cover object-center"
       />
     </div>
   );
