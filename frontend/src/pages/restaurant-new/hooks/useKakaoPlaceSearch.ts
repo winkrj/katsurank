@@ -36,7 +36,6 @@ export function useKakaoPlaceSearch() {
 
     try {
       const data = await searchKakaoPlacesProxy(trimmed, targetPage);
-      console.log('카카오 장소 검색 결과', data);
       setResults(data.places.map(toKakaoPlace));
       setPage(data.page);
       setTotalPages(Math.max(1, data.totalPages));

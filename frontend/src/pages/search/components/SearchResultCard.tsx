@@ -15,60 +15,54 @@ export function SearchResultCard({ item, layout = 'desktop' }: SearchResultCardP
     <article
       className={
         isMobile
-          ? 'flex gap-3 rounded-2xl border border-[#E8D9BF] bg-white p-3 shadow-[0_8px_20px_rgba(58,35,24,0.05)]'
-          : 'flex gap-4 rounded-2xl border border-[#E8D9BF] bg-white p-4 shadow-[0_8px_24px_rgba(58,35,24,0.06)]'
+          ? 'flex flex-col gap-3 rounded-2xl border border-[#E8D9BF] bg-white p-3 shadow-[0_8px_20px_rgba(58,35,24,0.05)]'
+          : 'flex flex-col gap-3 rounded-2xl border border-[#E8D9BF] bg-white p-4 shadow-[0_8px_24px_rgba(58,35,24,0.06)]'
       }
     >
-      <div
-        className={
-          isMobile
-            ? 'size-[88px] shrink-0 overflow-hidden rounded-xl border border-[#E8D9BF]'
-            : 'size-[120px] shrink-0 overflow-hidden rounded-xl border border-[#E8D9BF]'
-        }
-      >
-        <img src={item.image} alt="" className="size-full object-cover" />
+      <div className={isMobile ? 'flex gap-3' : 'flex gap-4'}>
+        <div
+          className={
+            isMobile
+              ? 'w-[88px] shrink-0 overflow-hidden rounded-xl border border-[#E8D9BF]'
+              : 'w-[120px] shrink-0 overflow-hidden rounded-xl border border-[#E8D9BF]'
+          }
+        >
+          <img src={item.image} alt="" className="size-full object-cover" />
+        </div>
+
+        <div className="flex min-w-0 flex-1 flex-col justify-center gap-1">
+          <div className="flex items-center gap-2">
+            <RankBadge
+              rank={item.rank}
+              className={isMobile ? 'size-[20px] text-[11px]' : undefined}
+            />
+            <h3 className="truncate text-[15px] font-black text-[#2A1A12]">{item.name}</h3>
+          </div>
+
+          <p className="flex items-start gap-1 text-[12px] leading-snug text-[#8A7A6A]">
+            <LocationIcon />
+            <span className="line-clamp-2">{item.address}</span>
+          </p>
+
+          <p className="text-[14px] font-bold text-[#D88A24]">{item.votes.toLocaleString()}표</p>
+        </div>
       </div>
 
-      <div className="flex min-w-0 flex-1 flex-col">
-        <div className="mb-1 flex items-center gap-2">
-          <RankBadge
-            rank={item.rank}
-            className={isMobile ? 'size-[20px] text-[11px]' : undefined}
-          />
-          <h3 className="truncate text-[15px] font-black text-[#2A1A12]">{item.name}</h3>
-        </div>
-
-        <p className="mb-1 flex items-start gap-1 text-[12px] leading-snug text-[#8A7A6A]">
-          <LocationIcon />
-          <span className="line-clamp-2">{item.address}</span>
-        </p>
-
-        <p className="mb-3 text-[14px] font-bold text-[#D88A24]">{item.votes.toLocaleString()}표</p>
-
-        <div className={`mt-auto flex gap-2 ${isMobile ? '' : 'justify-end'}`}>
-          <Button
-            tag="a"
-            variant="secondary"
-            href={`/restaurants/${item.id}`}
-            className={
-              isMobile
-                ? 'h-10 flex-1 rounded-lg text-[13px]'
-                : 'h-10 min-w-[100px] rounded-lg text-[13px]'
-            }
-          >
-            상세보기
-          </Button>
-          <RestaurantVoteConfirmButton
-            restaurantId={item.id}
-            restaurantName={item.name}
-            label="투표하기"
-            className={
-              isMobile
-                ? 'h-10 flex-1 rounded-lg text-[13px]'
-                : 'h-10 min-w-[100px] rounded-lg text-[13px]'
-            }
-          />
-        </div>
+      <div className="flex gap-2">
+        <Button
+          tag="a"
+          variant="secondary"
+          href={`/restaurants/${item.id}`}
+          className="h-10 flex-1 rounded-lg text-[13px]"
+        >
+          상세보기
+        </Button>
+        <RestaurantVoteConfirmButton
+          restaurantId={item.id}
+          restaurantName={item.name}
+          label="투표하기"
+          className="h-10 flex-1 rounded-lg text-[13px]"
+        />
       </div>
     </article>
   );

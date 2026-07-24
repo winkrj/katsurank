@@ -1,6 +1,6 @@
-import { HeroHeading } from './HeroHeading'
-import { RankingList } from './RankingList'
-import { VoteButtons } from './VoteButtons'
+import { HeroHeading } from '../HeroHeading'
+import { RankingList } from '../RankingList'
+import { VoteButtons } from '../VoteButtons'
 
 export function MobileHero() {
   return (

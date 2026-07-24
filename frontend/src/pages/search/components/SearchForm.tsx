@@ -1,20 +1,17 @@
 import type { FormEvent } from 'react'
-import { SEARCH_REGION_TAGS } from '../constants'
+// TODO: 2차 -> 지역(장소) 검색 지원 시 SEARCH_REGION_TAGS 다시 사용
+// import { SEARCH_REGION_TAGS } from '../constants'
 
 type SearchFormProps = {
   query: string
-  selectedTag: string | null
   onQueryChange: (value: string) => void
-  onTagSelect: (tag: string | null) => void
   onSubmit: () => void
   layout?: 'desktop' | 'mobile'
 }
 
 export function SearchForm({
   query,
-  selectedTag,
   onQueryChange,
-  onTagSelect,
   onSubmit,
   layout = 'desktop',
 }: SearchFormProps) {
@@ -40,7 +37,7 @@ export function SearchForm({
           type="search"
           value={query}
           onChange={(e) => onQueryChange(e.target.value)}
-          placeholder="가게명 또는 지역을 입력하세요"
+          placeholder="가게명을 입력하세요"
           className="h-11 min-w-0 flex-1 rounded-lg border border-[#E8D9BF] bg-[#FFFDF4] px-3 text-[14px] text-[#2A1A12] outline-none placeholder:text-[#8A7A6A] focus:border-[#D88A24]"
         />
         <button
@@ -52,6 +49,7 @@ export function SearchForm({
         </button>
       </form>
 
+      {/* TODO: 2차 -> 지역(장소) 검색 API 나오면 주석 해제
       <div className="flex flex-wrap gap-2">
         {SEARCH_REGION_TAGS.map((tag) => {
           const isActive = selectedTag === tag
@@ -72,6 +70,7 @@ export function SearchForm({
           )
         })}
       </div>
+      */}
     </section>
   )
 }

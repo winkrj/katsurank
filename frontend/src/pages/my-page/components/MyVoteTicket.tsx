@@ -1,4 +1,5 @@
 import { Link } from 'react-router-dom';
+import { formatDateKST } from '../../../shared/lib/formatDate';
 
 type MyVoteTicketProps = {
   restaurantId: number;
@@ -23,7 +24,11 @@ export function MyVoteTicket({
 
   return (
     <div
-      className="flex justify-center relative overflow-hidden rounded-2xl px-8 py-6"
+      className={
+        isDesktop
+          ? 'flex justify-center relative overflow-hidden rounded-2xl px-10 py-8'
+          : 'flex justify-center relative overflow-hidden rounded-2xl px-8 pb-8 pt-12'
+      }
       style={{
         backgroundImage: isDesktop
           ? 'url(/images/my_vote_bg_img_desktop.png)'
@@ -59,19 +64,19 @@ export function MyVoteTicket({
         )}
 
         {/* 점선 구분 */}
-        <div className="my-5 border-t border-dashed border-[#D9A83A]" />
+        <div className="mt-5 mb-3 border-t border-dashed border-[#D9A83A]" />
 
         {/* 하단: 날짜 + 상세보기 */}
-        <div className="flex items-center justify-between">
-          <p className="text-[13px] text-[#8A7A6A]">
+        <div className="flex items-center justify-between gap-4 mb-4 px-3">
+          <p className="shrink-0 text-[13px] text-[#8A7A6A]">
             투표한 날짜&nbsp;&nbsp;
-            <span className="font-bold text-[#2A1A12]">{votedAt}</span>
+            <span className="font-bold text-[#2A1A12]">{formatDateKST(votedAt)}</span>
           </p>
           <Link
             to={`/restaurants/${restaurantId}`}
-            className="flex items-center gap-1 rounded-xl border border-[#C78316] px-4 py-2 text-[13px] font-bold text-[#2A1A12] transition hover:bg-[#C78316]/10"
+            className="flex shrink-0 items-center gap-1 rounded-xl border border-[#C78316] bg-white px-4 py-2 text-[13px] font-bold text-[#2A1A12] shadow-sm transition hover:bg-[#FFF4D8]"
           >
-            가게 상세보기 <span aria-hidden>→</span>
+            상세보기 <span aria-hidden>→</span>
           </Link>
         </div>
       </div>
@@ -98,7 +103,8 @@ function RestaurantImage({ src, name, size }: { src: string; name: string; size:
 function RankBadge({ rank, votes }: { rank: number | null; votes: number | null }) {
   return (
     <div className="rounded-full bg-[#D88A24] px-5 py-2 text-[14px] font-black text-white shadow-[0_3px_0_#A86010]">
-      {rank != null ? `현재 ${rank}위 · ` : ''}{votes != null ? `${votes.toLocaleString()}표` : '집계 중'}
+      {rank != null ? `현재 ${rank}위 · ` : ''}
+      {votes != null ? `${votes.toLocaleString()}표` : '집계 중'}
     </div>
   );
 }

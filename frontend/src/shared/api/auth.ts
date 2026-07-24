@@ -1,8 +1,10 @@
-import { apiClient } from './client'
+import { apiClient, setCsrfToken } from './client'
 import type { AuthMeResponse, CsrfTokenResponse } from '../types/auth'
 
-export function fetchCsrf() {
-  return apiClient<CsrfTokenResponse>('/api/v1/auth/csrf')
+export async function fetchCsrf() {
+  const data = await apiClient<CsrfTokenResponse>('/api/v1/auth/csrf')
+  setCsrfToken(data.token)
+  return data
 }
 
 export function fetchAuthMe() {

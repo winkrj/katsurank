@@ -1,8 +1,8 @@
 import { useParams } from 'react-router-dom'
 import { useIsMobile } from '../../shared/hooks/useIsMobile'
 import { ClosedRestaurantDetail } from './components/ClosedRestaurantDetail'
-import { DesktopRestaurantDetail } from './components/DesktopRestaurantDetail'
-import { MobileRestaurantDetail } from './components/MobileRestaurantDetail'
+import { DesktopRestaurantDetail } from './components/desktop/DesktopRestaurantDetail'
+import { MobileRestaurantDetail } from './components/mobile/MobileRestaurantDetail'
 import { useRestaurantDetailQuery } from './queries/useRestaurantDetailQuery'
 
 export function RestaurantDetailPage() {

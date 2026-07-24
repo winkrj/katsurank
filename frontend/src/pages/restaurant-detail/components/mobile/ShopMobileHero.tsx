@@ -6,7 +6,8 @@ type ShopMobileHeroProps = {
   name: string;
 };
 
-export function ShopMobileHero({ images, name }: ShopMobileHeroProps) {
+export function ShopMobileHero({ images: rawImages, name }: ShopMobileHeroProps) {
+  const images = rawImages ?? [];
   const [currentIndex, setCurrentIndex] = useState(0);
   const scrollRef = useRef<HTMLDivElement>(null);
 
@@ -53,6 +54,7 @@ export function ShopMobileHero({ images, name }: ShopMobileHeroProps) {
           <BackIcon />
         </Link>
 
+        {/* TODO: 2차 -> 찜하기/공유하기 기능 붙일 때 주석 해제
         <div className="flex gap-2">
           <button
             type="button"
@@ -69,6 +71,7 @@ export function ShopMobileHero({ images, name }: ShopMobileHeroProps) {
             <ShareIcon />
           </button>
         </div>
+        */}
       </div>
 
       {images.length > 1 && (
@@ -107,38 +110,39 @@ function BackIcon() {
   );
 }
 
-function HeartIcon() {
-  return (
-    <svg width="18" height="18" viewBox="0 0 18 18" fill="none" aria-hidden>
-      <path
-        d="M9 15s-5.5-3.6-5.5-7.2a3.2 3.2 0 0 1 5.5-2.2 3.2 3.2 0 0 1 5.5 2.2C14.5 11.4 9 15 9 15Z"
-        stroke="currentColor"
-        strokeWidth="1.5"
-        strokeLinejoin="round"
-      />
-    </svg>
-  );
-}
-
-function ShareIcon() {
-  return (
-    <svg
-      xmlns="http://www.w3.org/2000/svg"
-      width="18"
-      height="18"
-      viewBox="0 0 18 18"
-      fill="none"
-      stroke="currentColor"
-      strokeWidth="1.5"
-      strokeLinecap="round"
-      strokeLinejoin="round"
-      aria-hidden
-    >
-      <circle cx="13.5" cy="3.75" r="2.25"></circle>
-      <circle cx="4.5" cy="9" r="2.25"></circle>
-      <circle cx="13.5" cy="14.25" r="2.25"></circle>
-      <line x1="6.44" y1="10.13" x2="11.57" y2="12.62"></line>
-      <line x1="11.56" y1="4.88" x2="6.44" y2="7.37"></line>
-    </svg>
-  );
-}
+// TODO: 2차 -> 찜하기/공유하기 기능 붙일 때 주석 해제
+// function HeartIcon() {
+//   return (
+//     <svg width="18" height="18" viewBox="0 0 18 18" fill="none" aria-hidden>
+//       <path
+//         d="M9 15s-5.5-3.6-5.5-7.2a3.2 3.2 0 0 1 5.5-2.2 3.2 3.2 0 0 1 5.5 2.2C14.5 11.4 9 15 9 15Z"
+//         stroke="currentColor"
+//         strokeWidth="1.5"
+//         strokeLinejoin="round"
+//       />
+//     </svg>
+//   );
+// }
+//
+// function ShareIcon() {
+//   return (
+//     <svg
+//       xmlns="http://www.w3.org/2000/svg"
+//       width="18"
+//       height="18"
+//       viewBox="0 0 18 18"
+//       fill="none"
+//       stroke="currentColor"
+//       strokeWidth="1.5"
+//       strokeLinecap="round"
+//       strokeLinejoin="round"
+//       aria-hidden
+//     >
+//       <circle cx="13.5" cy="3.75" r="2.25"></circle>
+//       <circle cx="4.5" cy="9" r="2.25"></circle>
+//       <circle cx="13.5" cy="14.25" r="2.25"></circle>
+//       <line x1="6.44" y1="10.13" x2="11.57" y2="12.62"></line>
+//       <line x1="11.56" y1="4.88" x2="6.44" y2="7.37"></line>
+//     </svg>
+//   );
+// }

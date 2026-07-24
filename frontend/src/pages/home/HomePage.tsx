@@ -1,7 +1,7 @@
 import './style/home.css';
 import { useIsMobile } from '../../shared/hooks/useIsMobile';
-import { DesktopMain } from './components/DesktopMain';
-import { MobileHero } from './components/MobileHero';
+import { DesktopMain } from './components/desktop/DesktopMain';
+import { MobileHero } from './components/mobile/MobileHero';
 
 export function HomePage() {
   const isMobile = useIsMobile();

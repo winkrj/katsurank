@@ -1,8 +1,8 @@
-import { MAP_PIN_POSITIONS } from '../constants'
-import { HeroHeading } from './HeroHeading'
+import { MAP_PIN_POSITIONS } from '../../constants'
+import { HeroHeading } from '../HeroHeading'
 import { MapPin } from './MapPin'
-import { RankingList } from './RankingList'
-import { VoteButtons } from './VoteButtons'
+import { RankingList } from '../RankingList'
+import { VoteButtons } from '../VoteButtons'
 
 export function DesktopMain() {
   return (

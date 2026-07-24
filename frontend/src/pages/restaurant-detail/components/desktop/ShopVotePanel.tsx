@@ -1,7 +1,7 @@
-import { Button } from '../../../shared/ui/Button'
-import type { RestaurantDetail } from '../types/restaurantDetail'
-import { RestaurantVoteConfirmButton } from './RestaurantVoteConfirmButton'
-import { ShopVoteStatsCard } from './ShopVoteStatsCard'
+import { Button } from '../../../../shared/ui/Button'
+import type { RestaurantDetail } from '../../types/restaurantDetail'
+import { RestaurantVoteConfirmButton } from '../RestaurantVoteConfirmButton'
+import { ShopVoteStatsCard } from '../ShopVoteStatsCard'
 
 type ShopVotePanelProps = {
   restaurant: RestaurantDetail

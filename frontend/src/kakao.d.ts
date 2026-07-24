@@ -5,12 +5,25 @@ declare namespace kakao.maps {
     getLevel(): number
     setCenter(latlng: LatLng): void
     getCenter(): LatLng
+    panTo(latlng: LatLng): void
+    getProjection(): Projection
   }
 
   class LatLng {
     constructor(lat: number, lng: number)
     getLat(): number
     getLng(): number
+  }
+
+  class Point {
+    constructor(x: number, y: number)
+    x: number
+    y: number
+  }
+
+  interface Projection {
+    pointFromCoords(coords: LatLng): Point
+    coordsFromPoint(point: Point): LatLng
   }
 
   class CustomOverlay {

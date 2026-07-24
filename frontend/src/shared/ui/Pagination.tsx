@@ -1,11 +1,11 @@
-import type { ReactNode } from 'react'
+import type { ReactNode } from 'react';
 
 type PaginationProps = {
-  currentPage: number
-  totalPages: number
-  onPageChange: (page: number) => void
-  ariaLabel?: string
-}
+  currentPage: number;
+  totalPages: number;
+  onPageChange: (page: number) => void;
+  ariaLabel?: string;
+};
 
 export function Pagination({
   currentPage,
@@ -13,10 +13,10 @@ export function Pagination({
   onPageChange,
   ariaLabel = '페이지',
 }: PaginationProps) {
-  const pages = Array.from({ length: totalPages }, (_, index) => index + 1)
+  const pages = Array.from({ length: totalPages }, (_, index) => index + 1);
 
   return (
-    <nav className="mt-8 flex items-center justify-center gap-1" aria-label={ariaLabel}>
+    <nav className="my-8 flex items-center justify-center gap-1" aria-label={ariaLabel}>
       <PaginationButton
         label="이전"
         disabled={currentPage <= 1}
@@ -44,7 +44,7 @@ export function Pagination({
         ›
       </PaginationButton>
     </nav>
-  )
+  );
 }
 
 function PaginationButton({
@@ -54,11 +54,11 @@ function PaginationButton({
   disabled = false,
   onClick,
 }: {
-  children: ReactNode
-  label: string
-  active?: boolean
-  disabled?: boolean
-  onClick: () => void
+  children: ReactNode;
+  label: string;
+  active?: boolean;
+  disabled?: boolean;
+  onClick: () => void;
 }) {
   return (
     <button
@@ -76,5 +76,5 @@ function PaginationButton({
     >
       {children}
     </button>
-  )
+  );
 }

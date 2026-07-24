@@ -1,6 +1,6 @@
 import { useIsMobile } from '../../shared/hooks/useIsMobile'
-import { DesktopSearchPage } from './components/DesktopSearchPage'
-import { MobileSearchPage } from './components/MobileSearchPage'
+import { DesktopSearchPage } from './components/desktop/DesktopSearchPage'
+import { MobileSearchPage } from './components/mobile/MobileSearchPage'
 
 export function SearchPage() {
   const isMobile = useIsMobile()

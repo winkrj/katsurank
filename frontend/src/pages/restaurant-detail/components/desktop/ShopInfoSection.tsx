@@ -1,10 +1,10 @@
-import type { ReactNode } from 'react'
-import type { RestaurantDetail } from '../types/restaurantDetail'
-import { RestaurantVoteConfirmButton } from './RestaurantVoteConfirmButton'
+import type { ReactNode } from 'react';
+import type { RestaurantDetail } from '../../types/restaurantDetail';
+import { RestaurantVoteConfirmButton } from '../RestaurantVoteConfirmButton';
 
 type ShopInfoSectionProps = {
-  restaurant: RestaurantDetail
-}
+  restaurant: RestaurantDetail;
+};
 
 function CrownIcon() {
   return (
@@ -17,22 +17,16 @@ function CrownIcon() {
         strokeLinejoin="round"
       />
     </svg>
-  )
+  );
 }
 
-function InfoRow({
-  icon,
-  children,
-}: {
-  icon: ReactNode
-  children: ReactNode
-}) {
+function InfoRow({ icon, children }: { icon: ReactNode; children: ReactNode }) {
   return (
     <li className="flex gap-3 text-[14px] leading-snug text-[#5F4A3C]">
       <span className="mt-0.5 shrink-0 text-[#8A7A6A]">{icon}</span>
       <span>{children}</span>
     </li>
-  )
+  );
 }
 
 export function ShopInfoSection({ restaurant }: ShopInfoSectionProps) {
@@ -40,16 +34,15 @@ export function ShopInfoSection({ restaurant }: ShopInfoSectionProps) {
     <section className="flex flex-col space-y-5 px-2">
       <div className="space-y-3">
         <div className="flex flex-wrap items-center gap-2">
-          <CrownIcon />
-          <h1 className="font-serif text-[2rem] font-black leading-tight text-[#2A1A12]">
-            {restaurant.name}
-          </h1>
           {restaurant.rankAreaLabel && (
             <span className="inline-flex items-center gap-1 rounded-full border border-[#E8D9BF] bg-[#FFF4D8] px-2.5 py-1 text-[12px] font-bold text-[#7A431D]">
               <CrownIcon />
               {restaurant.rankAreaLabel}
             </span>
           )}
+          <h1 className="font-serif text-[2rem] font-black leading-tight text-[#2A1A12]">
+            {restaurant.name}
+          </h1>
         </div>
         <p className="text-[14px] text-[#8A7A6A]">{restaurant.tagline}</p>
       </div>
@@ -84,16 +77,21 @@ export function ShopInfoSection({ restaurant }: ShopInfoSectionProps) {
         className="w-full max-w-sm rounded-lg"
       />
     </section>
-  )
+  );
 }
 
 function MapIcon() {
   return (
     <svg width="18" height="18" viewBox="0 0 18 18" fill="none" aria-hidden>
-      <path d="M1 3.5l5-2 6 2 5-2V14.5l-5 2-6-2-5 2V3.5Z" stroke="currentColor" strokeWidth="1.4" strokeLinejoin="round" />
+      <path
+        d="M1 3.5l5-2 6 2 5-2V14.5l-5 2-6-2-5 2V3.5Z"
+        stroke="currentColor"
+        strokeWidth="1.4"
+        strokeLinejoin="round"
+      />
       <path d="M6 1.5v13M12 3.5v13" stroke="currentColor" strokeWidth="1.4" strokeLinecap="round" />
     </svg>
-  )
+  );
 }
 
 function LocationIcon() {
@@ -106,7 +104,7 @@ function LocationIcon() {
       />
       <circle cx="8" cy="6" r="1.5" fill="currentColor" />
     </svg>
-  )
+  );
 }
 
 function ClockIcon() {
@@ -115,7 +113,7 @@ function ClockIcon() {
       <circle cx="8" cy="8" r="6" stroke="currentColor" strokeWidth="1.2" />
       <path d="M8 4.5V8l2.5 1.5" stroke="currentColor" strokeWidth="1.2" strokeLinecap="round" />
     </svg>
-  )
+  );
 }
 
 function PhoneIcon() {
@@ -128,5 +126,5 @@ function PhoneIcon() {
         strokeLinejoin="round"
       />
     </svg>
-  )
+  );
 }

@@ -1,13 +1,14 @@
 import { Link } from 'react-router-dom'
-import { RestaurantVoteConfirmButton } from '../../restaurant-detail/components/RestaurantVoteConfirmButton'
-import type { MapRestaurant } from '../types/map'
+import { RestaurantVoteConfirmButton } from '../../../restaurant-detail/components/RestaurantVoteConfirmButton'
+import type { MapRestaurant } from '../../types/map'
 
 type MapSelectedMiniCardProps = {
   restaurant: MapRestaurant
+  focusReason?: 'myVote' | 'top1' | null
   onClose: () => void
 }
 
-export function MapSelectedMiniCard({ restaurant: r, onClose }: MapSelectedMiniCardProps) {
+export function MapSelectedMiniCard({ restaurant: r, focusReason, onClose }: MapSelectedMiniCardProps) {
   return (
     <div className="absolute bottom-0 left-0 right-0 z-20 rounded-t-2xl border-t border-[#E8D9BF] bg-white shadow-[0_-4px_20px_rgba(42,26,18,0.12)]">
       <div className="flex items-center gap-3 px-4 py-3">
@@ -16,16 +17,24 @@ export function MapSelectedMiniCard({ restaurant: r, onClose }: MapSelectedMiniC
         </div>
 
         <div className="min-w-0 flex-1">
+          {focusReason && (
+            <span
+              className={[
+                'mb-1 inline-flex items-center rounded-full px-2 py-0.5 text-[10px] font-black',
+                focusReason === 'myVote'
+                  ? 'bg-[#FFC533] text-[#2A1A12]'
+                  : 'bg-[#2A1A12] text-white',
+              ].join(' ')}
+            >
+              {focusReason === 'myVote' ? '내가 투표한 가게' : '현재 서울 1위'}
+            </span>
+          )}
           <div className="flex items-center gap-1.5">
             {r.rank === 1 && <CrownIcon />}
             <span className="truncate text-[15px] font-black text-[#2A1A12]">{r.name}</span>
           </div>
-          <p className="truncate text-[12px] text-[#5F4A3C]">{r.shortAddress}</p>
-          <p className="mt-0.5 text-[13px] font-bold text-[#2A1A12]">
-            {r.votes.toLocaleString()}표
-            <span className="ml-1.5 text-[12px] font-semibold text-[#D88A24]">
-              최근 7일 +{r.weeklyVoteDelta}
-            </span>
+          <p className="mt-1 text-[13px] font-bold text-[#2A1A12]">
+            서울 {r.rank}위 <span className="text-[#8A7A6A] font-normal">·</span> {r.votes.toLocaleString()}표
           </p>
         </div>
 

@@ -1,5 +1,5 @@
-import type { RestaurantDetail } from '../types/restaurantDetail';
-import { ShopDetailTabs } from './ShopDetailTabs';
+import type { RestaurantDetail } from '../../types/restaurantDetail';
+import { ShopDetailTabs } from '../ShopDetailTabs';
 import { ShopImageGallery } from './ShopImageGallery';
 import { ShopInfoSection } from './ShopInfoSection';
 

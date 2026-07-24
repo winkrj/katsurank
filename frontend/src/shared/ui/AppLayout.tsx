@@ -1,11 +1,21 @@
 import { useEffect } from 'react';
-import { Outlet, useMatch } from 'react-router-dom';
+import { Outlet, useLocation, useMatch } from 'react-router-dom';
 import { ApiError } from '../api/client';
 import { useAuthMeQuery, useCsrfBootstrapQuery } from '../queries/auth';
 import { useAuthStore } from '../stores/authStore';
 import { useIsMobile } from '../hooks/useIsMobile';
 import { HomeHeader } from './header/HomeHeader';
 import { BottomNav } from './BottomNav';
+
+function ScrollToTop() {
+  const { pathname } = useLocation();
+
+  useEffect(() => {
+    window.scrollTo(0, 0);
+  }, [pathname]);
+
+  return null;
+}
 
 function AuthInit() {
   const setUser = useAuthStore((s) => s.setUser);
@@ -38,6 +48,7 @@ export function AppLayout() {
   return (
     <>
       <AuthInit />
+      {isMobile && <ScrollToTop />}
       {!hideMobileHeader && <HomeHeader />}
       <Outlet />
       {isMobile && <BottomNav />}

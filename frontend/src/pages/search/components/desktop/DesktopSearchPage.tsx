@@ -1,18 +1,17 @@
 import { useState } from 'react'
-import { SEARCH_RESULTS_PER_PAGE } from '../constants'
-import { Pagination } from '../../../shared/ui/Pagination'
-import { useRestaurantSearchQuery } from '../../../shared/queries/restaurants'
-import type { SearchResultItem, SearchSortOption } from '../types/searchResult'
-import { SearchBanner } from './SearchBanner'
-import { SearchForm } from './SearchForm'
-import { SearchRegisterCard } from './SearchRegisterCard'
-import { SearchResultList } from './SearchResultList'
-import { SearchResultsHeader } from './SearchResultsHeader'
+import { SEARCH_RESULTS_PER_PAGE } from '../../constants'
+import { Pagination } from '../../../../shared/ui/Pagination'
+import { useRestaurantSearchQuery } from '../../../../shared/queries/restaurants'
+import type { SearchResultItem, SearchSortOption } from '../../types/searchResult'
+import { SearchBanner } from '../SearchBanner'
+import { SearchForm } from '../SearchForm'
+import { SearchRegisterCard } from '../SearchRegisterCard'
+import { SearchResultList } from '../SearchResultList'
+import { SearchResultsHeader } from '../SearchResultsHeader'
 
 export function DesktopSearchPage() {
   const [inputQuery, setInputQuery] = useState('')
   const [submittedQuery, setSubmittedQuery] = useState('')
-  const [selectedTag, setSelectedTag] = useState<string | null>(null)
   const [sort, setSort] = useState<SearchSortOption>('rank')
   const [page, setPage] = useState(1)
 
@@ -55,9 +54,7 @@ export function DesktopSearchPage() {
           <aside>
             <SearchForm
               query={inputQuery}
-              selectedTag={selectedTag}
               onQueryChange={setInputQuery}
-              onTagSelect={setSelectedTag}
               onSubmit={handleSearch}
             />
             <SearchRegisterCard />
@@ -72,7 +69,7 @@ export function DesktopSearchPage() {
             <SearchResultList
               items={paginatedResults}
               layout="desktop"
-              hasQuery={Boolean(submittedQuery.trim() || selectedTag)}
+              hasQuery={Boolean(submittedQuery.trim())}
               isLoading={isLoading}
             />
             <Pagination

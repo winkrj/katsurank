@@ -1,27 +1,25 @@
-import { useState } from 'react'
+import { useMemo, useState } from 'react'
 import { Link } from 'react-router-dom'
 import { useMapPinsQuery } from '../../../../shared/queries/ranking'
 import { useMeQuery } from '../../../../shared/queries/me'
 import { useAuthStore } from '../../../../shared/stores/authStore'
 import { RankingList } from '../../../home/components/RankingList'
-import type { MapFilterKey, MapRestaurant } from '../../types/map'
+import type { MapRestaurant } from '../../types/map'
 import { mapPinsToRestaurants } from '../../utils/mapPinsToRestaurants'
-import { MapFilterTabs } from '../MapFilterTabs'
 import { MapKakaoMap } from '../MapKakaoMap'
 import { MapSearchBar } from '../MapSearchBar'
-import { MapSelectedCard } from '../MapSelectedCard'
+import { MapSelectedCard } from './MapSelectedCard'
 
 export function DesktopMapPage() {
-  const [activeFilter, setActiveFilter] = useState<MapFilterKey>('all')
   const [showList, setShowList] = useState(false)
   const [selected, setSelected] = useState<MapRestaurant | null>(null)
   const isLoggedIn = useAuthStore((s) => s.isLoggedIn())
   const { data: me } = useMeQuery(isLoggedIn)
   const currentVote = me?.currentVote ?? null
 
-  const { data } = useMapPinsQuery()
+  const { data: pins = [] } = useMapPinsQuery()
 
-  const restaurants: MapRestaurant[] = mapPinsToRestaurants(data?.items ?? [])
+  const restaurants: MapRestaurant[] = useMemo(() => mapPinsToRestaurants(pins), [pins])
 
   return (
     <div className="flex h-screen pt-20">
@@ -83,9 +81,8 @@ export function DesktopMapPage() {
 
       {/* 지도 영역 */}
       <div className="relative flex-1 overflow-hidden">
-        {/* 필터 바 */}
-        <div className="absolute inset-x-0 top-0 z-10 flex items-center gap-3 bg-white/90 px-4 py-3 shadow-sm backdrop-blur-sm">
-          <MapFilterTabs active={activeFilter} onChange={setActiveFilter} className="flex-1" />
+        {/* TODO: 2차 -> 카테고리 필터 API 나오면 MapFilterTabs 복원 */}
+        <div className="absolute inset-x-0 top-0 z-10 flex items-center justify-end gap-3 bg-white/90 px-4 py-3 shadow-sm backdrop-blur-sm">
           <button
             type="button"
             onClick={() => setShowList((v) => !v)}

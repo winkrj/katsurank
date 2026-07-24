@@ -5,7 +5,7 @@ type ShopImageGalleryProps = {
 }
 
 export function ShopImageGallery({ images, name, layout = 'desktop' }: ShopImageGalleryProps) {
-  const [mainImage, ...thumbnails] = images
+  const [mainImage = '/images/shop_default_img.png', ...thumbnails] = images ?? []
   const isMobile = layout === 'mobile'
 
   return (

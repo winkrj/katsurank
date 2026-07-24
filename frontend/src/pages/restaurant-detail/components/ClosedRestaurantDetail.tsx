@@ -2,8 +2,8 @@ import type { ReactNode } from 'react'
 import { Link } from 'react-router-dom'
 import type { RestaurantDetail } from '../types/restaurantDetail'
 import { RestaurantClosedBadge, RestaurantClosedNotice } from './RestaurantClosedStatus'
-import { ShopImageGallery } from './ShopImageGallery'
-import { ShopMobileHero } from './ShopMobileHero'
+import { ShopImageGallery } from './desktop/ShopImageGallery'
+import { ShopMobileHero } from './mobile/ShopMobileHero'
 
 type ClosedRestaurantDetailProps = {
   restaurant: RestaurantDetail

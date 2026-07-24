@@ -13,5 +13,5 @@ export function fetchRankingTop() {
 }
 
 export function fetchMapPins() {
-  return apiClient<Paginated<MapPinResponse>>('/api/v1/ranking/map-pins')
+  return apiClient<MapPinResponse[]>('/api/v1/ranking/map-pins')
 }

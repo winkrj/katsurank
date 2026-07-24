@@ -29,7 +29,12 @@ function loadKakaoSdk(appkey: string): Promise<void> {
   });
 }
 
-export function MapKakaoMap({ restaurants, selectedId, onSelect, className = '' }: MapKakaoMapProps) {
+export function MapKakaoMap({
+  restaurants,
+  selectedId,
+  onSelect,
+  className = '',
+}: MapKakaoMapProps) {
   const containerRef = useRef<HTMLDivElement>(null);
   const mapRef = useRef<kakao.maps.Map | null>(null);
   const overlaysRef = useRef<Map<number, kakao.maps.CustomOverlay>>(new Map());
@@ -73,7 +78,7 @@ export function MapKakaoMap({ restaurants, selectedId, onSelect, className = '' 
         });
       })
       .catch(() => {
-        console.error('[KakaoMap] SDK 로드 실패 — 카카오 개발자 콘솔에서 localhost 도메인을 등록했는지 확인하세요.');
+        console.error('[KakaoMap] SDK 로드 실패');
       });
 
     return () => {
@@ -99,6 +104,22 @@ export function MapKakaoMap({ restaurants, selectedId, onSelect, className = '' 
         .filter(Boolean)
         .join(' ');
     });
+  }, [selectedId, restaurants]);
+
+  useEffect(() => {
+    const map = mapRef.current;
+    if (!map || selectedId == null) return;
+    const r = restaurants.find((item) => item.id === selectedId);
+    if (!r) return;
+
+    const { maps } = window.kakao;
+    const targetLatLng = new maps.LatLng(r.lat, r.lng);
+    const projection = map.getProjection();
+    const targetPoint = projection.pointFromCoords(targetLatLng);
+    // 화면 좌표는 아래로 갈수록 y가 커진다 — 지도 중심을 핀보다 더 아래(y+)로 잡아야
+    // 핀이 화면 중앙보다 위쪽(하단 선택 카드에 안 가리는 위치)에 보인다.
+    const shiftedCenterPoint = new maps.Point(targetPoint.x, targetPoint.y + 50);
+    map.setCenter(projection.coordsFromPoint(shiftedCenterPoint));
   }, [selectedId, restaurants]);
 
   function handleZoomIn() {

@@ -1,16 +1,10 @@
-import { useState } from 'react'
 import { Skeleton } from '../../../../shared/ui/Skeleton'
 import { useRankingQuery } from '../../../../shared/queries/ranking'
-import type { PeriodKey, RegionFilterKey } from '../../types/rankingDetail'
 import { RankingBanner } from '../RankingBanner'
-import { RankingFilterBar } from '../RankingFilterBar'
 import { RankingPromoSection } from '../RankingPromoSection'
 import { RankingTable } from '../RankingTable'
 
 export function MobileRankingsPage() {
-  const [region, setRegion] = useState<RegionFilterKey>('all')
-  const [period, setPeriod] = useState<PeriodKey>('weekly')
-
   const { data, isLoading, isError } = useRankingQuery(100)
 
   const items = data?.items.map((item) => ({
@@ -24,13 +18,7 @@ export function MobileRankingsPage() {
   return (
     <main className="min-h-screen bg-[#FFFDF4] pb-[68px] pt-14 text-[#2A1A12]">
       <RankingBanner layout="mobile" />
-      <RankingFilterBar
-        region={region}
-        period={period}
-        onRegionChange={setRegion}
-        onPeriodChange={setPeriod}
-        layout="mobile"
-      />
+      {/* TODO: 2차 -> 지역/기간 필터 API 나오면 RankingFilterBar 복원 */}
 
       <div className="px-4 py-4">
         {isLoading && (

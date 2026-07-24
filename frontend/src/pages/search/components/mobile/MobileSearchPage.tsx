@@ -1,18 +1,17 @@
 import { useState } from 'react'
-import { SEARCH_RESULTS_PER_PAGE } from '../constants'
-import { Pagination } from '../../../shared/ui/Pagination'
-import { useRestaurantSearchQuery } from '../../../shared/queries/restaurants'
-import type { SearchResultItem, SearchSortOption } from '../types/searchResult'
-import { SearchBanner } from './SearchBanner'
-import { SearchForm } from './SearchForm'
-import { SearchRegisterCard } from './SearchRegisterCard'
-import { SearchResultList } from './SearchResultList'
-import { SearchResultsHeader } from './SearchResultsHeader'
+import { SEARCH_RESULTS_PER_PAGE } from '../../constants'
+import { Pagination } from '../../../../shared/ui/Pagination'
+import { useRestaurantSearchQuery } from '../../../../shared/queries/restaurants'
+import type { SearchResultItem, SearchSortOption } from '../../types/searchResult'
+import { SearchBanner } from '../SearchBanner'
+import { SearchForm } from '../SearchForm'
+import { SearchRegisterCard } from '../SearchRegisterCard'
+import { SearchResultList } from '../SearchResultList'
+import { SearchResultsHeader } from '../SearchResultsHeader'
 
 export function MobileSearchPage() {
   const [inputQuery, setInputQuery] = useState('')
   const [submittedQuery, setSubmittedQuery] = useState('')
-  const [selectedTag, setSelectedTag] = useState<string | null>(null)
   const [sort, setSort] = useState<SearchSortOption>('rank')
   const [page, setPage] = useState(1)
 
@@ -53,13 +52,10 @@ export function MobileSearchPage() {
       <div className="space-y-4 px-4 py-5">
         <SearchForm
           query={inputQuery}
-          selectedTag={selectedTag}
           onQueryChange={setInputQuery}
-          onTagSelect={setSelectedTag}
           onSubmit={handleSearch}
           layout="mobile"
         />
-        <SearchRegisterCard layout="mobile" />
         <SearchResultsHeader
           total={sorted.length}
           sort={sort}
@@ -68,7 +64,7 @@ export function MobileSearchPage() {
         <SearchResultList
           items={paginatedResults}
           layout="mobile"
-          hasQuery={Boolean(submittedQuery.trim() || selectedTag)}
+          hasQuery={Boolean(submittedQuery.trim())}
           isLoading={isLoading}
         />
         <Pagination
@@ -77,6 +73,7 @@ export function MobileSearchPage() {
           onPageChange={setPage}
           ariaLabel="검색 결과 페이지"
         />
+        <SearchRegisterCard layout="mobile" />
       </div>
     </main>
   )

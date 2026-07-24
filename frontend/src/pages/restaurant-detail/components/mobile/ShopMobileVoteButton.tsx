@@ -1,4 +1,4 @@
-import { RestaurantVoteConfirmButton } from './RestaurantVoteConfirmButton'
+import { RestaurantVoteConfirmButton } from '../RestaurantVoteConfirmButton'
 
 type ShopMobileVoteButtonProps = {
   restaurantId: number

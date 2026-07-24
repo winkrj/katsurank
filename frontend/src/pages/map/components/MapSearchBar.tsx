@@ -7,7 +7,7 @@ export function MapSearchBar({ className = '' }: MapSearchBarProps) {
     <div className={`relative ${className}`}>
       <input
         type="search"
-        placeholder="지역, 가게명 검색"
+        placeholder="가게명 검색"
         className="w-full rounded-xl border border-[#E8D9BF] bg-white py-2.5 pl-4 pr-10 text-[14px] text-[#2A1A12] outline-none placeholder:text-[#8A7A6A] focus:border-[#D88A24] focus:ring-2 focus:ring-[#D88A24]/20"
       />
       <button
