@@ -1,13 +1,13 @@
 package com.katsurank.vote;
 
 import com.katsurank.restaurant.Restaurant;
-import com.katsurank.restaurant.RestaurantRepository;
+import com.katsurank.restaurant.repository.RestaurantRepository;
 import com.katsurank.support.CleanUp;
 import com.katsurank.support.TestAuth;
 import com.katsurank.support.TestFixtures;
 import com.katsurank.support.WithMockAuthPrincipal;
 import com.katsurank.user.User;
-import com.katsurank.user.UserRepository;
+import com.katsurank.user.repository.UserRepository;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -60,7 +60,7 @@ class VoteControllerTest {
     @Test
     @DisplayName("POST /api/v1/votes — 인증 + CSRF → 정상 투표")
     void voteSuccess() throws Exception {
-        User user = userRepository.save(User.register(100L, "테스터", null));
+        User user = userRepository.save(User.register(100L, "테스터", null, java.time.Instant.EPOCH));
         Restaurant r = TestFixtures.createRestaurant(restaurantRepository);
 
         mockMvc.perform(post("/api/v1/votes")
@@ -71,14 +71,14 @@ class VoteControllerTest {
                                 {"restaurantId": %d}
                                 """.formatted(r.getId())))
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$.restaurantId").value(r.getId()))
-                .andExpect(jsonPath("$.voteCount").value(1));
+                .andExpect(jsonPath("$.data.restaurantId").value(r.getId()))
+                .andExpect(jsonPath("$.data.voteCount").value(1));
     }
 
     @Test
     @DisplayName("POST /api/v1/votes — restaurantId 누락 → 400")
     void voteValidationError() throws Exception {
-        User user = userRepository.save(User.register(101L, "테스터2", null));
+        User user = userRepository.save(User.register(101L, "테스터2", null, java.time.Instant.EPOCH));
 
         mockMvc.perform(post("/api/v1/votes")
                         .with(csrf())
@@ -86,13 +86,13 @@ class VoteControllerTest {
                         .contentType(MediaType.APPLICATION_JSON)
                         .content("{}"))
                 .andExpect(status().isBadRequest())
-                .andExpect(jsonPath("$.code").value("VALIDATION_ERROR"));
+                .andExpect(jsonPath("$.error.code").value("VALIDATION_ERROR"));
     }
 
     @Test
     @DisplayName("POST /api/v1/votes — 존재하지 않는 가게 → 404")
     void voteRestaurantNotFound() throws Exception {
-        User user = userRepository.save(User.register(200L, "테스터3", null));
+        User user = userRepository.save(User.register(200L, "테스터3", null, java.time.Instant.EPOCH));
 
         mockMvc.perform(post("/api/v1/votes")
                         .with(csrf())
@@ -102,6 +102,6 @@ class VoteControllerTest {
                                 {"restaurantId": 999999}
                                 """))
                 .andExpect(status().isNotFound())
-                .andExpect(jsonPath("$.code").value("RESTAURANT_NOT_FOUND"));
+                .andExpect(jsonPath("$.error.code").value("RESTAURANT_NOT_FOUND"));
     }
 }

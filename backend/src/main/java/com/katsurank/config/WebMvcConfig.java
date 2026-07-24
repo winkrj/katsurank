@@ -1,6 +1,8 @@
 package com.katsurank.config;
 
-import com.katsurank.auth.LoginUserArgumentResolver;
+import com.katsurank.auth.controller.LoginUser;
+
+import com.katsurank.auth.controller.LoginUserArgumentResolver;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.web.method.support.HandlerMethodArgumentResolver;
 import org.springframework.web.servlet.config.annotation.WebMvcConfigurer;

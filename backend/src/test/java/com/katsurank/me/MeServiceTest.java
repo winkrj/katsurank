@@ -1,21 +1,26 @@
 package com.katsurank.me;
 
+import com.katsurank.me.dto.VoteHistoryItem;
+
+import com.katsurank.me.dto.MeResponse;
+
+import com.katsurank.me.service.MeService;
+
+import com.katsurank.common.web.PageResponse;
 import com.katsurank.restaurant.Restaurant;
-import com.katsurank.restaurant.RestaurantRepository;
+import com.katsurank.restaurant.repository.RestaurantRepository;
 import com.katsurank.restaurant.RestaurantStatus;
 import com.katsurank.support.CleanUp;
 import com.katsurank.support.TestFixtures;
 import com.katsurank.user.User;
-import com.katsurank.user.UserRepository;
-import com.katsurank.vote.VoteService;
+import com.katsurank.user.repository.UserRepository;
+import com.katsurank.vote.service.VoteService;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.test.context.jdbc.Sql;
 import org.springframework.transaction.annotation.Transactional;
-
-import java.util.List;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
@@ -40,8 +45,9 @@ class MeServiceTest {
         assertThat(me.nickname()).isEqualTo(user.getNickname());
         assertThat(me.currentVote()).isNull();
 
-        List<VoteHistoryItem> history = meService.getVoteHistory(user.getId());
-        assertThat(history).isEmpty();
+        PageResponse<VoteHistoryItem> history = meService.getVoteHistory(user.getId(), 0, 20);
+        assertThat(history.items()).isEmpty();
+        assertThat(history.total()).isZero();
     }
 
     @Test
@@ -70,13 +76,14 @@ class MeServiceTest {
         voteService.vote(user.getId(), a.getId());
         voteService.vote(user.getId(), b.getId());
 
-        List<VoteHistoryItem> history = meService.getVoteHistory(user.getId());
+        PageResponse<VoteHistoryItem> history = meService.getVoteHistory(user.getId(), 0, 20);
 
-        assertThat(history).hasSize(2);
-        assertThat(history.get(0).restaurantId()).isEqualTo(b.getId());
-        assertThat(history.get(0).isCurrent()).isTrue();
-        assertThat(history.get(1).restaurantId()).isEqualTo(a.getId());
-        assertThat(history.get(1).isCurrent()).isFalse();
+        assertThat(history.items()).hasSize(2);
+        assertThat(history.total()).isEqualTo(2);
+        assertThat(history.items().get(0).restaurantId()).isEqualTo(b.getId());
+        assertThat(history.items().get(0).isCurrent()).isTrue();
+        assertThat(history.items().get(1).restaurantId()).isEqualTo(a.getId());
+        assertThat(history.items().get(1).isCurrent()).isFalse();
     }
 
     @Test
@@ -87,7 +94,7 @@ class MeServiceTest {
         voteService.vote(user.getId(), r.getId());
 
         Restaurant loaded = restaurantRepository.findById(r.getId()).orElseThrow();
-        loaded.close();
+        loaded.close(java.time.Instant.EPOCH);
         restaurantRepository.save(loaded);
 
         MeResponse me = meService.getMe(user.getId());

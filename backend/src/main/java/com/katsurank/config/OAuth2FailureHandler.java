@@ -30,7 +30,8 @@ public class OAuth2FailureHandler implements AuthenticationFailureHandler {
     public void onAuthenticationFailure(HttpServletRequest request,
                                         HttpServletResponse response,
                                         AuthenticationException exception) throws IOException {
-        log.warn("OAuth2 로그인 실패: {}", exception.getMessage());
+        log.atWarn().setCause(exception).addKeyValue("failureType", exception.getClass().getSimpleName())
+                .log("OAuth2 로그인 실패");
         String target = UriComponentsBuilder.fromUriString(frontendUrl + "/oauth/callback")
                 .queryParam("error", "login_failed")
                 .encode(StandardCharsets.UTF_8)

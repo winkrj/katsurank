@@ -1,5 +1,7 @@
 package com.katsurank.restaurant;
 
+import com.katsurank.common.domain.BaseTimeEntity;
+import com.katsurank.common.domain.EntityIdentity;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.EnumType;
@@ -7,8 +9,6 @@ import jakarta.persistence.Enumerated;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
-import jakarta.persistence.PrePersist;
-import jakarta.persistence.PreUpdate;
 import jakarta.persistence.Table;
 import jakarta.persistence.Version;
 import lombok.AccessLevel;
@@ -31,7 +31,7 @@ import java.time.Instant;
 @Table(name = "restaurants")
 @Getter
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
-public class Restaurant {
+public class Restaurant extends BaseTimeEntity {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
@@ -96,12 +96,6 @@ public class Restaurant {
     @Column(name = "created_by")
     private Long createdBy;
 
-    @Column(name = "created_at", nullable = false, updatable = false)
-    private Instant createdAt;
-
-    @Column(name = "updated_at", nullable = false)
-    private Instant updatedAt;
-
     private Restaurant(String kakaoPlaceId, String name, String address, String roadAddress,
                        BigDecimal latitude, BigDecimal longitude, String kakaoCategory,
                        String phone, String placeUrl, Long createdBy) {
@@ -150,9 +144,9 @@ public class Restaurant {
     }
 
     /** 폐업 처리(박제) — 표·히스토리는 보존하되 투표·랭킹에서 제외된다. (감지는 운영자 수동) */
-    public void close() {
+    public void close(Instant closedAt) {
         this.status = RestaurantStatus.CLOSED;
-        this.closedAt = Instant.now();
+        this.closedAt = closedAt;
     }
 
     /** 이전 처리 — 기존 가게의 표를 새 가게로 승계한다. */
@@ -172,15 +166,16 @@ public class Restaurant {
         this.voteCount = adjusted;
     }
 
-    @PrePersist
-    void onCreate() {
-        Instant now = Instant.now();
-        this.createdAt = now;
-        this.updatedAt = now;
+    @Override
+    public boolean equals(Object other) {
+        if (this == other) return true;
+        if (other == null || EntityIdentity.effectiveClass(this) != EntityIdentity.effectiveClass(other)) return false;
+        Restaurant restaurant = (Restaurant) other;
+        return id != null && id.equals(restaurant.getId());
     }
 
-    @PreUpdate
-    void onUpdate() {
-        this.updatedAt = Instant.now();
+    @Override
+    public int hashCode() {
+        return EntityIdentity.effectiveClass(this).hashCode();
     }
 }

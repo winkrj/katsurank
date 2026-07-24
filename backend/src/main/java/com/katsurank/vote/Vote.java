@@ -1,5 +1,8 @@
 package com.katsurank.vote;
 
+import com.katsurank.restaurant.Restaurant;
+
+import com.katsurank.common.domain.EntityIdentity;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.GeneratedValue;
@@ -45,20 +48,33 @@ public class Vote {
     @Column(name = "is_current", nullable = false)
     private boolean current;
 
-    private Vote(Long userId, Long restaurantId) {
+    private Vote(Long userId, Long restaurantId, Instant votedAt) {
         this.userId = userId;
         this.restaurantId = restaurantId;
-        this.votedAt = Instant.now();
+        this.votedAt = votedAt;
         this.current = true;
     }
 
     /** 새 유효표를 발행한다(is_current=true). */
-    public static Vote cast(Long userId, Long restaurantId) {
-        return new Vote(userId, restaurantId);
+    public static Vote cast(Long userId, Long restaurantId, Instant votedAt) {
+        return new Vote(userId, restaurantId, votedAt);
     }
 
     /** 표 이동 시 기존 표를 박제한다(is_current=false). 표·히스토리는 보존된다. */
     public void deactivate() {
         this.current = false;
+    }
+
+    @Override
+    public boolean equals(Object other) {
+        if (this == other) return true;
+        if (other == null || EntityIdentity.effectiveClass(this) != EntityIdentity.effectiveClass(other)) return false;
+        Vote vote = (Vote) other;
+        return id != null && id.equals(vote.getId());
+    }
+
+    @Override
+    public int hashCode() {
+        return EntityIdentity.effectiveClass(this).hashCode();
     }
 }

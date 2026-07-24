@@ -1,12 +1,22 @@
 package com.katsurank.ranking;
 
+import com.katsurank.ranking.service.RankingService;
+
+import com.katsurank.ranking.dto.MapPinResponse;
+
+import com.katsurank.ranking.dto.RankingItem;
+import com.katsurank.ranking.dto.TopRankingResult;
+
+import com.katsurank.ranking.exception.LimitExceededException;
+
+import com.katsurank.common.web.PageResponse;
 import com.katsurank.restaurant.Restaurant;
-import com.katsurank.restaurant.RestaurantRepository;
+import com.katsurank.restaurant.repository.RestaurantRepository;
 import com.katsurank.support.CleanUp;
 import com.katsurank.support.TestFixtures;
 import com.katsurank.user.User;
-import com.katsurank.user.UserRepository;
-import com.katsurank.vote.VoteService;
+import com.katsurank.user.repository.UserRepository;
+import com.katsurank.vote.service.VoteService;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -15,7 +25,6 @@ import org.springframework.test.context.jdbc.Sql;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
-import java.util.Optional;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
@@ -41,7 +50,7 @@ class RankingServiceTest {
         vote(r2, 5);
         vote(r3, 5);
 
-        RankingResponse response = rankingService.getRanking(0, 20);
+        PageResponse<RankingItem> response = rankingService.getRanking(0, 20);
 
         assertThat(response.items()).hasSize(3);
         assertThat(response.items().get(0).rank()).isEqualTo(1);
@@ -63,10 +72,10 @@ class RankingServiceTest {
         vote(closed, 5);
 
         closed = restaurantRepository.findById(closed.getId()).orElseThrow();
-        closed.close();
+        closed.close(java.time.Instant.EPOCH);
         restaurantRepository.save(closed);
 
-        RankingResponse response = rankingService.getRanking(0, 20);
+        PageResponse<RankingItem> response = rankingService.getRanking(0, 20);
 
         assertThat(response.items()).hasSize(1);
         assertThat(response.items().get(0).id()).isEqualTo(active.getId());
@@ -83,12 +92,11 @@ class RankingServiceTest {
     @Test
     @DisplayName("ACTIVE 가게 0개 → top empty, ranking items=[]")
     void emptyRanking() {
-        RankingResponse response = rankingService.getRanking(0, 20);
+        PageResponse<RankingItem> response = rankingService.getRanking(0, 20);
         assertThat(response.items()).isEmpty();
         assertThat(response.total()).isZero();
 
-        Optional<RankingItem> top = rankingService.getTop();
-        assertThat(top).isEmpty();
+        assertThat(rankingService.getTop()).isInstanceOf(TopRankingResult.Empty.class);
     }
 
     @Test
@@ -101,7 +109,7 @@ class RankingServiceTest {
         vote(r2, 5);
         vote(r3, 3);
 
-        RankingResponse response = rankingService.getRanking(2, 1);
+        PageResponse<RankingItem> response = rankingService.getRanking(2, 1);
 
         assertThat(response.items()).hasSize(1);
         assertThat(response.items().get(0).rank()).isEqualTo(3);
@@ -117,11 +125,12 @@ class RankingServiceTest {
         vote(r1, 10);
         vote(r2, 5);
 
-        Optional<RankingItem> top = rankingService.getTop();
+        TopRankingResult result = rankingService.getTop();
 
-        assertThat(top).isPresent();
-        assertThat(top.get().rank()).isEqualTo(1);
-        assertThat(top.get().id()).isEqualTo(r1.getId());
+        assertThat(result).isInstanceOfSatisfying(TopRankingResult.Found.class, found -> {
+            assertThat(found.item().rank()).isEqualTo(1);
+            assertThat(found.item().id()).isEqualTo(r1.getId());
+        });
     }
 
     @Test
@@ -132,7 +141,7 @@ class RankingServiceTest {
 
         Restaurant closedWithCoords = newRestaurant("폐업좌표있음");
         closedWithCoords = restaurantRepository.findById(closedWithCoords.getId()).orElseThrow();
-        closedWithCoords.close();
+        closedWithCoords.close(java.time.Instant.EPOCH);
         restaurantRepository.save(closedWithCoords);
 
         List<MapPinResponse> pins = rankingService.getMapPins();

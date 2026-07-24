@@ -1,9 +1,9 @@
 package com.katsurank.support;
 
 import com.katsurank.restaurant.Restaurant;
-import com.katsurank.restaurant.RestaurantRepository;
+import com.katsurank.restaurant.repository.RestaurantRepository;
 import com.katsurank.user.User;
-import com.katsurank.user.UserRepository;
+import com.katsurank.user.repository.UserRepository;
 
 import java.math.BigDecimal;
 import java.util.ArrayList;
@@ -18,7 +18,7 @@ public final class TestFixtures {
 
     public static User createUser(UserRepository userRepository) {
         long kakaoId = ThreadLocalRandom.current().nextLong(1, Long.MAX_VALUE);
-        return userRepository.save(User.register(kakaoId, "tester-" + kakaoId, null));
+        return userRepository.save(User.register(kakaoId, "tester-" + kakaoId, null, java.time.Instant.EPOCH));
     }
 
     public static List<User> createUsers(UserRepository userRepository, int count) {
@@ -51,7 +51,7 @@ public final class TestFixtures {
         Restaurant r = Restaurant.register(
                 "test-closed-" + UUID.randomUUID(), name, null, null, null, null,
                 "음식점 > 일식 > 돈까스,우동", null, null, null);
-        r.close();
+        r.close(java.time.Instant.EPOCH);
         return restaurantRepository.save(r);
     }
 }

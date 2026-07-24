@@ -6,6 +6,7 @@
 ## SSOT 문서 (필요할 때만 해당 파일을 Read 할 것 — 전체를 한 번에 읽지 말 것)
 
 - 데이터 모델 · API · 기술 결정: `docs/03_data_model_and_tech.md` ← 백엔드 작업 1순위
+- 코드 컨벤션 (아키텍처 · 네이밍 · DTO · 응답 포맷): `docs/04_code_convention.md` ← 코드 작성 전 필독
 - 기능 범위 (V1 / V1.1 / V2): `docs/02_mvp_scope.md`
 - 제품 컨셉 · 정책: `docs/01_product_spec.md`
 - 프로젝트 전체 요약: `docs/00_index.md`

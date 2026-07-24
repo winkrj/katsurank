@@ -1,5 +1,13 @@
 package com.katsurank.kakao;
 
+import com.katsurank.kakao.dto.KakaoSearchResult;
+
+import com.katsurank.kakao.dto.KakaoPlace;
+
+import com.katsurank.kakao.client.KakaoLocalClient;
+
+import com.katsurank.kakao.client.KakaoRawPageFetcher;
+
 import org.junit.jupiter.api.Test;
 import org.springframework.http.MediaType;
 import org.springframework.test.web.client.MockRestServiceServer;
@@ -31,7 +39,7 @@ class KakaoLocalClientTest {
     }
 
     @Test
-    void 클라이언트가_요청한_page와_무관하게_원본은_1페이지부터_순서대로_요청한다() {
+    void 클라이언트가_요청한_offset과_무관하게_원본은_1페이지부터_순서대로_요청한다() {
         RestClient.Builder builder = newBuilder();
         MockRestServiceServer server = MockRestServiceServer.bindTo(builder).build();
         KakaoLocalClient client = newClient(builder);
@@ -46,7 +54,7 @@ class KakaoLocalClientTest {
                         {"documents":[],"meta":{"total_count":0,"pageable_count":0,"is_end":true}}
                         """, MediaType.APPLICATION_JSON));
 
-        client.searchByKeyword("tonkatsu", 2);
+        client.searchByKeyword("tonkatsu", 15, 15);
 
         server.verify();
     }
@@ -70,14 +78,14 @@ class KakaoLocalClientTest {
                         """.formatted(place("2", "강남돈까스", "음식점 > 일식 > 돈까스,우동", "서울 강남구 역삼동")),
                         MediaType.APPLICATION_JSON));
 
-        KakaoSearchResult result = client.searchByKeyword("돈까스", 1);
+        KakaoSearchResult result = client.searchByKeyword("돈까스", 0, 15);
 
         assertThat(result.places()).extracting(KakaoPlace::name).containsExactly("동경돈까스", "강남돈까스");
         server.verify();
     }
 
     @Test
-    void 여러_원본_페이지에_흩어진_결과를_모아_우리_페이지_단위로_다시_나눈다() {
+    void 여러_원본_페이지에_흩어진_결과를_모아_요청받은_limit_단위로_다시_나눈다() {
         RestClient.Builder builder = newBuilder();
         MockRestServiceServer server = MockRestServiceServer.bindTo(builder).build();
         KakaoLocalClient client = newClient(builder);
@@ -104,17 +112,15 @@ class KakaoLocalClientTest {
                         "{\"documents\":[" + page2Docs + "],\"meta\":{\"total_count\":20,\"pageable_count\":20,\"is_end\":true}}",
                         MediaType.APPLICATION_JSON));
 
-        KakaoSearchResult result = client.searchByKeyword("돈까스", 1);
+        KakaoSearchResult result = client.searchByKeyword("돈까스", 0, 15);
 
         assertThat(result.places()).hasSize(15);
         assertThat(result.places().get(0).name()).isEqualTo("돈까스1");
         assertThat(result.totalCount()).isEqualTo(20);
-        assertThat(result.totalPages()).isEqualTo(2);
-        assertThat(result.isEnd()).isFalse();
     }
 
     @Test
-    void 두번째_페이지를_요청하면_필터링된_결과의_다음_15건을_돌려준다() {
+    void offset을_주면_필터링된_결과의_다음_구간을_돌려준다() {
         RestClient.Builder builder = newBuilder();
         MockRestServiceServer server = MockRestServiceServer.bindTo(builder).build();
         KakaoLocalClient client = newClient(builder);
@@ -141,13 +147,11 @@ class KakaoLocalClientTest {
                         "{\"documents\":[" + page2Docs + "],\"meta\":{\"total_count\":20,\"pageable_count\":20,\"is_end\":true}}",
                         MediaType.APPLICATION_JSON));
 
-        KakaoSearchResult result = client.searchByKeyword("돈까스", 2);
+        KakaoSearchResult result = client.searchByKeyword("돈까스", 15, 15);
 
         assertThat(result.places()).hasSize(5);
         assertThat(result.places().get(0).name()).isEqualTo("돈까스16");
         assertThat(result.totalCount()).isEqualTo(20);
-        assertThat(result.totalPages()).isEqualTo(2);
-        assertThat(result.isEnd()).isTrue();
     }
 
     @Test
@@ -168,7 +172,7 @@ class KakaoLocalClientTest {
                         }
                         """, MediaType.APPLICATION_JSON));
 
-        KakaoSearchResult result = client.searchByKeyword("돈까스", 1);
+        KakaoSearchResult result = client.searchByKeyword("돈까스", 0, 15);
 
         assertThat(result.places())
                 .extracting(KakaoPlace::name)
@@ -192,7 +196,7 @@ class KakaoLocalClientTest {
                         }
                         """, MediaType.APPLICATION_JSON));
 
-        KakaoSearchResult result = client.searchByKeyword("돈까스", 1);
+        KakaoSearchResult result = client.searchByKeyword("돈까스", 0, 15);
 
         assertThat(result.places())
                 .extracting(KakaoPlace::name)
@@ -216,11 +220,10 @@ class KakaoLocalClientTest {
                         }
                         """, MediaType.APPLICATION_JSON));
 
-        KakaoSearchResult result = client.searchByKeyword("강남 맛집", 1);
+        KakaoSearchResult result = client.searchByKeyword("강남 맛집", 0, 15);
 
         assertThat(result.places()).hasSize(1);
         assertThat(result.totalCount()).isEqualTo(1);
-        assertThat(result.totalPages()).isEqualTo(1);
     }
 
     @Test
@@ -234,10 +237,9 @@ class KakaoLocalClientTest {
                         {"documents":[]}
                         """, MediaType.APPLICATION_JSON));
 
-        KakaoSearchResult result = client.searchByKeyword("돈까스", 1);
+        KakaoSearchResult result = client.searchByKeyword("돈까스", 0, 15);
 
         assertThat(result.places()).isEmpty();
-        assertThat(result.totalPages()).isZero();
-        assertThat(result.isEnd()).isTrue();
+        assertThat(result.totalCount()).isZero();
     }
 }

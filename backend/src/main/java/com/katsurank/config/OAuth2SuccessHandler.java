@@ -31,7 +31,7 @@ public class OAuth2SuccessHandler implements AuthenticationSuccessHandler {
     public void onAuthenticationSuccess(HttpServletRequest request,
                                         HttpServletResponse response,
                                         Authentication authentication) throws IOException {
-        log.info("OAuth2 로그인 성공 principal={}", authentication.getName());
+        log.atInfo().log("OAuth2 로그인 성공");
         response.sendRedirect(frontendUrl + "/oauth/callback");
     }
 }

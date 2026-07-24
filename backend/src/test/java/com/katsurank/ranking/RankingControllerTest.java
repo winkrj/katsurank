@@ -1,11 +1,11 @@
 package com.katsurank.ranking;
 
-import com.katsurank.restaurant.RestaurantRepository;
+import com.katsurank.restaurant.repository.RestaurantRepository;
 import com.katsurank.support.CleanUp;
 import com.katsurank.support.TestFixtures;
 import com.katsurank.user.User;
-import com.katsurank.user.UserRepository;
-import com.katsurank.vote.VoteService;
+import com.katsurank.user.repository.UserRepository;
+import com.katsurank.vote.service.VoteService;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -39,10 +39,10 @@ class RankingControllerTest {
 
         mockMvc.perform(get("/api/v1/ranking"))
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$.items").isArray())
-                .andExpect(jsonPath("$.items[0].name").value("돈까스왕"))
-                .andExpect(jsonPath("$.items[0].rank").value(1))
-                .andExpect(jsonPath("$.total").value(1));
+                .andExpect(jsonPath("$.data.items").isArray())
+                .andExpect(jsonPath("$.data.items[0].name").value("돈까스왕"))
+                .andExpect(jsonPath("$.data.items[0].rank").value(1))
+                .andExpect(jsonPath("$.data.total").value(1));
     }
 
     @Test
@@ -50,7 +50,7 @@ class RankingControllerTest {
     void rankingInvalidLimit() throws Exception {
         mockMvc.perform(get("/api/v1/ranking").param("limit", "0"))
                 .andExpect(status().isBadRequest())
-                .andExpect(jsonPath("$.code").value("LIMIT_EXCEEDED"));
+                .andExpect(jsonPath("$.error.code").value("LIMIT_EXCEEDED"));
     }
 
     @Test
@@ -69,8 +69,8 @@ class RankingControllerTest {
 
         mockMvc.perform(get("/api/v1/ranking/top"))
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$.name").value("왕좌돈까스"))
-                .andExpect(jsonPath("$.rank").value(1));
+                .andExpect(jsonPath("$.data.name").value("왕좌돈까스"))
+                .andExpect(jsonPath("$.data.rank").value(1));
     }
 
     @Test
@@ -80,6 +80,6 @@ class RankingControllerTest {
 
         mockMvc.perform(get("/api/v1/ranking/map-pins"))
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$[0].name").value("지도핀돈까스"));
+                .andExpect(jsonPath("$.data[0].name").value("지도핀돈까스"));
     }
 }

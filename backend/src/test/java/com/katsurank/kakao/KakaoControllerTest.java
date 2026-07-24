@@ -1,6 +1,14 @@
 package com.katsurank.kakao;
 
-import com.katsurank.auth.CustomOAuth2UserService;
+import com.katsurank.kakao.dto.KakaoSearchResult;
+
+import com.katsurank.kakao.dto.KakaoPlace;
+
+import com.katsurank.kakao.controller.KakaoController;
+
+import com.katsurank.kakao.client.KakaoLocalClient;
+
+import com.katsurank.auth.service.CustomOAuth2UserService;
 import com.katsurank.config.OAuth2FailureHandler;
 import com.katsurank.config.OAuth2SuccessHandler;
 import com.katsurank.config.SecurityConfig;
@@ -34,50 +42,51 @@ class KakaoControllerTest {
     @MockitoBean OAuth2FailureHandler failureHandler;
 
     @Test
-    @DisplayName("GET /api/v1/kakao-places/search — 인증 없이 200, page 기본값 1")
-    void searchWithoutAuthDefaultsToPageOne() throws Exception {
-        when(kakaoLocalClient.searchByKeyword(eq("돈까스"), eq(1)))
+    @DisplayName("GET /api/v1/kakao-places/search — 인증 없이 200, offset/limit 기본값 0/15")
+    void searchWithoutAuthDefaultsToFirstPage() throws Exception {
+        when(kakaoLocalClient.searchByKeyword(eq("돈까스"), eq(0), eq(15)))
                 .thenReturn(new KakaoSearchResult(
                         List.of(new KakaoPlace("p1", "명동돈까스", "서울 어딘가", "서울 어딘가로 1",
                                 BigDecimal.valueOf(37.5), BigDecimal.valueOf(127.0),
                                 "음식점 > 일식 > 돈까스", "02-1234-5678", "http://place.kakao.com/p1")),
-                        30, 2, false));
+                        30));
 
         mockMvc.perform(get("/api/v1/kakao-places/search").param("query", "돈까스"))
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$.page").value(1))
-                .andExpect(jsonPath("$.totalPages").value(2))
-                .andExpect(jsonPath("$.totalCount").value(30))
-                .andExpect(jsonPath("$.isEnd").value(false))
-                .andExpect(jsonPath("$.places[0].kakaoPlaceId").value("p1"));
+                .andExpect(jsonPath("$.data.offset").value(0))
+                .andExpect(jsonPath("$.data.limit").value(15))
+                .andExpect(jsonPath("$.data.total").value(30))
+                .andExpect(jsonPath("$.data.items[0].kakaoPlaceId").value("p1"));
 
-        verify(kakaoLocalClient).searchByKeyword("돈까스", 1);
+        verify(kakaoLocalClient).searchByKeyword("돈까스", 0, 15);
     }
 
     @Test
-    @DisplayName("GET /api/v1/kakao-places/search?page=2 — 요청한 page를 그대로 전달·응답")
-    void searchWithExplicitPage() throws Exception {
-        when(kakaoLocalClient.searchByKeyword(eq("돈까스"), anyInt()))
-                .thenReturn(new KakaoSearchResult(List.of(), 30, 2, true));
+    @DisplayName("GET /api/v1/kakao-places/search?offset=15&limit=15 — 요청한 offset/limit을 그대로 전달·응답")
+    void searchWithExplicitOffset() throws Exception {
+        when(kakaoLocalClient.searchByKeyword(eq("돈까스"), anyInt(), anyInt()))
+                .thenReturn(new KakaoSearchResult(List.of(), 30));
 
-        mockMvc.perform(get("/api/v1/kakao-places/search").param("query", "돈까스").param("page", "2"))
+        mockMvc.perform(get("/api/v1/kakao-places/search")
+                        .param("query", "돈까스").param("offset", "15").param("limit", "15"))
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$.page").value(2));
+                .andExpect(jsonPath("$.data.offset").value(15))
+                .andExpect(jsonPath("$.data.limit").value(15));
 
-        verify(kakaoLocalClient).searchByKeyword("돈까스", 2);
+        verify(kakaoLocalClient).searchByKeyword("돈까스", 15, 15);
     }
 
     @Test
-    @DisplayName("GET /api/v1/kakao-places/search?page=0 — 범위 밖이면 400")
-    void searchPageTooSmall() throws Exception {
-        mockMvc.perform(get("/api/v1/kakao-places/search").param("query", "돈까스").param("page", "0"))
+    @DisplayName("GET /api/v1/kakao-places/search?offset=-1 — 범위 밖이면 400")
+    void searchOffsetNegative() throws Exception {
+        mockMvc.perform(get("/api/v1/kakao-places/search").param("query", "돈까스").param("offset", "-1"))
                 .andExpect(status().isBadRequest());
     }
 
     @Test
-    @DisplayName("GET /api/v1/kakao-places/search?page=4 — 카카오 정책상 최대 3페이지, 초과면 400")
-    void searchPageTooLarge() throws Exception {
-        mockMvc.perform(get("/api/v1/kakao-places/search").param("query", "돈까스").param("page", "4"))
+    @DisplayName("GET /api/v1/kakao-places/search?limit=46 — 카카오 정책상 최대 45건, 초과면 400")
+    void searchLimitTooLarge() throws Exception {
+        mockMvc.perform(get("/api/v1/kakao-places/search").param("query", "돈까스").param("limit", "46"))
                 .andExpect(status().isBadRequest());
     }
 
