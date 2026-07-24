@@ -166,6 +166,28 @@ class RankingServiceTest {
 
         assertThat(pins).hasSize(1);
         assertThat(pins.get(0).id()).isEqualTo(withCoords.getId());
+        assertThat(pins.get(0).rank()).isEqualTo(1);
+    }
+
+    @Test
+    @DisplayName("지도 핀 순위는 좌표 없는 ACTIVE 가게를 포함한 서울 전체 순위이며 동점은 같은 순위")
+    void mapPinsUseGlobalRankIncludingRestaurantsWithoutCoordinates() {
+        Restaurant first = newRestaurant("1위 핀");
+        Restaurant tiedPin = newRestaurant("공동 2위 핀");
+        Restaurant tiedWithoutCoords = TestFixtures.createRestaurantNoCoords(restaurantRepository, "공동 2위 좌표 없음");
+        Restaurant fourth = newRestaurant("4위 핀");
+
+        vote(first, 10);
+        vote(tiedPin, 5);
+        vote(tiedWithoutCoords, 5);
+        vote(fourth, 3);
+
+        List<MapPinResponse> pins = rankingService.getMapPins();
+
+        assertThat(pins).extracting(MapPinResponse::id)
+                .containsExactly(first.getId(), tiedPin.getId(), fourth.getId());
+        assertThat(pins).extracting(MapPinResponse::rank)
+                .containsExactly(1, 2, 4);
     }
 
     // --- helpers ---

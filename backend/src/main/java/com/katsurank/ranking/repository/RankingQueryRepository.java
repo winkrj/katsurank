@@ -1,7 +1,8 @@
 package com.katsurank.ranking.repository;
 
-import com.katsurank.ranking.dto.MapPinResponse;
+import com.katsurank.ranking.dto.MapPinRow;
 import com.katsurank.ranking.dto.RankingRow;
+import com.katsurank.ranking.dto.VoteCountGroup;
 import com.katsurank.restaurant.RestaurantStatus;
 import com.querydsl.core.types.Projections;
 import com.querydsl.jpa.impl.JPAQueryFactory;
@@ -69,8 +70,8 @@ public class RankingQueryRepository {
                 .fetchOne();
     }
 
-    public List<MapPinResponse> findActivePinsWithCoordinates() {
-        return queryFactory.select(Projections.constructor(MapPinResponse.class,
+    public List<MapPinRow> findActivePinsWithCoordinates() {
+        return queryFactory.select(Projections.constructor(MapPinRow.class,
                         restaurant.id,
                         restaurant.name,
                         restaurant.latitude,
@@ -80,6 +81,19 @@ public class RankingQueryRepository {
                 .where(restaurant.status.eq(RestaurantStatus.ACTIVE),
                         restaurant.latitude.isNotNull(),
                         restaurant.longitude.isNotNull())
+                .orderBy(restaurant.voteCount.desc(), restaurant.id.asc())
+                .fetch();
+    }
+
+    /** 좌표 유무와 무관한 ACTIVE 전체의 득표 수 분포. 동점 순위 계산 기준이다. */
+    public List<VoteCountGroup> findActiveVoteCountGroups() {
+        return queryFactory.select(Projections.constructor(VoteCountGroup.class,
+                        restaurant.voteCount,
+                        restaurant.count()))
+                .from(restaurant)
+                .where(restaurant.status.eq(RestaurantStatus.ACTIVE))
+                .groupBy(restaurant.voteCount)
+                .orderBy(restaurant.voteCount.desc())
                 .fetch();
     }
 }

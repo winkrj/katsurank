@@ -1,9 +1,11 @@
 package com.katsurank.ranking.service;
 
 import com.katsurank.ranking.dto.MapPinResponse;
+import com.katsurank.ranking.dto.MapPinRow;
 import com.katsurank.ranking.dto.RankingItem;
 import com.katsurank.ranking.dto.RankingRow;
 import com.katsurank.ranking.dto.TopRankingResult;
+import com.katsurank.ranking.dto.VoteCountGroup;
 import com.katsurank.ranking.exception.LimitExceededException;
 import com.katsurank.ranking.repository.RankingQueryRepository;
 import com.katsurank.common.web.PageResponse;
@@ -11,7 +13,9 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 @Service
 public class RankingService {
@@ -47,7 +51,29 @@ public class RankingService {
 
     @Transactional(readOnly = true)
     public List<MapPinResponse> getMapPins() {
-        return rankingQueryRepository.findActivePinsWithCoordinates();
+        Map<Integer, Integer> ranksByVoteCount = ranksByVoteCount();
+        return rankingQueryRepository.findActivePinsWithCoordinates().stream()
+                .map(pin -> toMapPinResponse(pin, ranksByVoteCount))
+                .toList();
+    }
+
+    private Map<Integer, Integer> ranksByVoteCount() {
+        List<VoteCountGroup> groups = rankingQueryRepository.findActiveVoteCountGroups();
+        Map<Integer, Integer> ranks = new HashMap<>(groups.size());
+        int rank = 1;
+        for (VoteCountGroup group : groups) {
+            ranks.put(group.voteCount(), rank);
+            rank = Math.addExact(rank, Math.toIntExact(group.restaurantCount()));
+        }
+        return ranks;
+    }
+
+    private MapPinResponse toMapPinResponse(MapPinRow pin, Map<Integer, Integer> ranksByVoteCount) {
+        Integer rank = ranksByVoteCount.get(pin.voteCount());
+        if (rank == null) {
+            throw new IllegalStateException("ACTIVE 지도 핀의 득표 수 순위를 찾을 수 없습니다. voteCount=" + pin.voteCount());
+        }
+        return new MapPinResponse(pin.id(), pin.name(), pin.latitude(), pin.longitude(), pin.voteCount(), rank);
     }
 
     private List<RankingItem> toRankingItems(List<RankingRow> rows, int offset) {
