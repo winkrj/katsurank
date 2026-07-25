@@ -50,7 +50,6 @@ export function RankingList({ layout = 'default', limit: limitProp }: RankingLis
         {isLoading && (
           <ul>
             {Array.from({ length: limit }).map((_, i) => (
-              // eslint-disable-next-line react/no-array-index-key
               <li
                 key={i}
                 className={

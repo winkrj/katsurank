@@ -1,15 +1,12 @@
-import { MOCK_SEARCH_TOTAL_COUNT } from '../constants';
 import type { SearchSortOption } from '../types/searchResult';
 
 type SearchResultsHeaderProps = {
-  total?: number;
+  total: number;
   sort: SearchSortOption;
   onSortChange: (sort: SearchSortOption) => void;
 };
 
-export function SearchResultsHeader({
-  total = MOCK_SEARCH_TOTAL_COUNT,
-}: SearchResultsHeaderProps) {
+export function SearchResultsHeader({ total }: SearchResultsHeaderProps) {
   return (
     <div className="mb-4 flex flex-wrap items-end justify-between gap-3">
       <div>

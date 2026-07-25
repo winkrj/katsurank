@@ -57,8 +57,10 @@ export function MyVoteTicket({
           <div className="flex flex-col items-center gap-3">
             <p className="text-[11px] font-black tracking-[0.2em] text-[#C78316]">MY ONE PICK</p>
             <RestaurantImage src={restaurantImage} name={restaurantName} size={96} />
-            <CrownIcon />
-            <h2 className="text-[22px] font-black text-[#2A1A12]">{restaurantName}</h2>
+            <div className="flex flex-col items-center">
+              <CrownIcon />
+              <h2 className="text-[22px] font-black text-[#2A1A12]">{restaurantName}</h2>
+            </div>
             <RankBadge rank={rank} votes={votes} />
           </div>
         )}

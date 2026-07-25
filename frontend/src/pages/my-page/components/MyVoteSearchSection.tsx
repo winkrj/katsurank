@@ -1,24 +1,28 @@
-import { useNavigate } from 'react-router-dom'
-import { useState } from 'react'
+import { useNavigate } from 'react-router-dom';
+import { useState } from 'react';
 
 type MyVoteSearchSectionProps = {
-  layout: 'desktop' | 'mobile'
-}
+  layout: 'desktop' | 'mobile';
+};
 
 export function MyVoteSearchSection({ layout }: MyVoteSearchSectionProps) {
-  const [query, setQuery] = useState('')
-  const navigate = useNavigate()
-  const isDesktop = layout === 'desktop'
+  const [query, setQuery] = useState('');
+  const navigate = useNavigate();
+  const isDesktop = layout === 'desktop';
 
   function handleSearch() {
-    if (!query.trim()) return
-    navigate(`/search?q=${encodeURIComponent(query.trim())}`)
+    if (!query.trim()) return;
+    navigate(`/search?q=${encodeURIComponent(query.trim())}`);
   }
 
   return (
     <div className="relative overflow-hidden rounded-2xl border border-[#E8D9BF] bg-[#FFFDF4] p-6">
       <div className={isDesktop ? 'max-w-[60%]' : ''}>
-        <h3 className={['font-black text-[#2A1A12]', isDesktop ? 'text-[18px]' : 'text-[15px]'].join(' ')}>
+        <h3
+          className={['font-black text-[#2A1A12]', isDesktop ? 'text-[18px]' : 'text-[15px]'].join(
+            ' ',
+          )}
+        >
           다른 가게에 한 표 던져보세요!
         </h3>
         <p className="mt-1 text-[13px] text-[#5F4A3C]">
@@ -32,7 +36,7 @@ export function MyVoteSearchSection({ layout }: MyVoteSearchSectionProps) {
               value={query}
               onChange={(e) => setQuery(e.target.value)}
               onKeyDown={(e) => e.key === 'Enter' && handleSearch()}
-              placeholder="가게명 또는 지역으로 검색"
+              placeholder="가게명 검색"
               className="w-full rounded-xl border border-[#E8D9BF] bg-white py-2.5 pl-4 pr-10 text-[14px] text-[#2A1A12] outline-none placeholder:text-[#8A7A6A] focus:border-[#D88A24]"
             />
             <button
@@ -65,15 +69,29 @@ export function MyVoteSearchSection({ layout }: MyVoteSearchSectionProps) {
         </div>
       )}
     </div>
-  )
+  );
 }
 
-function PodiumBlock({ label, height, crown = false }: { label: string; height: number; crown?: boolean }) {
+function PodiumBlock({
+  label,
+  height,
+  crown = false,
+}: {
+  label: string;
+  height: number;
+  crown?: boolean;
+}) {
   return (
     <div className="flex flex-col items-center gap-1">
       {crown && (
         <svg width="20" height="16" viewBox="0 0 32 28" fill="none" aria-hidden>
-          <path d="M2 22h28l2-16-8 6-8-12-8 12-8-6 2 16z" fill="#FFC533" stroke="#C78316" strokeWidth="1.5" strokeLinejoin="round" />
+          <path
+            d="M2 22h28l2-16-8 6-8-12-8 12-8-6 2 16z"
+            fill="#FFC533"
+            stroke="#C78316"
+            strokeWidth="1.5"
+            strokeLinejoin="round"
+          />
           <circle cx="6" cy="8" r="2" fill="#C78316" />
           <circle cx="16" cy="4" r="2" fill="#C78316" />
           <circle cx="26" cy="8" r="2" fill="#C78316" />
@@ -86,14 +104,23 @@ function PodiumBlock({ label, height, crown = false }: { label: string; height: 
         {label}
       </div>
     </div>
-  )
+  );
 }
 
 function SearchIcon() {
   return (
-    <svg width="18" height="18" viewBox="0 0 18 18" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" aria-hidden>
+    <svg
+      width="18"
+      height="18"
+      viewBox="0 0 18 18"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth="1.8"
+      strokeLinecap="round"
+      aria-hidden
+    >
       <circle cx="8.5" cy="8.5" r="5.5" />
       <path d="M13 13l3 3" />
     </svg>
-  )
+  );
 }

@@ -24,6 +24,7 @@ export function RestaurantVoteConfirmButton({
   const { data: me } = useMeQuery(isLoggedIn);
   const [confirmOpen, setConfirmOpen] = useState(false);
   const [successOpen, setSuccessOpen] = useState(false);
+  const [errorOpen, setErrorOpen] = useState(false);
   const navigate = useNavigate();
   const { mutate: vote, isPending } = useCreateVoteMutation();
 
@@ -34,6 +35,10 @@ export function RestaurantVoteConfirmButton({
         onSuccess: () => {
           setConfirmOpen(false);
           setSuccessOpen(true);
+        },
+        onError: () => {
+          setConfirmOpen(false);
+          setErrorOpen(true);
         },
       },
     );
@@ -67,8 +72,15 @@ export function RestaurantVoteConfirmButton({
 
   return (
     <>
-      <Button variant="primary" className={className} onClick={() => setConfirmOpen(true)}>
-        {label}
+      <Button
+        variant="primary"
+        className={['disabled:cursor-not-allowed disabled:opacity-60', className]
+          .filter(Boolean)
+          .join(' ')}
+        onClick={() => setConfirmOpen(true)}
+        disabled={isPending}
+      >
+        {isPending ? '투표 처리 중...' : label}
       </Button>
 
       <ConfirmDialog
@@ -83,7 +95,7 @@ export function RestaurantVoteConfirmButton({
           </>
         }
         description="표는 언제든 옮길 수 있어요."
-        confirmLabel={isPending ? '투표 중...' : '투표하기'}
+        confirmLabel="투표하기"
       />
 
       <AlertDialog
@@ -94,6 +106,14 @@ export function RestaurantVoteConfirmButton({
         }}
         title="투표가 완료되었어요!"
         description="마이페이지에서 내 표를 확인할 수 있어요."
+        confirmLabel="확인"
+      />
+
+      <AlertDialog
+        open={errorOpen}
+        onClose={() => setErrorOpen(false)}
+        title="투표에 실패했어요"
+        description="잠시 후 다시 시도해 주세요."
         confirmLabel="확인"
       />
     </>

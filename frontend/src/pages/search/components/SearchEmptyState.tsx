@@ -1,9 +1,9 @@
-import { Link } from 'react-router-dom'
-import { Button } from '../../../shared/ui/Button'
+import { Link } from 'react-router-dom';
+import { Button } from '../../../shared/ui/Button';
 
 type SearchEmptyStateProps = {
-  hasQuery: boolean
-}
+  hasQuery: boolean;
+};
 
 export function SearchEmptyState({ hasQuery }: SearchEmptyStateProps) {
   return (
@@ -16,7 +16,7 @@ export function SearchEmptyState({ hasQuery }: SearchEmptyStateProps) {
       <p className="mx-auto mt-2 max-w-[280px] text-[13px] leading-relaxed text-[#8A7A6A]">
         {hasQuery
           ? '다른 키워드로 검색하거나 새 가게를 등록해 보세요.'
-          : '가게명 또는 지역을 입력하고 검색해 주세요.'}
+          : '가게명을 입력하고 검색해 주세요.'}
       </p>
 
       <div className="mx-auto mt-6 flex max-w-[320px] flex-col gap-3">
@@ -25,15 +25,12 @@ export function SearchEmptyState({ hasQuery }: SearchEmptyStateProps) {
             + 새 가게 등록하기
           </Button>
         )}
-        <Link
-          to="/"
-          className="text-[13px] font-bold text-[#8A7A6A] hover:text-[#5F4A3C]"
-        >
+        <Link to="/" className="text-[13px] font-bold text-[#8A7A6A] hover:text-[#5F4A3C]">
           홈으로 돌아가기
         </Link>
       </div>
     </div>
-  )
+  );
 }
 
 function EmptyIcon() {
@@ -43,5 +40,5 @@ function EmptyIcon() {
       <path d="M38 38 48 48" stroke="#E8D9BF" strokeWidth="3" strokeLinecap="round" />
       <path d="M22 28h12M28 22v12" stroke="#FFC533" strokeWidth="2" strokeLinecap="round" />
     </svg>
-  )
+  );
 }

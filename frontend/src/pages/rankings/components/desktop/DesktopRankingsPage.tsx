@@ -31,7 +31,6 @@ export function DesktopRankingsPage() {
           {isLoading && (
             <div className="space-y-2 overflow-hidden rounded-xl border border-[#E6D5B8] bg-white">
               {Array.from({ length: 10 }).map((_, i) => (
-                // eslint-disable-next-line react/no-array-index-key
                 <div
                   key={i}
                   className="flex items-center gap-5 border-b border-[#F0E3CC] px-6 py-4 last:border-b-0"

@@ -33,6 +33,8 @@ export function MobileMapPage() {
       : restaurants[0]
 
     if (target) {
+      // 쿼리 데이터가 도착한 뒤 딱 한 번만 자동 포커스한다 (hasAutoSelected로 재실행 방지).
+      // eslint-disable-next-line react-hooks/set-state-in-effect
       setSelected(target)
       setAutoFocusReason(currentVote ? 'myVote' : 'top1')
       setHasAutoSelected(true)

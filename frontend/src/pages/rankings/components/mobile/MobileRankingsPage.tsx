@@ -24,7 +24,6 @@ export function MobileRankingsPage() {
         {isLoading && (
           <div className="space-y-0 overflow-hidden rounded-xl border border-[#E6D5B8] bg-white">
             {Array.from({ length: 10 }).map((_, i) => (
-              // eslint-disable-next-line react/no-array-index-key
               <div key={i} className="flex items-center gap-3 border-b border-[#F0E3CC] px-4 py-3 last:border-b-0">
                 <Skeleton className="size-8 rounded-full" />
                 <Skeleton className="size-[52px] rounded-lg" />

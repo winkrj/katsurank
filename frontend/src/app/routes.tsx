@@ -8,6 +8,8 @@ import { RestaurantNewPage } from '../pages/restaurant-new/RestaurantNewPage'
 import { MapPage } from '../pages/map/MapPage'
 import { RankingsPage } from '../pages/rankings/RankingsPage'
 import { SearchPage } from '../pages/search/SearchPage'
+import { PrivacyPolicyPage } from '../pages/legal/PrivacyPolicyPage'
+import { TermsPage } from '../pages/legal/TermsPage'
 
 export function AppRoutes() {
   return (
@@ -22,6 +24,8 @@ export function AppRoutes() {
           <Route path="/map" element={<MapPage />} />
           <Route path="/search" element={<SearchPage />} />
           <Route path="/me" element={<MyPage />} />
+          <Route path="/privacy" element={<PrivacyPolicyPage />} />
+          <Route path="/terms" element={<TermsPage />} />
         </Route>
         {/* 레이아웃 없는 페이지 */}
         <Route path="/oauth/callback" element={<KakaoCallbackPage />} />
