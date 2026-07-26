@@ -33,6 +33,7 @@ export function useLogoutMutation() {
     onSettled: () => {
       clearUser()
       queryClient.removeQueries({ queryKey: queryKeys.auth.me })
+      queryClient.removeQueries({ queryKey: queryKeys.me.all })
     },
   })
 }

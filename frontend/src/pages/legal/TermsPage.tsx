@@ -80,7 +80,7 @@ export function TermsPage() {
 
       <section>
         <h2>제10조. 문의</h2>
-        <p>이메일: [문의용 이메일 주소]</p>
+        <p>이메일: support@katsurank.kr</p>
       </section>
     </LegalPageLayout>
   );

@@ -61,7 +61,7 @@ export function PrivacyPolicyPage() {
 
       <section>
         <h2>8. 개인정보 보호책임자 및 문의처</h2>
-        <p>이메일: [문의용 이메일 주소]</p>
+        <p>이메일: support@katsurank.kr</p>
       </section>
 
       <section>
