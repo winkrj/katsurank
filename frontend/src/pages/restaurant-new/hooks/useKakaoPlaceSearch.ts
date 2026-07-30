@@ -17,6 +17,8 @@ function toKakaoPlace(dto: KakaoPlaceDto): KakaoPlace {
   };
 }
 
+const PAGE_SIZE = 15;
+
 export function useKakaoPlaceSearch() {
   const [results, setResults] = useState<KakaoPlace[]>([]);
   const [hasSearched, setHasSearched] = useState(false);
@@ -35,10 +37,11 @@ export function useKakaoPlaceSearch() {
     setHasSearched(true);
 
     try {
-      const data = await searchKakaoPlacesProxy(trimmed, targetPage);
-      setResults(data.places.map(toKakaoPlace));
-      setPage(data.page);
-      setTotalPages(Math.max(1, data.totalPages));
+      const offset = (targetPage - 1) * PAGE_SIZE;
+      const data = await searchKakaoPlacesProxy(trimmed, offset, PAGE_SIZE);
+      setResults(data.items.map(toKakaoPlace));
+      setPage(targetPage);
+      setTotalPages(Math.max(1, Math.ceil(data.total / PAGE_SIZE)));
       setLastQuery(trimmed);
     } catch (err) {
       setSearchError(err instanceof Error ? err.message : '검색 중 오류가 발생했습니다.');

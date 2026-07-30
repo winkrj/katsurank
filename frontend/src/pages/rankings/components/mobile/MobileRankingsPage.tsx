@@ -1,3 +1,5 @@
+import { useState } from 'react'
+import { RANKING_PREVIEW_COUNT } from '../../constants'
 import { Skeleton } from '../../../../shared/ui/Skeleton'
 import { useRankingQuery } from '../../../../shared/queries/ranking'
 import { RankingBanner } from '../RankingBanner'
@@ -5,7 +7,8 @@ import { RankingPromoSection } from '../RankingPromoSection'
 import { RankingTable } from '../RankingTable'
 
 export function MobileRankingsPage() {
-  const { data, isLoading, isError } = useRankingQuery(100)
+  const [limit, setLimit] = useState(RANKING_PREVIEW_COUNT)
+  const { data, isLoading, isFetching, isError } = useRankingQuery(limit)
 
   const items = data?.items.map((item) => ({
     id: item.id,
@@ -40,7 +43,13 @@ export function MobileRankingsPage() {
           <p className="py-12 text-center text-[14px] text-[#8A7A6A]">랭킹을 불러오지 못했어요.</p>
         )}
         {!isLoading && !isError && (
-          <RankingTable items={items} layout="mobile" />
+          <RankingTable
+            items={items}
+            layout="mobile"
+            total={data?.total}
+            isLoadingMore={isFetching}
+            onLoadMore={data?.total ? () => setLimit(data.total) : undefined}
+          />
         )}
       </div>
 

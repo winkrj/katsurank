@@ -15,8 +15,13 @@ export function DesktopSearchPage() {
   const [sort, setSort] = useState<SearchSortOption>('rank')
   const [page, setPage] = useState(1)
 
-  const { data, isLoading } = useRestaurantSearchQuery(submittedQuery)
+  const { data, isLoading } = useRestaurantSearchQuery(
+    submittedQuery,
+    SEARCH_RESULTS_PER_PAGE,
+    (page - 1) * SEARCH_RESULTS_PER_PAGE,
+  )
   const apiResults = data?.items ?? []
+  const total = data?.total ?? 0
 
   const results: SearchResultItem[] = apiResults.map((r) => ({
     id: r.id,
@@ -34,11 +39,7 @@ export function DesktopSearchPage() {
     return (a.rank || 9999) - (b.rank || 9999)
   })
 
-  const totalPages = Math.max(1, Math.ceil(sorted.length / SEARCH_RESULTS_PER_PAGE))
-  const paginatedResults = sorted.slice(
-    (page - 1) * SEARCH_RESULTS_PER_PAGE,
-    page * SEARCH_RESULTS_PER_PAGE,
-  )
+  const totalPages = Math.max(1, Math.ceil(total / SEARCH_RESULTS_PER_PAGE))
 
   function handleSearch() {
     setSubmittedQuery(inputQuery)
@@ -62,12 +63,12 @@ export function DesktopSearchPage() {
 
           <section>
             <SearchResultsHeader
-              total={sorted.length}
+              total={total}
               sort={sort}
               onSortChange={setSort}
             />
             <SearchResultList
-              items={paginatedResults}
+              items={sorted}
               layout="desktop"
               hasQuery={Boolean(submittedQuery.trim())}
               isLoading={isLoading}

@@ -1,4 +1,5 @@
 import { apiClient } from './client'
+import type { Paginated } from '../types/common'
 
 export type KakaoPlaceDto = {
   kakaoPlaceId: string
@@ -12,15 +13,7 @@ export type KakaoPlaceDto = {
   placeUrl: string
 }
 
-export type KakaoPlaceSearchResultDto = {
-  places: KakaoPlaceDto[]
-  page: number
-  totalPages: number
-  totalCount: number
-  isEnd: boolean
-}
-
-export function searchKakaoPlacesProxy(query: string, page = 1) {
-  const params = new URLSearchParams({ query, page: String(page) })
-  return apiClient<KakaoPlaceSearchResultDto>(`/api/v1/kakao-places/search?${params}`)
+export function searchKakaoPlacesProxy(query: string, offset = 0, limit = 15) {
+  const params = new URLSearchParams({ query, offset: String(offset), limit: String(limit) })
+  return apiClient<Paginated<KakaoPlaceDto>>(`/api/v1/kakao-places/search?${params}`)
 }

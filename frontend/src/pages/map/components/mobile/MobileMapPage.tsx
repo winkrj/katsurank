@@ -48,16 +48,16 @@ export function MobileMapPage() {
 
   return (
     <div
-      className="flex flex-col overflow-hidden bg-[#FFFDF4]"
+      className="fixed inset-x-0 z-0 flex flex-col overflow-hidden bg-[#FFFDF4]"
       style={{
-        marginTop: `${HEADER_HEIGHT}px`,
-        height: `calc(100vh - ${HEADER_HEIGHT}px - ${BOTTOM_NAV_HEIGHT}px - env(safe-area-inset-bottom, 0px))`,
+        top: `${HEADER_HEIGHT}px`,
+        bottom: `calc(${BOTTOM_NAV_HEIGHT}px + env(safe-area-inset-bottom, 0px))`,
       }}
     >
       {/* 검색 */}
       {/* TODO: 2차 -> 카테고리 필터 API 나오면 MapFilterTabs 복원 */}
       <div className="z-10 shrink-0 bg-white px-3 pb-2 pt-2 shadow-sm">
-        <MapSearchBar className="mb-2" />
+        <MapSearchBar restaurants={restaurants} onSelect={handleSelect} className="mb-2" />
       </div>
 
       {/* 지도 */}

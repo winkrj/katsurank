@@ -37,14 +37,17 @@ export function RankingPromoSection({ layout = 'desktop' }: RankingPromoSectionP
   if (!isDesktop) {
     const first = PROMO_ITEMS[0]
     return (
-      <div className="mx-4 my-4 flex items-center gap-3 rounded-xl border border-[#E8D9BF] bg-white p-4">
+      <Link
+        to="/search"
+        className="mx-4 my-4 flex items-center gap-3 rounded-xl border border-[#E8D9BF] bg-white p-4"
+      >
         <span className="text-[32px]">{first.icon}</span>
         <div>
           <p className="text-[14px] font-black text-[#2A1A12]">{first.title.replace('\n', ' ')}</p>
           <p className="text-[12px] text-[#5F4A3C]">{first.desc}</p>
         </div>
         <ChevronIcon />
-      </div>
+      </Link>
     )
   }
 

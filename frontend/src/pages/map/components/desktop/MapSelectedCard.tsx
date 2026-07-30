@@ -32,7 +32,7 @@ export function MapSelectedCard({ restaurant: r, onClose }: MapSelectedCardProps
         </div>
 
         {/* 투표수 */}
-        <div className="flex shrink-0 flex-col items-end gap-0.5">
+        <div className="flex shrink-0 flex-col items-end gap-0.5 pr-8">
           <p className="text-[22px] font-black text-[#2A1A12]">{r.votes.toLocaleString()}표</p>
           <p className="text-[12px] text-[#8A7A6A]">전체 득표 수</p>
         </div>

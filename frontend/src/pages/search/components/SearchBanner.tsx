@@ -4,13 +4,13 @@ type SearchBannerProps = {
 
 export function SearchBanner({ layout }: SearchBannerProps) {
   const isMobile = layout === 'mobile';
-  const src = isMobile ? '/images/search_banner_mobile.png' : '/images/search_banner_desktop.png';
+  const src = isMobile ? '/images/search_banner_mobile.png' : '/images/search_banner_desktop.jpeg';
 
   return (
     <div
       className={[
         'relative w-full overflow-hidden',
-        isMobile ? 'aspect-[1778/494]' : 'aspect-[2108/317] border-b border-[#E8D9BF]/60',
+        isMobile ? 'aspect-[1778/494]' : 'aspect-[2108/210] border-b border-[#E8D9BF]/60',
       ].join(' ')}
     >
       <img

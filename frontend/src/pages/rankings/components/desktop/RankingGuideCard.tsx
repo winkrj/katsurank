@@ -5,17 +5,17 @@ const GUIDE_ITEMS = [
   {
     icon: '1',
     title: '1인 1표 원칙',
-    desc: '하루에 한 곳만 투표할 수 있어요.',
+    desc: '누구나 단 한 곳에만 투표할 수 있어요.',
   },
   {
     icon: '⇄',
     title: '표는 이동 가능',
-    desc: '이전 투표를 취소하고 새로 투표할 수 있어요.',
+    desc: '더 마음에 드는 가게가 생기면 언제든 표를 옮길 수 있어요.',
   },
   {
     icon: '👑',
     title: '랭킹 기준',
-    desc: '최근 7일 동안 받은 총 득표수 기준이에요.',
+    desc: '가게가 현재 받은 총 득표수 기준이에요.',
   },
 ] as const
 
@@ -25,7 +25,7 @@ export function RankingGuideCard() {
   return (
     <aside className="flex flex-col gap-4 rounded-xl border border-[#E6D5B8] bg-white p-4 shadow-[0_4px_16px_rgba(58,35,24,0.06)]">
       <p className="flex items-center gap-1.5 text-[13px] font-black text-[#2A1A12]">
-        <span className="text-[#D88A24]">⊟</span> 카츠랭 가이드
+        <GuideIcon /> 카츠랭 가이드
       </p>
 
       <ul className="flex flex-col gap-4">
@@ -51,5 +51,15 @@ export function RankingGuideCard() {
         </Link>
       )}
     </aside>
+  )
+}
+
+function GuideIcon() {
+  return (
+    <svg width="14" height="14" viewBox="0 0 16 16" fill="none" aria-hidden className="shrink-0 text-[#D88A24]">
+      <circle cx="8" cy="8" r="6.5" stroke="currentColor" strokeWidth="1.4" />
+      <path d="M8 7.25v4" stroke="currentColor" strokeWidth="1.4" strokeLinecap="round" />
+      <circle cx="8" cy="5" r="0.9" fill="currentColor" />
+    </svg>
   )
 }

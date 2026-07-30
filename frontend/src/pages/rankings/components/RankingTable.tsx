@@ -1,35 +1,34 @@
-import { useState } from 'react'
-import { RANKING_PREVIEW_COUNT } from '../constants'
 import type { RankingDetailItem } from '../types/rankingDetail'
 import { RankingTableItem } from './RankingTableItem'
 
 type RankingTableProps = {
   items: RankingDetailItem[]
   layout: 'desktop' | 'mobile'
+  total?: number
+  onLoadMore?: () => void
+  isLoadingMore?: boolean
 }
 
-export function RankingTable({ items, layout }: RankingTableProps) {
-  const [expanded, setExpanded] = useState(false)
-
-  const visible = expanded ? items : items.slice(0, RANKING_PREVIEW_COUNT)
-  const hiddenCount = items.length - RANKING_PREVIEW_COUNT
+export function RankingTable({ items, layout, total, onLoadMore, isLoadingMore }: RankingTableProps) {
+  const hiddenCount = (total ?? items.length) - items.length
 
   return (
     <div className="overflow-hidden rounded-xl border border-[#E6D5B8] bg-white shadow-[0_4px_16px_rgba(58,35,24,0.06)]">
       <ol>
-        {visible.map((item) => (
+        {items.map((item) => (
           <RankingTableItem key={item.id} item={item} layout={layout} />
         ))}
       </ol>
 
-      {!expanded && hiddenCount > 0 && (
+      {onLoadMore && hiddenCount > 0 && (
         <button
           type="button"
-          onClick={() => setExpanded(true)}
-          className="flex w-full items-center justify-center gap-2 border-t border-[#E8D9BF] py-4 text-[14px] font-bold text-[#5F4A3C] transition hover:bg-[#FFF4D8]"
+          onClick={onLoadMore}
+          disabled={isLoadingMore}
+          className="flex w-full items-center justify-center gap-2 border-t border-[#E8D9BF] py-4 text-[14px] font-bold text-[#5F4A3C] transition hover:bg-[#FFF4D8] disabled:opacity-50"
         >
-          더 많은 랭킹 보기 ({RANKING_PREVIEW_COUNT + 1} ~ {items.length}위)
-          <ChevronDownIcon />
+          {isLoadingMore ? '불러오는 중...' : `더 많은 랭킹 보기 (${items.length + 1} ~ ${total}위)`}
+          {!isLoadingMore && <ChevronDownIcon />}
         </button>
       )}
     </div>

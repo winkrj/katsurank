@@ -6,7 +6,8 @@ export const queryKeys = {
   restaurants: {
     all: ['restaurants'] as const,
     detail: (id: number) => ['restaurants', 'detail', id] as const,
-    search: (q: string) => ['restaurants', 'search', q] as const,
+    search: (q: string, limit: number, offset: number) =>
+      ['restaurants', 'search', q, limit, offset] as const,
   },
   ranking: {
     all: ['ranking'] as const,

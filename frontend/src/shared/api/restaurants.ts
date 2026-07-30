@@ -13,8 +13,8 @@ export function fetchRestaurant(id: number) {
   return apiClient<RestaurantResponse>(`/api/v1/restaurants/${id}`)
 }
 
-export function searchRestaurants(q: string, limit = 20) {
-  const params = new URLSearchParams({ q, limit: String(limit) })
+export function searchRestaurants(q: string, limit = 10, offset = 0) {
+  const params = new URLSearchParams({ q, limit: String(limit), offset: String(offset) })
   return apiClient<Paginated<RestaurantSearchResponse>>(`/api/v1/restaurants/search?${params}`)
 }
 

@@ -44,44 +44,40 @@ export function RestaurantVoteConfirmButton({
     );
   }
 
-  if (!isLoggedIn) {
-    return (
-      <Button tag="a" variant="primary" href={KAKAO_LOGIN_URL} className={className}>
-        {label}
-      </Button>
-    )
-  }
-
-  if (me?.currentVote?.restaurantId === restaurantId) {
-    return (
-      <button
-        type="button"
-        disabled
-        className={[
-          'flex h-[48px] items-center justify-center gap-1.5 whitespace-nowrap rounded-md border-2 border-[#DBBA24] bg-[#FFF4D8] text-[14px] font-black text-[#7A431D]',
-          className,
-        ]
-          .filter(Boolean)
-          .join(' ')}
-      >
-        <CheckIcon />
-        투표완료
-      </button>
-    )
-  }
+  const alreadyVoted = me?.currentVote?.restaurantId === restaurantId
 
   return (
     <>
-      <Button
-        variant="primary"
-        className={['disabled:cursor-not-allowed disabled:opacity-60', className]
-          .filter(Boolean)
-          .join(' ')}
-        onClick={() => setConfirmOpen(true)}
-        disabled={isPending}
-      >
-        {isPending ? '투표 처리 중...' : label}
-      </Button>
+      {!isLoggedIn ? (
+        <Button tag="a" variant="primary" href={KAKAO_LOGIN_URL} className={className}>
+          {label}
+        </Button>
+      ) : alreadyVoted ? (
+        <button
+          type="button"
+          disabled
+          className={[
+            'flex h-[48px] items-center justify-center gap-1.5 whitespace-nowrap rounded-md border-2 border-[#DBBA24] bg-[#FFF4D8] text-[14px] font-black text-[#7A431D]',
+            className,
+          ]
+            .filter(Boolean)
+            .join(' ')}
+        >
+          <CheckIcon />
+          투표완료
+        </button>
+      ) : (
+        <Button
+          variant="primary"
+          className={['disabled:cursor-not-allowed disabled:opacity-60', className]
+            .filter(Boolean)
+            .join(' ')}
+          onClick={() => setConfirmOpen(true)}
+          disabled={isPending}
+        >
+          {isPending ? '투표 처리 중...' : label}
+        </Button>
+      )}
 
       <ConfirmDialog
         open={confirmOpen}

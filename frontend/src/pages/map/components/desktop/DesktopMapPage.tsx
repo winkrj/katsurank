@@ -27,7 +27,7 @@ export function DesktopMapPage() {
       <aside className="flex w-[320px] shrink-0 flex-col border-r border-[#E8D9BF] bg-[#FFFDF4]">
         {/* 검색바 — 고정 */}
         <div className="shrink-0 p-4 pb-3">
-          <MapSearchBar />
+          <MapSearchBar restaurants={restaurants} onSelect={setSelected} />
         </div>
 
         {/* 랭킹 목록 — 스크롤 */}
