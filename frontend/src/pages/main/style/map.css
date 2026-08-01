@@ -1,0 +1,72 @@
+/* 카카오맵 위에 올라가는 커스텀 핀 오버레이 */
+.map-pin-overlay {
+  position: relative;
+  display: flex;
+  width: 46px;
+  height: 46px;
+  cursor: pointer;
+  align-items: center;
+  justify-content: center;
+  border: 2px solid #7a431d;
+  border-radius: 999px;
+  background: #fff4d8;
+  box-shadow: 3px 3px 0 rgba(42, 26, 18, 0.28);
+  transition: transform 0.15s ease;
+}
+
+.map-pin-overlay:hover {
+  transform: translateY(-3px) scale(1.05);
+}
+
+.map-pin-overlay--rank1 {
+  width: 58px;
+  height: 58px;
+  border-color: #d88a24;
+  background: #ffc533;
+  box-shadow: 3px 3px 0 rgba(216, 138, 36, 0.4);
+}
+
+.map-pin-overlay--selected {
+  border-color: #d88a24;
+  background: #ffc533;
+  transform: translateY(-3px) scale(1.08);
+}
+
+.map-pin-overlay__rank {
+  position: absolute;
+  top: -12px;
+  left: 50%;
+  display: flex;
+  width: 24px;
+  height: 24px;
+  transform: translateX(-50%);
+  align-items: center;
+  justify-content: center;
+  border: 2px solid #d88a24;
+  border-radius: 999px;
+  background: #fffdf4;
+  color: #d88a24;
+  font-size: 12px;
+  font-weight: 900;
+  line-height: 1;
+}
+
+.map-pin-overlay--rank1 .map-pin-overlay__rank {
+  width: 28px;
+  height: 28px;
+  top: -14px;
+  font-size: 13px;
+  background: #2a1a12;
+  color: #ffc533;
+  border-color: #2a1a12;
+}
+
+.map-pin-overlay__icon {
+  width: 28px;
+  height: 28px;
+}
+
+.map-pin-overlay--rank1 .map-pin-overlay__icon {
+  width: 34px;
+  height: 34px;
+}
