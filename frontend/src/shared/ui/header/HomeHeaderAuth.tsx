@@ -1,4 +1,3 @@
-import { Link } from 'react-router-dom'
 import { KAKAO_LOGIN_URL } from '../../constant/api'
 import { saveLoginRedirect } from '../../lib/loginRedirect'
 import { useLogoutMutation } from '../../queries/auth'
@@ -34,7 +33,7 @@ export function HomeHeaderAuth({ variant = 'desktop' }: HomeHeaderAuthProps) {
   if (variant === 'mobile') {
     return (
       <div className="flex items-center gap-2">
-        <Link to="/me" className="flex items-center gap-1.5">
+        <span className="flex items-center gap-1.5">
           {user.profileImage ? (
             <img
               src={user.profileImage}
@@ -49,7 +48,7 @@ export function HomeHeaderAuth({ variant = 'desktop' }: HomeHeaderAuthProps) {
           <span className="max-w-[72px] truncate text-[13px] font-bold text-[#2A1A12]">
             {user.nickname}
           </span>
-        </Link>
+        </span>
         <button
           type="button"
           onClick={() => logout()}
@@ -63,10 +62,7 @@ export function HomeHeaderAuth({ variant = 'desktop' }: HomeHeaderAuthProps) {
 
   return (
     <div className="flex items-center gap-4">
-      <Link
-        to="/me"
-        className="flex max-w-[180px] items-center gap-2.5 rounded-xl border border-transparent px-2 py-1.5 transition hover:border-[#E8D9BF] hover:bg-[#FFF4D8]"
-      >
+      <span className="flex max-w-[180px] items-center gap-2.5 px-2 py-1.5">
         {user.profileImage ? (
           <img
             src={user.profileImage}
@@ -79,7 +75,7 @@ export function HomeHeaderAuth({ variant = 'desktop' }: HomeHeaderAuthProps) {
           </span>
         )}
         <span className="truncate text-[14px] font-bold text-[#2A1A12]">{user.nickname}</span>
-      </Link>
+      </span>
 
       <button
         type="button"
