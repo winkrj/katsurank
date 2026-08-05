@@ -42,6 +42,10 @@ jobs:
       - name: Run tests
         id: gradle_test
         working-directory: backend
+        env:
+          # GitHub Actions Linux 러너에서 JVM이 localhost를 IPv6(::1)로 먼저 풀어
+          # IPv4로만 퍼블리시된 서비스 컨테이너 접속에 실패하는 문제 회피
+          SPRING_DATASOURCE_URL: jdbc:postgresql://127.0.0.1:5432/katsurank
         run: ./gradlew test --stacktrace
         continue-on-error: true
 
