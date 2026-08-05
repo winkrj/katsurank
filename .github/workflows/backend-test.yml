@@ -40,5 +40,22 @@ jobs:
           cache: 'gradle'
 
       - name: Run tests
+        id: gradle_test
         working-directory: backend
-        run: ./gradlew test
+        run: ./gradlew test --stacktrace
+        continue-on-error: true
+
+      - name: Show failing test details
+        if: steps.gradle_test.outcome == 'failure'
+        working-directory: backend
+        run: |
+          for f in build/test-results/test/*.xml; do
+            if grep -qE 'failures="[1-9]|errors="[1-9]' "$f"; then
+              echo "=== $(basename "$f") ==="
+              grep -o 'message="[^"]*"' "$f" | sort -u | head -5
+            fi
+          done
+
+      - name: Fail job if tests failed
+        if: steps.gradle_test.outcome == 'failure'
+        run: exit 1
