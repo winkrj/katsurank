@@ -118,6 +118,24 @@ class RankingServiceTest {
     }
 
     @Test
+    @DisplayName("동점 그룹 중간 offset도 원래 순위를 유지")
+    void offsetInsideTieKeepsOriginalRank() {
+        Restaurant r1 = newRestaurant("가게1");
+        Restaurant r2 = newRestaurant("가게2");
+        Restaurant r3 = newRestaurant("가게3");
+        vote(r1, 10);
+        vote(r2, 5);
+        vote(r3, 5);
+
+        PageResponse<RankingItem> response = rankingService.getRanking(2, 1);
+
+        assertThat(response.items()).singleElement().satisfies(item -> {
+            assertThat(item.id()).isEqualTo(r3.getId());
+            assertThat(item.rank()).isEqualTo(2);
+        });
+    }
+
+    @Test
     @DisplayName("top → 1위 가게 반환")
     void topReturnsFirst() {
         Restaurant r1 = newRestaurant("1위가게");
@@ -148,6 +166,28 @@ class RankingServiceTest {
 
         assertThat(pins).hasSize(1);
         assertThat(pins.get(0).id()).isEqualTo(withCoords.getId());
+        assertThat(pins.get(0).rank()).isEqualTo(1);
+    }
+
+    @Test
+    @DisplayName("지도 핀 순위는 좌표 없는 ACTIVE 가게를 포함한 서울 전체 순위이며 동점은 같은 순위")
+    void mapPinsUseGlobalRankIncludingRestaurantsWithoutCoordinates() {
+        Restaurant first = newRestaurant("1위 핀");
+        Restaurant tiedPin = newRestaurant("공동 2위 핀");
+        Restaurant tiedWithoutCoords = TestFixtures.createRestaurantNoCoords(restaurantRepository, "공동 2위 좌표 없음");
+        Restaurant fourth = newRestaurant("4위 핀");
+
+        vote(first, 10);
+        vote(tiedPin, 5);
+        vote(tiedWithoutCoords, 5);
+        vote(fourth, 3);
+
+        List<MapPinResponse> pins = rankingService.getMapPins();
+
+        assertThat(pins).extracting(MapPinResponse::id)
+                .containsExactly(first.getId(), tiedPin.getId(), fourth.getId());
+        assertThat(pins).extracting(MapPinResponse::rank)
+                .containsExactly(1, 2, 4);
     }
 
     // --- helpers ---

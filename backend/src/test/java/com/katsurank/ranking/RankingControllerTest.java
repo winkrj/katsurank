@@ -80,6 +80,7 @@ class RankingControllerTest {
 
         mockMvc.perform(get("/api/v1/ranking/map-pins"))
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$.data[0].name").value("지도핀돈까스"));
+                .andExpect(jsonPath("$.data[0].name").value("지도핀돈까스"))
+                .andExpect(jsonPath("$.data[0].rank").value(1));
     }
 }

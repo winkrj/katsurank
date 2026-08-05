@@ -35,4 +35,21 @@ class ArchitectureTest {
                 .should().dependOnClassesThat().resideInAPackage("..controller..")
                 .check(classes);
     }
+
+    @Test
+    void repositoriesDoNotDependOnUpperLayers() {
+        noClasses().that().resideInAPackage("..repository..")
+                .should().dependOnClassesThat()
+                .resideInAnyPackage("..controller..", "..service..")
+                .because("Repository는 Controller와 Service 계층에 의존하면 안 된다.")
+                .check(classes);
+    }
+
+    @Test
+    void rankingServiceDoesNotDependOnRestaurantFeature() {
+        noClasses().that().resideInAPackage("..ranking.service..")
+                .should().dependOnClassesThat().resideInAPackage("..restaurant..")
+                .because("Ranking Service는 Restaurant 기능 패키지로부터 독립되어야 한다.")
+                .check(classes);
+    }
 }

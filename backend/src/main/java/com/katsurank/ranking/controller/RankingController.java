@@ -53,7 +53,7 @@ public class RankingController {
     }
 
     @GetMapping("/map-pins")
-    @Operation(summary = "지도 핀용 가게 목록", description = "status=ACTIVE 인 가게의 좌표 목록. 지도에 마커를 찍는 용도.")
+    @Operation(summary = "지도 핀용 가게 목록", description = "좌표가 있는 ACTIVE 가게 목록. 각 핀에 서울 전체 단일 랭킹 순위를 포함한다.")
     public ApiResponse<List<MapPinResponse>> mapPins() {
         return ApiResponse.success(rankingService.getMapPins());
     }
