@@ -29,7 +29,7 @@ public class RankingService {
         this.rankingQueryRepository = rankingQueryRepository;
     }
 
-    @Transactional(readOnly = true)
+    @Transactional(readOnly = true, isolation = Isolation.REPEATABLE_READ)
     public PageResponse<RankingItem> getRanking(int offset, int limit) {
         if (offset < 0) {
             throw new IllegalArgumentException("offset은 0 이상이어야 합니다.");

@@ -6,6 +6,8 @@ const BASE_URL = (__ENV.BASE_URL || 'http://localhost:8080').replace(/\/$/, '');
 const RANKING_URL = `${BASE_URL}/api/v1/ranking?offset=0&limit=20`;
 const SESSION_MODE = (__ENV.SESSION_MODE || 'anonymous').toLowerCase();
 const SESSION_COOKIE = __ENV.SESSION_COOKIE || '';
+const isHttps = BASE_URL.startsWith('https://');
+const isLocalhost = /^http:\/\/(localhost|127\.0\.0\.1|\[::1\])(?::\d+)?(?:\/|$)/.test(BASE_URL);
 
 const LOAD_STAGES = [
   { duration: '10s', target: 100 },
@@ -45,6 +47,10 @@ if (!['anonymous', 'session'].includes(SESSION_MODE)) {
 
 if (SESSION_MODE === 'session' && SESSION_COOKIE.length === 0) {
   throw new Error('SESSION_MODE=session이면 SESSION_COOKIE에 SESSION 쿠키 값이 필요하다.');
+}
+
+if (SESSION_MODE === 'session' && !isHttps && !isLocalhost) {
+  throw new Error('SESSION_MODE=session은 HTTPS 또는 localhost에서만 사용할 수 있다.');
 }
 
 export function buildOptions() {

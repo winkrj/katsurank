@@ -6,6 +6,14 @@
 
 BEGIN;
 
+DO $$
+BEGIN
+    IF (SELECT count(*) FROM restaurants WHERE status = 'ACTIVE') > 2000 THEN
+        RAISE EXCEPTION 'ACTIVE 가게가 2,000건을 초과해 부하테스트 시드를 생성할 수 없습니다.';
+    END IF;
+END
+$$;
+
 CREATE TEMP TABLE loadtest_restaurant_ids ON COMMIT DROP AS
 SELECT id
 FROM restaurants
@@ -44,7 +52,7 @@ WITH existing AS (
     FROM restaurants
     WHERE status = 'ACTIVE'
 ), desired AS (
-    SELECT greatest(2000 - active_count, 0) AS seed_count
+    SELECT 2000 - active_count AS seed_count
     FROM existing
 ), generated AS (
     SELECT n,

@@ -31,7 +31,7 @@ while :; do
   timestamp_epoch=$(date +%s)
   timestamp_utc=$(date -u '+%Y-%m-%dT%H:%M:%SZ')
 
-  if curl -fsS "${actuator_base_url}/actuator/prometheus" -o "$snapshot_file"; then
+  if curl -fsS --connect-timeout 2 --max-time 5 "${actuator_base_url}/actuator/prometheus" -o "$snapshot_file"; then
     scrape_ok=1
     metric_values=$(awk '
       function metric_name(token, parts) {
