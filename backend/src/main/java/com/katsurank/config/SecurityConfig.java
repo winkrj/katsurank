@@ -4,6 +4,7 @@ import com.katsurank.auth.service.CustomOAuth2UserService;
 import org.springframework.boot.context.properties.EnableConfigurationProperties;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.core.env.Environment;
 import org.springframework.http.HttpMethod;
 import org.springframework.http.HttpStatus;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
@@ -50,7 +51,8 @@ public class SecurityConfig {
                                                    OAuth2SuccessHandler successHandler,
                                                    OAuth2FailureHandler failureHandler,
                                                    ApiAuthenticationEntryPoint authenticationEntryPoint,
-                                                   ApiAccessDeniedHandler accessDeniedHandler) throws Exception {
+                                                   ApiAccessDeniedHandler accessDeniedHandler,
+                                                   Environment environment) throws Exception {
         // SPA 더블 서밋 쿠키: 쿠키 값과 헤더 값을 그대로 비교(XOR 인코딩 없이)
         CsrfTokenRequestAttributeHandler csrfRequestHandler = new CsrfTokenRequestAttributeHandler();
 
@@ -67,16 +69,21 @@ public class SecurityConfig {
                 .httpBasic(basic -> basic.disable())
                 .sessionManagement(session -> session
                         .sessionCreationPolicy(SessionCreationPolicy.IF_REQUIRED))
-                .authorizeHttpRequests(auth -> auth
-                        .requestMatchers("/oauth2/**", "/login/**").permitAll()
-                        .requestMatchers("/api/v1/auth/csrf", "/api/v1/auth/logout").permitAll()
-                        .requestMatchers("/actuator/health/**", "/actuator/info", "/actuator/prometheus").permitAll()
-                        .requestMatchers("/swagger-ui/**", "/swagger-ui.html", "/v3/api-docs/**").permitAll()
-                        .requestMatchers(HttpMethod.GET,
-                                "/api/v1/ranking/**",
-                                "/api/v1/restaurants/**",
-                                "/api/v1/kakao-places/**").permitAll()
-                        .anyRequest().authenticated())
+                .authorizeHttpRequests(auth -> {
+                    // 부하 측정용 상세 metrics 는 local 프로파일에서만 공개하고 prod 에서는 인증을 유지한다.
+                    if (environment.matchesProfiles("local")) {
+                        auth.requestMatchers("/actuator/metrics/**").permitAll();
+                    }
+                    auth.requestMatchers("/oauth2/**", "/login/**").permitAll()
+                            .requestMatchers("/api/v1/auth/csrf", "/api/v1/auth/logout").permitAll()
+                            .requestMatchers("/actuator/health/**", "/actuator/info", "/actuator/prometheus").permitAll()
+                            .requestMatchers("/swagger-ui/**", "/swagger-ui.html", "/v3/api-docs/**").permitAll()
+                            .requestMatchers(HttpMethod.GET,
+                                    "/api/v1/ranking/**",
+                                    "/api/v1/restaurants/**",
+                                    "/api/v1/kakao-places/**").permitAll()
+                            .anyRequest().authenticated();
+                })
                 .oauth2Login(oauth -> oauth
                         .userInfoEndpoint(userInfo -> userInfo.userService(customOAuth2UserService))
                         .successHandler(successHandler)
