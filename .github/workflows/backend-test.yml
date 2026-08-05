@@ -53,6 +53,8 @@ jobs:
       - name: Show failing test details
         if: steps.gradle_test.outcome == 'failure'
         working-directory: backend
+        # @SpringBootTest 실패는 대부분 컨텍스트 캐시 때문에 한꺼번에 쏟아진다 —
+        # 근본 원인 파악에는 보통 가장 먼저 실패한 리포트 하나면 충분하다.
         run: |
           f=$(grep -lE 'failures="[1-9]|errors="[1-9]' build/test-results/test/*.xml | head -1)
           echo "=== full contents of $f ==="
