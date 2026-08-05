@@ -8,6 +8,10 @@ import org.junit.jupiter.api.Test;
 
 import static com.tngtech.archunit.lang.syntax.ArchRuleDefinition.noClasses;
 
+/**
+ * 계층 의존 방향(Controller/Service/Repository/Entity)과 ranking↛restaurant 기능 간 독립성을
+ * ArchUnit으로 강제한다. 위반 시 각 규칙의 because() 메시지에 원인과 수정 방법을 명시한다.
+ */
 class ArchitectureTest {
 
     private final JavaClasses classes = new ClassFileImporter()
