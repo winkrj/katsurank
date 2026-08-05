@@ -4,6 +4,13 @@
 - **목표**: 카카오 로그인 + 가게 CRUD (지도·랭킹·투표 X)
 - **기간**: 7일, 하루 1~2시간
 
+> ⚠️ **이 문서는 Thymeleaf + 서버사이드 렌더링을 전제로 작성된 v0.1 초안이며 갱신되지 않았다.**
+> 실제 아키텍처는 이후 React(Vite) SPA + 순수 REST API로 전환됐다(`docs/00_index.md` v0.4 변경 이력 참조).
+> 특히 아래 2.1 `SecurityConfig` 샘플의 `.csrf(csrf -> csrf.disable())`와 "CSRF는 일단 끄지만 V1.1에 다시 켭니다"는
+> **틀린 내용이다** — 실제 정책은 처음부터 CSRF를 켠다(Double Submit Cookie, `CLAUDE.md` 절대 제약).
+> 현재 기준 스택·의존성은 `docs/03_data_model_and_tech.md`, 서버 배포는 `docs/06_deployment_guide.md`를 참조할 것.
+> 이 문서는 프로젝트 초창기 진행 과정을 보여주는 기록으로만 남겨둔다.
+
 ---
 
 ## 0. 시작 전 준비물
