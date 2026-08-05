@@ -25,7 +25,8 @@ paths:
 ## 가게 식별 · 상태
 
 - `kakao_place_id` UNIQUE가 중복/지점 구분. 체인점은 지점별 독립 Restaurant.
-- 카테고리 검증: "돈까스"·"돈가스"·"경양식" 포함 시 ACTIVE, 아니면 REJECTED.
+- 카테고리 검증: "돈까스"·"돈가스"·"돈카츠"·"경양식" 포함 시 ACTIVE, 아니면 REJECTED (`CategoryValidator`).
+- 서울 지역 검증: 지번·도로명 주소 중 하나라도 "서울"로 시작하지 않으면 REJECTED (`SeoulAddressValidator`). 서울 단일 랭킹이므로 서울 밖 가게는 등록 대상이 아님.
 - hard delete 금지. 폐업=CLOSED(박제), 이전=RELOCATED(relocated_to_id로 승계).
 - 투표·랭킹 쿼리는 status=ACTIVE 기본. Vote 히스토리 조회는 status 무관.
 
