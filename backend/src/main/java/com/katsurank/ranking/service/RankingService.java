@@ -10,6 +10,7 @@ import com.katsurank.ranking.exception.LimitExceededException;
 import com.katsurank.ranking.repository.RankingQueryRepository;
 import com.katsurank.common.web.PageResponse;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Isolation;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.util.ArrayList;
@@ -49,7 +50,7 @@ public class RankingService {
                 .orElseGet(TopRankingResult.Empty::new);
     }
 
-    @Transactional(readOnly = true)
+    @Transactional(readOnly = true, isolation = Isolation.REPEATABLE_READ)
     public List<MapPinResponse> getMapPins() {
         Map<Integer, Integer> ranksByVoteCount = ranksByVoteCount();
         return rankingQueryRepository.findActivePinsWithCoordinates().stream()
