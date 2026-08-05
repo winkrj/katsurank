@@ -53,12 +53,9 @@ jobs:
         if: steps.gradle_test.outcome == 'failure'
         working-directory: backend
         run: |
-          for f in build/test-results/test/*.xml; do
-            if grep -qE 'failures="[1-9]|errors="[1-9]' "$f"; then
-              echo "=== $(basename "$f") ==="
-              grep -o 'message="[^"]*"' "$f" | sort -u | head -5
-            fi
-          done
+          f=$(grep -lE 'failures="[1-9]|errors="[1-9]' build/test-results/test/*.xml | head -1)
+          echo "=== full contents of $f ==="
+          cat "$f"
 
       - name: Fail job if tests failed
         if: steps.gradle_test.outcome == 'failure'
