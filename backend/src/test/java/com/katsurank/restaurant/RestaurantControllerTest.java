@@ -117,6 +117,20 @@ class RestaurantControllerTest {
     }
 
     @Test
+    @DisplayName("POST /api/v1/restaurants — CSRF 토큰 없이 → 403")
+    void registerWithoutCsrf() throws Exception {
+        User user = userRepository.save(User.register(303L, "등록자4", null, java.time.Instant.EPOCH));
+
+        mockMvc.perform(post("/api/v1/restaurants")
+                        .with(TestAuth.oauth2(user))
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("""
+                                {"kakaoPlaceId":"p1","name":"테스트","kakaoCategory":"음식점 > 일식 > 돈까스,우동"}
+                                """))
+                .andExpect(status().isForbidden());
+    }
+
+    @Test
     @DisplayName("POST /api/v1/restaurants — 정상 등록 → 201")
     void registerSuccess() throws Exception {
         User user = userRepository.save(User.register(300L, "등록자", null, java.time.Instant.EPOCH));

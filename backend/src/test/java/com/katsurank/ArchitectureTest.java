@@ -1,5 +1,9 @@
 package com.katsurank;
 
+import com.katsurank.restaurant.repository.RestaurantRepository;
+import com.katsurank.vote.repository.VoteRepository;
+import com.tngtech.archunit.base.DescribedPredicate;
+import com.tngtech.archunit.core.domain.JavaCall;
 import com.tngtech.archunit.core.domain.JavaClasses;
 import com.tngtech.archunit.core.importer.ClassFileImporter;
 import com.tngtech.archunit.core.importer.ImportOption;
@@ -65,5 +69,22 @@ class ArchitectureTest {
                         + "QueryRepository가 소유해야 하며, Restaurant 데이터가 필요하면 그 Repository/Entity를 ranking의 "
                         + "QueryRepository에서 직접 조회하라 — Service 간 상호 호출로 계층을 우회하지 마라 (docs/04_code_convention.md §1.1).")
                 .check(classes);
+    }
+
+    @Test
+    void doesNotHardDeleteRestaurantsOrVotes() {
+        noClasses().should().callMethodWhere(
+                        deleteCallOn(RestaurantRepository.class).or(deleteCallOn(VoteRepository.class)))
+                .because("Restaurant/Vote는 hard delete 금지 — status/is_current로만 관리한다 (CLAUDE.md 절대 제약). "
+                        + "가게를 지우지 말고 status를 CLOSED(폐업)/RELOCATED(이전)로 바꾸는 도메인 메서드를 쓰고, "
+                        + "표를 지우지 말고 기존 Vote를 is_current=false로 갱신하라.")
+                .check(classes);
+    }
+
+    private static DescribedPredicate<JavaCall<?>> deleteCallOn(Class<?> repositoryType) {
+        return DescribedPredicate.describe(
+                "delete 계열 메서드를 " + repositoryType.getSimpleName() + "에 호출",
+                call -> call.getTarget().getOwner().isAssignableTo(repositoryType)
+                        && call.getTarget().getName().startsWith("delete"));
     }
 }
