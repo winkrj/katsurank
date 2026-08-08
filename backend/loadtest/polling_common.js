@@ -1,6 +1,7 @@
 import { check, sleep } from 'k6';
 import exec from 'k6/execution';
 import http from 'k6/http';
+import { Gauge } from 'k6/metrics';
 
 const BASE_URL = (__ENV.BASE_URL || 'http://localhost:8080').replace(/\/$/, '');
 const RANKING_URL = `${BASE_URL}/api/v1/ranking?offset=0&limit=20`;
@@ -8,6 +9,8 @@ const SESSION_MODE = (__ENV.SESSION_MODE || 'anonymous').toLowerCase();
 const SESSION_COOKIE = __ENV.SESSION_COOKIE || '';
 const isHttps = BASE_URL.startsWith('https://');
 const isLocalhost = /^http:\/\/(localhost|127\.0\.0\.1|\[::1\])(?::\d+)?(?:\/|$)/.test(BASE_URL);
+let initialPollJitterApplied = false;
+const targetRps = new Gauge('target_rps');
 
 const LOAD_STAGES = [
   { duration: '10s', target: 100 },
@@ -96,9 +99,21 @@ function requestParameters(stage) {
   return parameters;
 }
 
-export function pollRanking(pollSeconds) {
+export function pollRanking(pollSeconds, fixedTargetVus = null) {
+  if (!initialPollJitterApplied) {
+    sleep(Math.random() * pollSeconds);
+    initialPollJitterApplied = true;
+  }
+
   const iterationStartedAt = Date.now();
-  const stage = currentStage();
+  const stage = fixedTargetVus === null
+    ? currentStage()
+    : { targetVus: String(fixedTargetVus), phase: 'validation' };
+  targetRps.add(Number(stage.targetVus) / pollSeconds, {
+    load_stage: `${stage.phase}_${stage.targetVus}`,
+    target_vus: stage.targetVus,
+    session_mode: SESSION_MODE,
+  });
   const response = http.get(RANKING_URL, requestParameters(stage));
 
   check(response, {

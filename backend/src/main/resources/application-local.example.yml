@@ -1,0 +1,40 @@
+# application-local.yml은 로컬 비밀 설정이라 Git에서 제외된다.
+# 이 파일을 application-local.yml로 복사한 뒤 필요한 환경변수를 설정한다.
+spring:
+  datasource:
+    url: ${DATABASE_URL:jdbc:postgresql://localhost:5432/katsurank}
+    username: ${DATABASE_USERNAME:katsurank}
+    password: ${DATABASE_PASSWORD:katsurank_local}
+
+  jpa:
+    properties:
+      hibernate:
+        format_sql: true
+
+management:
+  metrics:
+    distribution:
+      percentiles-histogram:
+        http.server.requests: true
+        hikaricp.connections.acquire: true
+        hikaricp.connections.usage: true
+        jvm.gc.pause: true
+      minimum-expected-value:
+        http.server.requests: 1ms
+      maximum-expected-value:
+        http.server.requests: 1s
+
+server:
+  tomcat:
+    mbeanregistry:
+      enabled: true
+
+logging:
+  level:
+    com.katsurank: DEBUG
+    org.hibernate.SQL: DEBUG
+
+app:
+  frontend-url: ${FRONTEND_URL:http://localhost:5173}
+  cors:
+    allowed-origins: ${CORS_ALLOWED_ORIGINS:http://localhost:5173}
