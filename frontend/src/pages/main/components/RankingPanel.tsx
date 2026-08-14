@@ -1,3 +1,4 @@
+import { motion } from 'framer-motion'
 import { Skeleton } from '../../../shared/ui/Skeleton'
 import { useRankingQuery } from '../../../shared/queries/ranking'
 import { RankBadge } from './RankBadge'
@@ -14,7 +15,11 @@ export function RankingPanel({ limit = 100, onSelectRestaurant }: RankingPanelPr
     <section className="w-full">
       <div className="overflow-hidden rounded-xl border border-[#E6D5B8] bg-white/80 shadow-[0_8px_20px_rgba(58,35,24,0.06)]">
         <div className="flex items-center justify-between border-b border-[#E6D5B8] px-5 py-4">
-          <h2 className="text-[15px] font-black">실시간 랭킹</h2>
+          <h2 className="text-[15px] font-black">실시간 랭킹 TOP {limit}</h2>
+          <span className="flex items-center gap-1.5 text-[11px] font-bold text-[#8A7A6A]">
+            <span className="size-1.5 animate-pulse rounded-full bg-[#D88A24]" aria-hidden />
+            LIVE
+          </span>
         </div>
 
         {isLoading && (
@@ -40,7 +45,11 @@ export function RankingPanel({ limit = 100, onSelectRestaurant }: RankingPanelPr
         {data && (
           <ol>
             {data.items.map((item) => (
-              <li key={item.id}>
+              <motion.li
+                key={item.id}
+                layout
+                transition={{ type: 'spring', stiffness: 500, damping: 40 }}
+              >
                 <button
                   type="button"
                   onClick={() => onSelectRestaurant(item.id)}
@@ -58,7 +67,7 @@ export function RankingPanel({ limit = 100, onSelectRestaurant }: RankingPanelPr
                     {item.voteCount.toLocaleString()}표
                   </span>
                 </button>
-              </li>
+              </motion.li>
             ))}
           </ol>
         )}
