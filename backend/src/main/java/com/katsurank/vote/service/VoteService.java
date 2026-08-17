@@ -1,6 +1,7 @@
 package com.katsurank.vote.service;
 
 import com.katsurank.vote.exception.VoteConflictException;
+import com.katsurank.ranking.service.RankingChangeTracker;
 
 import com.katsurank.vote.exception.RestaurantNotVotableException;
 
@@ -66,17 +67,20 @@ public class VoteService {
     private final UserRepository userRepository;
     private final TransactionTemplate txTemplate;
     private final Clock clock;
+    private final RankingChangeTracker rankingChangeTracker;
 
     public VoteService(VoteRepository voteRepository,
                        RestaurantRepository restaurantRepository,
                        UserRepository userRepository,
                        PlatformTransactionManager transactionManager,
-                       Clock clock) {
+                       Clock clock,
+                       RankingChangeTracker rankingChangeTracker) {
         this.voteRepository = voteRepository;
         this.restaurantRepository = restaurantRepository;
         this.userRepository = userRepository;
         this.txTemplate = new TransactionTemplate(transactionManager);
         this.clock = clock;
+        this.rankingChangeTracker = rankingChangeTracker;
     }
 
     /**
@@ -87,7 +91,11 @@ public class VoteService {
     public VoteResponse vote(Long userId, Long restaurantId) {
         for (int attempt = 1; attempt <= MAX_ATTEMPTS; attempt++) {
             try {
-                return txTemplate.execute(status -> doVote(userId, restaurantId));
+                VoteAttemptResult result = txTemplate.execute(status -> doVote(userId, restaurantId));
+                if (result.changed()) {
+                    rankingChangeTracker.markCommitted(Instant.now(clock));
+                }
+                return result.response();
             } catch (OptimisticLockingFailureException | DataIntegrityViolationException | IllegalStateException ex) {
                 if (attempt == MAX_ATTEMPTS) {
                     log.atWarn().addKeyValue("userId", userId).addKeyValue("restaurantId", restaurantId)
@@ -106,7 +114,7 @@ public class VoteService {
     }
 
     /** 7단계 본체. {@link TransactionTemplate} 가 트랜잭션 경계(1·7단계)를 담당한다. */
-    private VoteResponse doVote(Long userId, Long targetRestaurantId) {
+    private VoteAttemptResult doVote(Long userId, Long targetRestaurantId) {
         Restaurant target = restaurantRepository.findById(targetRestaurantId)
                 .orElseThrow(() -> new RestaurantNotFoundException(targetRestaurantId));
         if (!target.isVotable()) {
@@ -115,7 +123,7 @@ public class VoteService {
 
         Vote current = voteRepository.findByUserIdAndCurrentIsTrue(userId).orElse(null);
         if (current != null && current.getRestaurantId().equals(targetRestaurantId)) {
-            return VoteResponse.from(current, target); // 같은 가게 재투표 → 멱등(변화 없음)
+            return new VoteAttemptResult(VoteResponse.from(current, target), false); // 같은 가게 재투표 → 멱등
         }
 
         if (current != null) {
@@ -137,7 +145,10 @@ public class VoteService {
                 .orElseThrow(() -> new UserNotFoundException(userId));
         user.pointCurrentVoteTo(newVote.getId());
 
-        return VoteResponse.from(newVote, target);
+        return new VoteAttemptResult(VoteResponse.from(newVote, target), true);
+    }
+
+    private record VoteAttemptResult(VoteResponse response, boolean changed) {
     }
 
     private void backoff(int attempt) {

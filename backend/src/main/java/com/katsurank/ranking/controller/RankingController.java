@@ -1,6 +1,7 @@
 package com.katsurank.ranking.controller;
 
 import com.katsurank.ranking.service.RankingService;
+import com.katsurank.ranking.service.RankingSseService;
 
 import com.katsurank.ranking.dto.MapPinResponse;
 
@@ -14,10 +15,12 @@ import io.swagger.v3.oas.annotations.media.Content;
 import io.swagger.v3.oas.annotations.media.Schema;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import org.springframework.http.ResponseEntity;
+import org.springframework.http.MediaType;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.servlet.mvc.method.annotation.SseEmitter;
 
 import java.util.List;
 
@@ -28,9 +31,11 @@ import java.util.List;
 public class RankingController {
 
     private final RankingService rankingService;
+    private final RankingSseService rankingSseService;
 
-    public RankingController(RankingService rankingService) {
+    public RankingController(RankingService rankingService, RankingSseService rankingSseService) {
         this.rankingService = rankingService;
+        this.rankingSseService = rankingSseService;
     }
 
     @GetMapping
@@ -41,6 +46,14 @@ public class RankingController {
             @RequestParam(defaultValue = "0") int offset,
             @RequestParam(defaultValue = "20") int limit) {
         return ApiResponse.success(rankingService.getRanking(offset, limit));
+    }
+
+    @GetMapping(path = "/stream", produces = MediaType.TEXT_EVENT_STREAM_VALUE)
+    @Operation(summary = "랭킹 변경 스트림", description = "TOP 20이 변경될 때 전체 스냅샷을 SSE로 전송한다.")
+    public ResponseEntity<SseEmitter> stream() {
+        return ResponseEntity.ok()
+                .header("X-Accel-Buffering", "no")
+                .body(rankingSseService.connect());
     }
 
     @GetMapping("/top")
