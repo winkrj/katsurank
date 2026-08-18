@@ -1,40 +1,54 @@
-import { Toast } from '../../../../shared/ui/Toast'
-import { RestaurantClosedBadge, RestaurantClosedNotice } from '../detail/RestaurantClosedStatus'
-import { RestaurantVoteConfirmButton } from '../detail/RestaurantVoteConfirmButton'
-import { useShareRestaurant } from '../../hooks/useShareRestaurant'
-import { useRestaurantDetailQuery } from '../../queries/useRestaurantDetailQuery'
-import { WeeklyVoteTrendChart } from './WeeklyVoteTrendChart'
+import { Toast } from '../../../../shared/ui/Toast';
+import { RestaurantClosedBadge, RestaurantClosedNotice } from '../detail/RestaurantClosedStatus';
+import { RestaurantVoteConfirmButton } from '../detail/RestaurantVoteConfirmButton';
+import { useShareRestaurant } from '../../hooks/useShareRestaurant';
+import { useRestaurantDetailQuery } from '../../queries/useRestaurantDetailQuery';
+import { WeeklyVoteTrendChart } from './WeeklyVoteTrendChart';
 
 type RestaurantDetailAsideProps = {
-  restaurantId: number
-  onClose: () => void
-}
+  restaurantId: number;
+  onClose: () => void;
+};
 
 // TODO: 실제 API 나오면 교체 — 백엔드가 최근 4주 투표 추이 데이터를 내려줄 예정
 function getMockWeeklyTrend(totalVotes: number) {
-  const labels = ['3주 전', '2주 전', '1주 전', '이번 주']
-  const steps = [0.7, 0.79, 0.92, 1]
+  const labels = ['3주 전', '2주 전', '1주 전', '이번 주'];
+  const steps = [0.7, 0.79, 0.92, 1];
   return labels.map((label, i) => ({
     label,
     value: Math.max(0, Math.round(totalVotes * steps[i])),
-  }))
+  }));
 }
 
 // TODO: 실제 댓글/리뷰 API 나오면 교체
 const MOCK_COMMENTS = [
-  { author: '돈까스러버', timeAgo: '2시간 전', text: '겉은 바삭하고 속은 촉촉해요! 소스도 직접 만드시는 것 같아요 👍' },
-  { author: '바삭한정석', timeAgo: '5시간 전', text: '카츠 진짜 부드럽고 맛있었어요. 재방문 의사 100%!' },
-  { author: '김카츠', timeAgo: '1일 전', text: '양도 적당하고, 밥이랑 국도 최고! 점심엔 웨이팅 필수예요.' },
-]
+  {
+    author: '돈까스러버',
+    timeAgo: '2시간 전',
+    text: '겉은 바삭하고 속은 촉촉해요! 소스도 직접 만드시는 것 같아요 👍',
+  },
+  {
+    author: '바삭한정석',
+    timeAgo: '5시간 전',
+    text: '카츠 진짜 부드럽고 맛있었어요. 재방문 의사 100%!',
+  },
+  {
+    author: '김카츠',
+    timeAgo: '1일 전',
+    text: '양도 적당하고, 밥이랑 국도 최고! 점심엔 웨이팅 필수예요.',
+  },
+];
 
 export function RestaurantDetailAside({ restaurantId, onClose }: RestaurantDetailAsideProps) {
-  const { data: restaurant, isPending, isError } = useRestaurantDetailQuery(restaurantId)
-  const { share, toastMessage, dismissToast } = useShareRestaurant()
+  const { data: restaurant, isPending, isError } = useRestaurantDetailQuery(restaurantId);
+  const { share, toastMessage, dismissToast } = useShareRestaurant();
 
   if (isPending) {
     return (
-      <div className="flex h-full items-center justify-center text-[13px] text-[#8A7A6A]">불러오는 중…</div>
-    )
+      <div className="flex h-full items-center justify-center text-[13px] text-[#8A7A6A]">
+        불러오는 중…
+      </div>
+    );
   }
 
   if (isError || !restaurant) {
@@ -49,12 +63,12 @@ export function RestaurantDetailAside({ restaurantId, onClose }: RestaurantDetai
           목록으로
         </button>
       </div>
-    )
+    );
   }
 
-  const isClosed = restaurant.status === 'CLOSED'
-  const isOpen = restaurant.status === 'ACTIVE'
-  const weeklyTrend = getMockWeeklyTrend(restaurant.totalVotes)
+  const isClosed = restaurant.status === 'CLOSED';
+  const isOpen = restaurant.status === 'ACTIVE';
+  const weeklyTrend = getMockWeeklyTrend(restaurant.totalVotes);
 
   return (
     <div className="flex h-full flex-col overflow-y-auto">
@@ -133,7 +147,7 @@ export function RestaurantDetailAside({ restaurantId, onClose }: RestaurantDetai
                   isOpen ? 'bg-[#EAF5EC] text-[#3D7A4A]' : 'bg-[#F4EFE6] text-[#8A7A6A]',
                 ].join(' ')}
               >
-                {isOpen ? '영업 중' : '폐업'}
+                {isOpen ? '영업중' : '폐업'}
               </span>
             </div>
 
@@ -152,11 +166,15 @@ export function RestaurantDetailAside({ restaurantId, onClose }: RestaurantDetai
 
               <ul className="space-y-2 text-[13px] text-[#5F4A3C]">
                 <li className="flex gap-2">
-                  <span className="shrink-0 text-[#8A7A6A]"><ClockIcon /></span>
+                  <span className="shrink-0 text-[#8A7A6A]">
+                    <ClockIcon />
+                  </span>
                   {restaurant.hours}
                 </li>
                 <li className="flex gap-2">
-                  <span className="shrink-0 text-[#8A7A6A]"><PhoneIcon /></span>
+                  <span className="shrink-0 text-[#8A7A6A]">
+                    <PhoneIcon />
+                  </span>
                   {restaurant.phone}
                 </li>
               </ul>
@@ -210,9 +228,13 @@ export function RestaurantDetailAside({ restaurantId, onClose }: RestaurantDetai
                     <div className="min-w-0">
                       <p className="flex items-center gap-1.5 text-[12px] font-bold text-[#2A1A12]">
                         {comment.author}
-                        <span className="text-[11px] font-normal text-[#8A7A6A]">{comment.timeAgo}</span>
+                        <span className="text-[11px] font-normal text-[#8A7A6A]">
+                          {comment.timeAgo}
+                        </span>
                       </p>
-                      <p className="mt-0.5 text-[13px] leading-relaxed text-[#5F4A3C]">{comment.text}</p>
+                      <p className="mt-0.5 text-[13px] leading-relaxed text-[#5F4A3C]">
+                        {comment.text}
+                      </p>
                     </div>
                   </li>
                 ))}
@@ -224,15 +246,24 @@ export function RestaurantDetailAside({ restaurantId, onClose }: RestaurantDetai
 
       <Toast message={toastMessage} onDismiss={dismissToast} />
     </div>
-  )
+  );
 }
 
 function CloseIcon() {
   return (
-    <svg width="14" height="14" viewBox="0 0 14 14" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" aria-hidden>
+    <svg
+      width="14"
+      height="14"
+      viewBox="0 0 14 14"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth="1.8"
+      strokeLinecap="round"
+      aria-hidden
+    >
       <path d="M2 2l10 10M12 2L2 12" />
     </svg>
-  )
+  );
 }
 
 function ShareIcon() {
@@ -254,7 +285,7 @@ function ShareIcon() {
       <line x1="6.44" y1="10.13" x2="11.57" y2="12.62" />
       <line x1="11.56" y1="4.88" x2="6.44" y2="7.37" />
     </svg>
-  )
+  );
 }
 
 function LocationIcon() {
@@ -267,17 +298,34 @@ function LocationIcon() {
       />
       <circle cx="8" cy="6" r="1.5" fill="currentColor" />
     </svg>
-  )
+  );
 }
 
 function VoteIcon() {
   return (
-    <svg width="14" height="14" viewBox="0 0 16 16" fill="none" aria-hidden className="shrink-0 text-[#D88A24]">
+    <svg
+      width="14"
+      height="14"
+      viewBox="0 0 16 16"
+      fill="none"
+      aria-hidden
+      className="shrink-0 text-[#D88A24]"
+    >
       <rect x="2" y="7" width="12" height="6.5" rx="1" stroke="currentColor" strokeWidth="1.3" />
-      <path d="M5.5 5.5h5a1 1 0 0 1 1 1V7h-7v-.5a1 1 0 0 1 1-1Z" stroke="currentColor" strokeWidth="1.3" />
-      <path d="M6 9.2l1.4 1.4L10.5 7.6" stroke="currentColor" strokeWidth="1.2" strokeLinecap="round" strokeLinejoin="round" />
+      <path
+        d="M5.5 5.5h5a1 1 0 0 1 1 1V7h-7v-.5a1 1 0 0 1 1-1Z"
+        stroke="currentColor"
+        strokeWidth="1.3"
+      />
+      <path
+        d="M6 9.2l1.4 1.4L10.5 7.6"
+        stroke="currentColor"
+        strokeWidth="1.2"
+        strokeLinecap="round"
+        strokeLinejoin="round"
+      />
     </svg>
-  )
+  );
 }
 
 function ClockIcon() {
@@ -286,7 +334,7 @@ function ClockIcon() {
       <circle cx="8" cy="8" r="6" stroke="currentColor" strokeWidth="1.2" />
       <path d="M8 4.5V8l2.5 1.5" stroke="currentColor" strokeWidth="1.2" strokeLinecap="round" />
     </svg>
-  )
+  );
 }
 
 function PhoneIcon() {
@@ -299,5 +347,5 @@ function PhoneIcon() {
         strokeLinejoin="round"
       />
     </svg>
-  )
+  );
 }
