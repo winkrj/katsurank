@@ -8,7 +8,7 @@ type LegalPageLayoutProps = {
 
 export function LegalPageLayout({ title, effectiveDate, children }: LegalPageLayoutProps) {
   return (
-    <main className="min-h-screen bg-[#FFFDF4] px-5 pb-16 pt-20 text-[#2A1A12] sm:px-8">
+    <main className="min-h-screen bg-white px-5 pb-16 pt-20 text-[#2A1A12] sm:px-8">
       <div className="mx-auto max-w-[720px]">
         <h1 className="text-[24px] font-black">{title}</h1>
         <p className="mt-1 text-[13px] text-[#8A7A6A]">시행일자: {effectiveDate}</p>

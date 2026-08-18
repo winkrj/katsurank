@@ -1,34 +1,52 @@
 import { useEffect, useRef } from 'react'
 import { useQueryClient } from '@tanstack/react-query'
 import { API_BASE_URL } from '../../../shared/constant/api'
-import { queryKeys } from '../../../shared/queries/queryKeys'
+import type { RankingItem } from '../../../shared/types/ranking'
+import type { Paginated } from '../../../shared/types/common'
 
-// TODO: 백엔드 SSE 엔드포인트 경로 확정되면 교체
 const RANKING_STREAM_URL = `${API_BASE_URL}/api/v1/ranking/stream`
 
 const THROTTLE_MS = 3000
 
+type RankingSnapshotEvent = {
+  version: number
+  changedAt: string
+  generatedAt: string
+  items: RankingItem[]
+}
+
 /**
- * 투표 발생 SSE 신호를 받아 랭킹 쿼리를 무효화한다.
- * 신호가 연달아 와도 3초에 한 번만 재조회하도록 스로틀한다
- * (leading: 3초 넘게 조용했다 첫 신호면 즉시, trailing: 그 후 몰린 신호는 남은 시간 뒤 한 번만).
+ * 랭킹 SSE 스트림(ranking-snapshot 이벤트)을 구독해 랭킹 쿼리 캐시를 직접 갱신한다.
+ * 이벤트마다 전체 랭킹 스냅샷이 오므로 재요청 없이 캐시를 바로 patch한다.
+ * 신호가 연달아 와도 3초에 한 번만 반영하도록 스로틀한다
+ * (leading: 3초 넘게 조용했다 첫 신호면 즉시, trailing: 그 후 몰린 신호는 가장 최신 걸로 한 번만).
  */
 export function useRankingLiveUpdates() {
   const queryClient = useQueryClient()
-  const lastInvalidatedAtRef = useRef(0)
+  const lastAppliedAtRef = useRef(0)
   const pendingTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null)
+  const latestSnapshotRef = useRef<RankingSnapshotEvent | null>(null)
 
   useEffect(() => {
-    function invalidateRanking() {
-      lastInvalidatedAtRef.current = Date.now()
-      queryClient.invalidateQueries({ queryKey: queryKeys.ranking.all })
+    function applySnapshot(snapshot: RankingSnapshotEvent) {
+      lastAppliedAtRef.current = Date.now()
+      queryClient.setQueriesData<Paginated<RankingItem>>({ queryKey: ['ranking', 'list'] }, (old) =>
+        old ? { ...old, items: snapshot.items.slice(0, old.limit) } : old,
+      )
     }
 
-    function handleVoteChanged() {
-      const elapsed = Date.now() - lastInvalidatedAtRef.current
+    function handleSnapshot(event: MessageEvent<string>) {
+      let snapshot: RankingSnapshotEvent
+      try {
+        snapshot = JSON.parse(event.data)
+      } catch {
+        return
+      }
+      latestSnapshotRef.current = snapshot
 
+      const elapsed = Date.now() - lastAppliedAtRef.current
       if (elapsed >= THROTTLE_MS) {
-        invalidateRanking()
+        applySnapshot(snapshot)
         return
       }
 
@@ -36,14 +54,12 @@ export function useRankingLiveUpdates() {
 
       pendingTimeoutRef.current = setTimeout(() => {
         pendingTimeoutRef.current = null
-        invalidateRanking()
+        if (latestSnapshotRef.current) applySnapshot(latestSnapshotRef.current)
       }, THROTTLE_MS - elapsed)
     }
 
     const eventSource = new EventSource(RANKING_STREAM_URL, { withCredentials: true })
-    eventSource.addEventListener('vote-changed', handleVoteChanged)
-    // 서버가 event 이름 없이 기본 메시지로 보낼 수도 있으니 폴백으로 같이 받는다.
-    eventSource.onmessage = handleVoteChanged
+    eventSource.addEventListener('ranking-snapshot', handleSnapshot)
     eventSource.onerror = () => {
       // EventSource는 연결이 끊기면 브라우저가 자동으로 재연결을 시도한다 — 별도 처리 불필요.
     }
