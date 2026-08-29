@@ -107,7 +107,7 @@ function parseSnapshot(client, block, blockBytes) {
     if (line.startsWith('event:')) eventName = line.slice(6).trim();
     if (line.startsWith('data:')) data.push(line.slice(5).trimStart());
   }
-  if (eventName !== 'ranking-snapshot' || data.length === 0) return;
+  if (eventName !== 'vote-changed' || data.length === 0) return;
   const snapshot = JSON.parse(data.join('\n'));
   if (snapshot.version <= client.lastVersion) return;
   client.lastVersion = snapshot.version;
