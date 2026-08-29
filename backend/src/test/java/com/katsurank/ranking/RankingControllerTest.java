@@ -18,8 +18,11 @@ import org.springframework.transaction.annotation.Transactional;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.content;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.header;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.request;
 
-@SpringBootTest
+@SpringBootTest(properties = "ranking.sse.max-connections=1")
 @AutoConfigureMockMvc
 @Transactional
 @Sql(statements = {CleanUp.SQL_CLEAR_VOTES, CleanUp.SQL_DELETE_VOTES, CleanUp.SQL_DELETE_RESTAURANTS})
@@ -43,6 +46,20 @@ class RankingControllerTest {
                 .andExpect(jsonPath("$.data.items[0].name").value("돈까스왕"))
                 .andExpect(jsonPath("$.data.items[0].rank").value(1))
                 .andExpect(jsonPath("$.data.total").value(1));
+    }
+
+    @Test
+    @DisplayName("GET /api/v1/ranking/stream — 인증 없이 SSE 연결")
+    void streamWithoutAuth() throws Exception {
+        mockMvc.perform(get("/api/v1/ranking/stream"))
+                .andExpect(status().isOk())
+                .andExpect(content().contentType("text/event-stream"))
+                .andExpect(header().string("X-Accel-Buffering", "no"))
+                .andExpect(request().asyncStarted());
+
+        mockMvc.perform(get("/api/v1/ranking/stream"))
+                .andExpect(status().isServiceUnavailable())
+                .andExpect(jsonPath("$.error.code").value("SSE_CAPACITY_EXCEEDED"));
     }
 
     @Test

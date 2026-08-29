@@ -13,6 +13,7 @@ import org.springframework.web.bind.annotation.RestControllerAdvice;
 import org.springframework.http.converter.HttpMessageNotReadableException;
 import org.springframework.web.method.annotation.HandlerMethodValidationException;
 import org.springframework.web.bind.ServletRequestBindingException;
+import org.springframework.web.context.request.async.AsyncRequestNotUsableException;
 
 /**
  * 도메인 예외와 검증 실패를 일관된 {@link ApiResponse} JSON 으로 변환한다.
@@ -71,6 +72,12 @@ public class GlobalExceptionHandler {
         return badRequest("INVALID_REQUEST", "필수 요청 값이 없거나 올바르지 않습니다.");
     }
 
+    /** SSE 등 비동기 응답에서 클라이언트가 연결을 닫은 경우에는 새 응답 본문을 쓰지 않는다. */
+    @ExceptionHandler(AsyncRequestNotUsableException.class)
+    public void handleDisconnectedAsyncClient(AsyncRequestNotUsableException ex) {
+        log.atDebug().log("비동기 클라이언트 연결 종료");
+    }
+
     @ExceptionHandler(Exception.class)
     public ResponseEntity<ApiResponse<Void>> handleUnexpected(Exception ex) {
         log.atError().setCause(ex).log("처리되지 않은 서버 예외");
@@ -88,6 +95,7 @@ public class GlobalExceptionHandler {
             case "LIMIT_EXCEEDED" -> HttpStatus.BAD_REQUEST;
             case "CATEGORY_NOT_ALLOWED", "REGION_NOT_ALLOWED" -> HttpStatus.UNPROCESSABLE_CONTENT;
             case "KAKAO_API_ERROR" -> HttpStatus.BAD_GATEWAY;
+            case "SSE_CAPACITY_EXCEEDED" -> HttpStatus.SERVICE_UNAVAILABLE;
             case "DUPLICATE_PLACE", "ALREADY_CLOSED", "RESTAURANT_NOT_VOTABLE", "VOTE_CONFLICT" ->
                     HttpStatus.CONFLICT;
             default -> HttpStatus.INTERNAL_SERVER_ERROR;
