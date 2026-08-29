@@ -22,7 +22,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.header;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.request;
 
-@SpringBootTest
+@SpringBootTest(properties = "ranking.sse.max-connections=1")
 @AutoConfigureMockMvc
 @Transactional
 @Sql(statements = {CleanUp.SQL_CLEAR_VOTES, CleanUp.SQL_DELETE_VOTES, CleanUp.SQL_DELETE_RESTAURANTS})
@@ -56,6 +56,10 @@ class RankingControllerTest {
                 .andExpect(content().contentType("text/event-stream"))
                 .andExpect(header().string("X-Accel-Buffering", "no"))
                 .andExpect(request().asyncStarted());
+
+        mockMvc.perform(get("/api/v1/ranking/stream"))
+                .andExpect(status().isServiceUnavailable())
+                .andExpect(jsonPath("$.error.code").value("SSE_CAPACITY_EXCEEDED"));
     }
 
     @Test

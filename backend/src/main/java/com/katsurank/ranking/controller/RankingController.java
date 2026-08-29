@@ -49,7 +49,7 @@ public class RankingController {
     }
 
     @GetMapping(path = "/stream", produces = MediaType.TEXT_EVENT_STREAM_VALUE)
-    @Operation(summary = "랭킹 변경 스트림", description = "TOP 20이 변경될 때 전체 스냅샷을 SSE로 전송한다.")
+    @Operation(summary = "랭킹 변경 스트림", description = "투표가 반영되면 vote-changed 이벤트를 전송한다.")
     public ResponseEntity<SseEmitter> stream() {
         return ResponseEntity.ok()
                 .header("X-Accel-Buffering", "no")

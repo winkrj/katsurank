@@ -113,7 +113,7 @@ public class RankingService {
             RankingSnapshot refreshed = refreshDuration.record(() -> RankingSnapshot.from(loadRanking(0, CACHED_LIMIT)));
             RankingSnapshot previous = cachedTopRanking.getAndSet(refreshed);
             lastRefreshFailed.set(false);
-            if (previous == null || !previous.items().equals(refreshed.items())) {
+            if (previous == null || changeMarker != null || !previous.items().equals(refreshed.items())) {
                 Instant generatedAt = Instant.now(clock);
                 Instant changedAt = changeMarker == null ? generatedAt : changeMarker.committedAt();
                 rankingSseService.broadcast(new RankingSnapshotEvent(

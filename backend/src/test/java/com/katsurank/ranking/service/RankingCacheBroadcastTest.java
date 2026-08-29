@@ -32,7 +32,7 @@ class RankingCacheBroadcastTest {
                 changeTracker, clock, true);
         when(repository.countActiveRestaurants()).thenReturn(1L);
         when(repository.countWithVoteCountGreaterThan(anyInt())).thenReturn(0L);
-        doReturn(List.of(row(10)), List.of(row(10)), List.of(row(11)))
+        doReturn(List.of(row(10)), List.of(row(10)), List.of(row(11)), List.of(row(11)))
                 .when(repository).findActiveRanking(0, 20);
 
         changeTracker.markCommitted(Instant.parse("2026-08-17T00:00:00Z"));
@@ -40,13 +40,17 @@ class RankingCacheBroadcastTest {
         service.refreshRankingCache();
         changeTracker.markCommitted(Instant.parse("2026-08-17T00:00:02Z"));
         service.refreshRankingCache();
+        changeTracker.markCommitted(Instant.parse("2026-08-17T00:00:03Z"));
+        service.refreshRankingCache();
 
         ArgumentCaptor<RankingSnapshotEvent> event = ArgumentCaptor.forClass(RankingSnapshotEvent.class);
-        verify(sseService, times(2)).broadcast(event.capture());
-        assertThat(event.getAllValues()).extracting(RankingSnapshotEvent::version).containsExactly(1L, 2L);
+        verify(sseService, times(3)).broadcast(event.capture());
+        assertThat(event.getAllValues()).extracting(RankingSnapshotEvent::version).containsExactly(1L, 2L, 3L);
         assertThat(event.getAllValues().get(1).items().getFirst().voteCount()).isEqualTo(11);
         assertThat(event.getAllValues().get(1).changedAt())
                 .isEqualTo(Instant.parse("2026-08-17T00:00:02Z"));
+        assertThat(event.getAllValues().get(2).changedAt())
+                .isEqualTo(Instant.parse("2026-08-17T00:00:03Z"));
     }
 
     private RankingRow row(int voteCount) {

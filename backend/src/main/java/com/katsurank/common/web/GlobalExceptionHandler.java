@@ -95,6 +95,7 @@ public class GlobalExceptionHandler {
             case "LIMIT_EXCEEDED" -> HttpStatus.BAD_REQUEST;
             case "CATEGORY_NOT_ALLOWED", "REGION_NOT_ALLOWED" -> HttpStatus.UNPROCESSABLE_CONTENT;
             case "KAKAO_API_ERROR" -> HttpStatus.BAD_GATEWAY;
+            case "SSE_CAPACITY_EXCEEDED" -> HttpStatus.SERVICE_UNAVAILABLE;
             case "DUPLICATE_PLACE", "ALREADY_CLOSED", "RESTAURANT_NOT_VOTABLE", "VOTE_CONFLICT" ->
                     HttpStatus.CONFLICT;
             default -> HttpStatus.INTERNAL_SERVER_ERROR;

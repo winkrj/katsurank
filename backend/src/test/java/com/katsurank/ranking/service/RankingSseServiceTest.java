@@ -17,8 +17,10 @@ import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicInteger;
+import java.util.concurrent.atomic.AtomicReference;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
 class RankingSseServiceTest {
 
@@ -44,6 +46,18 @@ class RankingSseServiceTest {
 
         assertThat(emitter.snapshotSent.await(1, TimeUnit.SECONDS)).isTrue();
         assertThat(emitter.snapshotCount.get()).isEqualTo(1);
+        assertThat(emitter.lastEventText.get()).contains("event:vote-changed");
+        assertThat(service.activeConnectionCount()).isEqualTo(1);
+    }
+
+    @Test
+    void rejectsConnectionsAboveConfiguredCapacity() {
+        service = new RankingSseService(new SimpleMeterRegistry(), executor, CapturingEmitter::new, 1);
+        service.connect();
+
+        assertThatThrownBy(service::connect)
+                .isInstanceOf(com.katsurank.ranking.exception.SseCapacityExceededException.class)
+                .hasMessageContaining("max=1");
         assertThat(service.activeConnectionCount()).isEqualTo(1);
     }
 
@@ -98,6 +112,7 @@ class RankingSseServiceTest {
         private final CountDownLatch sendAttempted = new CountDownLatch(1);
         private final CountDownLatch snapshotSent = new CountDownLatch(1);
         private final AtomicInteger snapshotCount = new AtomicInteger();
+        private final AtomicReference<String> lastEventText = new AtomicReference<>("");
         private volatile boolean fail;
 
         private CapturingEmitter() {
@@ -121,6 +136,11 @@ class RankingSseServiceTest {
                 Thread.currentThread().interrupt();
                 throw new IOException(exception);
             }
+            String eventText = builder.build().stream()
+                    .map(item -> item.getData().toString())
+                    .filter(data -> data.startsWith("id:") || data.startsWith("event:"))
+                    .reduce("", String::concat);
+            lastEventText.set(eventText);
             snapshotCount.incrementAndGet();
             snapshotSent.countDown();
         }
