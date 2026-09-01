@@ -61,14 +61,21 @@
 - 개인정보처리방침과 이용약관
 - 통합 준비 브랜치의 랭킹 TOP 20 캐시와 SSE 스냅샷 전파 백엔드
 
-## V1 목표 아키텍처
+## 서비스 흐름
 
-현재 `origin/main`의 프론트와 `feat/v1-backend-completion`의 캐시·SSE 백엔드를 통합했을 때의
-구조입니다. 붉은 점선에 해당하는 SSE 연결은 이벤트 이름과 스냅샷 범위를 정렬한 뒤 출시할 예정입니다.
+![돈까스집을 찾고 한 표를 주면 서울 랭킹이 바뀌는 카츠랭의 핵심 흐름](docs/assets/katsurank-v1-architecture.svg)
 
-![카츠랭 V1 목표 아키텍처](docs/assets/katsurank-v1-architecture.svg)
+첫 그림에는 제품의 핵심만 남겼습니다. 기술 세부사항은 아래 스택 표와 별도 구조도에서 설명하며,
+편집 원본은 [Excalidraw 파일](docs/architecture/katsurank-v1.excalidraw)로 관리합니다.
 
-그림 원본은 [D2 소스](docs/architecture/katsurank-v1.d2)로 함께 관리합니다.
+## 현재 백엔드 배포 구조
+
+![단일 EC2의 Nginx, Spring Boot, PostgreSQL과 외부 연동 및 관측 환경](docs/assets/katsurank-backend-architecture.svg)
+
+운영은 EC2 한 대에 Nginx, Spring Boot, PostgreSQL을 함께 둔 단일 인스턴스 구조입니다.
+Prometheus·Grafana는 현재 운영 상시 모니터링이 아니라 로컬 부하 실험 관측 환경이며, 운영 신호는
+Actuator 헬스체크, journald·Nginx 로그, GitHub Actions 헬스체크와 Slack 알림으로 확인합니다.
+구조도 원본은 [Eraser diagram-as-code 파일](docs/architecture/katsurank-backend.eraserdiagram)입니다.
 
 백엔드는 Controller → Service → Repository의 3계층을 유지합니다. 작은 팀과 단일 서비스에서
 헥사고날 아키텍처의 추가 간접 계층보다 예측 가능한 코드 위치와 빠른 변경을 우선했고, 비즈니스 규칙은

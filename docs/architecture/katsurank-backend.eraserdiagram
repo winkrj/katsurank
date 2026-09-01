@@ -1,0 +1,31 @@
+cloud-architecture-diagram
+
+direction right
+colorMode pastel
+styleMode shadow
+typeface clean
+
+Client [icon: user, label: "사용자 브라우저"]
+Vercel [icon: vercel, label: "React SPA · Vercel"]
+Cloudflare [icon: cloudflare, label: "Cloudflare DNS"]
+
+"AWS EC2 · 1대" [icon: aws-ec2, color: orange] {
+  Nginx [icon: nginx, label: "Nginx · HTTPS :443"]
+  API [icon: spring, label: "Spring Boot API · :8080"]
+  Database [icon: postgresql, label: "PostgreSQL 16 · :5432"]
+  Cache [icon: database, label: "Caffeine · in-process"]
+}
+
+Kakao [icon: kakao, color: yellow, label: "Kakao OAuth2 · Local API"]
+Delivery [icon: github-actions, label: "GitHub Actions · JAR · systemd"]
+Signals [icon: activity, label: "Actuator health · journald · Nginx logs · Slack"]
+Lab [icon: prometheus, label: "Prometheus · Grafana · 로컬 부하 실험"]
+
+Client > Vercel > Cloudflare > Nginx
+Nginx > API
+API > Database
+API > Cache
+API > Kakao
+Delivery > API
+API > Signals
+API > Lab
