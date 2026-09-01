@@ -1,16 +1,12 @@
-/* 카카오맵 위에 올라가는 커스텀 핀 오버레이 */
+/* 카카오맵 위에 올라가는 커스텀 핀 오버레이 — 등수 구간별 배경 이미지 위에 순위 숫자 표시 */
 .map-pin-overlay {
   position: relative;
-  display: flex;
-  width: 46px;
-  height: 46px;
+  display: block;
   cursor: pointer;
-  align-items: center;
-  justify-content: center;
-  border: 2px solid #7a431d;
-  border-radius: 999px;
-  background: #fff4d8;
-  box-shadow: 3px 3px 0 rgba(42, 26, 18, 0.28);
+  background-repeat: no-repeat;
+  background-size: contain;
+  background-position: bottom center;
+  filter: drop-shadow(2px 3px 0 rgba(42, 26, 18, 0.28));
   transition: transform 0.15s ease;
 }
 
@@ -18,55 +14,84 @@
   transform: translateY(-3px) scale(1.05);
 }
 
-.map-pin-overlay--rank1 {
-  width: 58px;
-  height: 58px;
-  border-color: #d88a24;
-  background: #ffc533;
-  box-shadow: 3px 3px 0 rgba(216, 138, 36, 0.4);
+.map-pin-overlay--selected {
+  transform: translateY(-3px) scale(1.08);
 }
 
-.map-pin-overlay--selected {
-  border-color: #d88a24;
-  background: #ffc533;
-  transform: translateY(-3px) scale(1.08);
+/* 왕관 있는 1~3등: 원 중심이 이미지 세로 50% 지점 */
+.map-pin-overlay--rank-1,
+.map-pin-overlay--rank-2,
+.map-pin-overlay--rank-3 {
+  width: 40px;
+  height: 58.4px;
+}
+
+.map-pin-overlay--rank-1 {
+  width: 46px;
+  height: 67.4px;
+  background-image: url('/images/map-pin-rank-1.png');
+}
+
+.map-pin-overlay--rank-2 {
+  background-image: url('/images/map-pin-rank-2.png');
+}
+
+.map-pin-overlay--rank-3 {
+  background-image: url('/images/map-pin-rank-3.png');
+}
+
+.map-pin-overlay--rank-1 .map-pin-overlay__rank {
+  top: 50%;
+  font-size: 15px;
+  color: #ffc533;
+}
+
+.map-pin-overlay--rank-2 .map-pin-overlay__rank,
+.map-pin-overlay--rank-3 .map-pin-overlay__rank {
+  top: 50%;
+  font-size: 13px;
+  color: #3a2318;
+}
+
+/* 왕관 없는 나머지 구간: 원 중심이 이미지 세로 40% 지점 */
+.map-pin-overlay--tier-a,
+.map-pin-overlay--tier-b,
+.map-pin-overlay--tier-c,
+.map-pin-overlay--tier-d {
+  width: 34px;
+  height: 42.8px;
+}
+
+.map-pin-overlay--tier-a {
+  background-image: url('/images/map-pin-tier-a.png');
+}
+
+.map-pin-overlay--tier-b {
+  background-image: url('/images/map-pin-tier-b.png');
+}
+
+.map-pin-overlay--tier-c {
+  background-image: url('/images/map-pin-tier-c.png');
+}
+
+.map-pin-overlay--tier-d {
+  background-image: url('/images/map-pin-tier-d.png');
+}
+
+.map-pin-overlay--tier-a .map-pin-overlay__rank,
+.map-pin-overlay--tier-b .map-pin-overlay__rank,
+.map-pin-overlay--tier-c .map-pin-overlay__rank,
+.map-pin-overlay--tier-d .map-pin-overlay__rank {
+  top: 40%;
+  font-size: 12px;
+  color: #3a2318;
 }
 
 .map-pin-overlay__rank {
   position: absolute;
-  top: -12px;
   left: 50%;
-  display: flex;
-  width: 24px;
-  height: 24px;
-  transform: translateX(-50%);
-  align-items: center;
-  justify-content: center;
-  border: 2px solid #d88a24;
-  border-radius: 999px;
-  background: #fffdf4;
-  color: #d88a24;
-  font-size: 12px;
+  transform: translate(-50%, -50%);
   font-weight: 900;
   line-height: 1;
-}
-
-.map-pin-overlay--rank1 .map-pin-overlay__rank {
-  width: 28px;
-  height: 28px;
-  top: -14px;
-  font-size: 13px;
-  background: #2a1a12;
-  color: #ffc533;
-  border-color: #2a1a12;
-}
-
-.map-pin-overlay__icon {
-  width: 28px;
-  height: 28px;
-}
-
-.map-pin-overlay--rank1 .map-pin-overlay__icon {
-  width: 34px;
-  height: 34px;
+  font-variant-numeric: tabular-nums;
 }

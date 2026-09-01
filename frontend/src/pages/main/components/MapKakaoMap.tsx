@@ -9,6 +9,16 @@ type MapKakaoMapProps = {
   className?: string;
 };
 
+function getPinTierClass(rank: number): string {
+  if (rank === 1) return 'map-pin-overlay--rank-1';
+  if (rank === 2) return 'map-pin-overlay--rank-2';
+  if (rank === 3) return 'map-pin-overlay--rank-3';
+  if (rank <= 10) return 'map-pin-overlay--tier-a';
+  if (rank <= 30) return 'map-pin-overlay--tier-b';
+  if (rank <= 60) return 'map-pin-overlay--tier-c';
+  return 'map-pin-overlay--tier-d';
+}
+
 function loadKakaoSdk(appkey: string): Promise<void> {
   return new Promise((resolve, reject) => {
     if (window.kakao?.maps) {
@@ -61,17 +71,12 @@ export function MapKakaoMap({
           const content = document.createElement('div');
           content.className = [
             'map-pin-overlay',
-            r.rank === 1 ? 'map-pin-overlay--rank1' : '',
+            getPinTierClass(r.rank),
             r.id === selectedId ? 'map-pin-overlay--selected' : '',
           ]
             .filter(Boolean)
             .join(' ');
-          content.innerHTML = `
-            <span class="map-pin-overlay__rank">${r.rank}</span>
-            <span class="map-pin-overlay__icon">
-              <img src="/images/katsu_icon.png" alt="" style="width:100%;height:100%" />
-            </span>
-          `;
+          content.innerHTML = `<span class="map-pin-overlay__rank">${r.rank}</span>`;
           content.addEventListener('click', () => onSelect(r));
           const overlay = new maps.CustomOverlay({ position, content, yAnchor: 1 });
           overlay.setMap(map);
@@ -99,7 +104,7 @@ export function MapKakaoMap({
       if (!r) return;
       el.className = [
         'map-pin-overlay',
-        r.rank === 1 ? 'map-pin-overlay--rank1' : '',
+        getPinTierClass(r.rank),
         id === selectedId ? 'map-pin-overlay--selected' : '',
       ]
         .filter(Boolean)
