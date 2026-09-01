@@ -1,8 +1,8 @@
 # 데이터 모델 & 기술 결정
 
-- **버전**: v0.4
-- **작성일**: 2026-07-02
-- **상태**: 백엔드 아키텍처 방향 확정 (REST API 전환, 단일 서울 랭킹, 식별·상태 정책 확정)
+- **버전**: v0.5
+- **작성일**: 2026-09-01
+- **상태**: 백엔드 아키텍처 방향 확정. 최신 브랜치 통합 상태는 `09_current_status.md` 참조.
 
 > v0.1 대비 주요 변경: 프론트가 React(Vite + React Router) + 순수 REST API로 전환됨에 따라 인증·화면·API 구조가 바뀌었고, "서울 단일 랭킹" 확정으로 뷰포트 기반 랭킹 설계가 폐기됨. Restaurant 상태 모델·폐업/이전 정책이 추가됨. 자세한 변경은 맨 아래 변경 이력 참조.
 
@@ -20,16 +20,18 @@
 | HTTP 클라이언트 | RestClient (Spring 6.1+) | 동기 호출에 단순·최신, RestTemplate 대체 |
 | 지도 | 카카오맵 JS SDK | 한국 데이터 최강, 무료 한도 충분 |
 | 가게 검색 API | 카카오 로컬 API | 일 30만 건 무료 |
-| 인증 | 카카오 OAuth2 + 외부저장소 세션 (Spring Security / Spring Session) | 가입 마찰 최소, 즉시 무효화 가능, 수평 확장 대응 |
+| 인증 | 카카오 OAuth2 + 외부저장소 세션 (Spring Security / Spring Session) | 가입 마찰 최소, 서버 측 세션 종료와 향후 강제 무효화 확장 가능 |
 | 백엔드 호스팅 | AWS EC2 | t2.micro, Nginx + systemd (최종 확정, Railway·Oracle Cloud 거쳐 변경) |
 | 프론트 호스팅 | Vercel | Vite SPA 정적 배포, 무료 티어 |
-| 도메인 (예정) | katsurank.kr | 1.5만원/년 정도 |
+| 공개 주소 | https://www.katsurank.kr | Vercel 프론트, 별도 API 도메인 |
 
 ### 1.1 인증 방식 — 외부저장소 세션 (확정, JWT 아님)
 
 - 카카오 OAuth2 로그인 성공 후 **세션 쿠키**(HttpOnly, SameSite) 발급.
 - 세션은 톰캣 인메모리가 아니라 **외부 저장소**(`spring-session-jdbc`로 PostgreSQL, 또는 추후 Redis)에 저장 → 서버를 수평 확장해도 세션 공유, 재배포에도 유지.
-- JWT를 쓰지 않는 이유: 단일 백엔드 + 자체 SPA 구조에서 JWT의 "무상태" 이점은 거의 없고, 무효화 불가(로그아웃·어뷰징 즉시 차단 어려움)라는 단점만 떠안음. 1인 1표 어뷰징 방어에는 즉시 무효화 가능한 세션이 유리.
+- JWT를 쓰지 않는 이유: 단일 백엔드 + 자체 SPA 구조에서 JWT의 무상태성보다 서버가 로그아웃과 세션
+  종료를 통제하는 편이 중요하다고 판단했다. 현재는 사용자 로그아웃·해당 세션 종료를 구현했고,
+  계정 차단·전체 세션 일괄 무효화는 별도 운영 기능이 필요하다.
 - 향후 네이티브 모바일 앱을 붙이게 되면 그때 JWT 도입 재검토.
 
 ### 1.2 OAuth 콜백 흐름 (SPA 대응)
@@ -45,7 +47,8 @@
 ```
 
 - 쿠키 도메인: `Domain=.katsurank.kr` (프론트·백엔드 서브도메인 공유). 로컬은 `localhost`.
-- CORS: 프론트 오리진(`https://katsurank.kr`, 로컬 `http://localhost:3000`)만 허용, `allowCredentials(true)`.
+- CORS: 프론트 오리진(`https://www.katsurank.kr`, 로컬 `http://localhost:5173`)만 허용,
+  `allowCredentials(true)`.
 - CSRF: 쿠키 기반이므로 **처음부터 켠다**. SPA 표준인 Double Submit Cookie 방식(`CookieCsrfTokenRepository.withHttpOnlyFalse()`). (※ 05 문서의 "CSRF 일단 끔"은 Thymeleaf 전제였으므로 폐기.)
 
 ---
@@ -149,13 +152,13 @@ INDEX idx_restaurant_current (restaurant_id, is_current)
 
 ## 4. 화면 구성 (MVP)
 
-> 프론트는 React(Vite) SPA. 아래는 라우트(프론트) 기준이며 백엔드는 REST API만 제공.
+> 프론트는 React(Vite) SPA이며 백엔드는 REST API만 제공한다.
 
-1. **메인** (`/`) — 지도(핀) + **서울 단일 랭킹** 패널 (1위 강조). 지도는 탐색·핀 보기 용도, 랭킹의 주인공은 서울 전체 단일 랭킹.
-2. **가게 상세** (`/restaurants/{id}`) — 정보 + 투표
-3. **가게 추가** (`/restaurants/new`) — 카카오맵 검색 → 등록
-4. **마이페이지** (`/me`) — 현재 1순위 + 표 이동 히스토리
-5. **약관 / 개인정보처리방침** (`/terms`, `/privacy`)
+1. **메인** (`/`) — 지도, 서울 단일 랭킹, 검색, 내 표를 한 화면에 통합한다.
+2. **가게 상세** — 별도 route가 아니라 데스크톱 sidebar·모바일 modal로 열고 `?restaurant={id}` 딥링크를 사용한다.
+3. **가게 추가** — 메인 지도 위 3단계 modal에서 처리한다.
+4. **내 표** — 별도 마이페이지 없이 랭킹 영역의 카드와 상세 연결로 제공한다.
+5. **약관 / 개인정보처리방침** (`/terms`, `/privacy`)은 공개 별도 route로 유지한다.
 
 > ※ OAuth 콜백은 프론트 화면이 아니라 백엔드 엔드포인트(`/login/oauth2/code/kakao`)에서 처리 후 프론트로 리다이렉트.
 
@@ -178,6 +181,7 @@ INDEX idx_restaurant_current (restaurant_id, is_current)
 | Method | Path | 설명 |
 |---|---|---|
 | GET | `/api/v1/ranking` | **서울 단일 랭킹** 목록 조회 (vote_count DESC, status=ACTIVE, offset/limit 페이지네이션) |
+| GET | `/api/v1/ranking/stream` | TOP 20 랭킹 스냅샷 SSE 스트림 |
 | GET | `/api/v1/ranking/top` | 현재 서울 1위 (왕좌) 단건 조회 |
 | GET | `/api/v1/ranking/map-pins` | 지도 핀용 가게 좌표 목록 (status=ACTIVE, 페이지네이션 없이 전체 반환) |
 | GET | `/api/v1/restaurants/{id}` | 가게 상세 (status 무관, 폐업/이전된 가게도 조회 가능) |
@@ -214,11 +218,17 @@ INDEX idx_restaurant_current (restaurant_id, is_current)
 - "서울"로 시작하지 않으면 REJECTED + 사용자에게 사유 안내 (서울 단일 랭킹이므로 서울 밖 가게는 등록 대상 아님)
 - 카카오 장소 검색 프록시(`GET /api/v1/kakao-places/search`)도 `rect`(서울 사각 영역) + 같은 주소 접두어 검사로 미리 걸러 검색 결과 단계에서부터 서울 밖 결과를 줄인다
 
-### 6.3 실시간 = 30초 폴링
+### 6.3 실시간 = TOP 20 캐시 + SSE 스냅샷
 
-- 프론트가 30초 간격으로 `/api/v1/ranking` 재호출.
-- 페이지 가시성 API로 백그라운드 탭은 폴링 중지 (서버 부담↓).
-- 진짜 실시간(WebSocket)은 V1.1+ 검토.
+- 기존 REST `/api/v1/ranking` 계약은 유지한다.
+- 백엔드는 TOP 20을 인메모리 캐시하고 cache hit 경로에서는 읽기 트랜잭션을 열지 않는다.
+- 투표·표 이동 커밋 뒤 변경 마커를 남기고, 다음 캐시 갱신에서 versioned TOP 20 스냅샷을 만든다.
+- SSE `vote-changed` 이벤트는 version, changedAt, generatedAt, items를 포함한다.
+- 느린 클라이언트는 연결별 비동기 전송으로 격리하고, 밀린 스냅샷은 최신 version으로 합친다.
+- 단일 인스턴스 V1은 인메모리 연결 관리를 사용한다. 다중 인스턴스 전환 시 외부 이벤트 브로커를 검토한다.
+- 최신 프론트의 이벤트 이름 정렬과 통합 검증은 `09_current_status.md`의 V1 체크리스트에 남아 있다.
+- 프론트 REST 목록은 TOP 100까지 표시할 수 있어, TOP 20 snapshot을 cache에 병합하는 범위 정책도
+  통합 전에 확정한다.
 
 ### 6.4 카카오 로컬 API 호출 최소화
 
@@ -228,7 +238,7 @@ INDEX idx_restaurant_current (restaurant_id, is_current)
 
 ### 6.5 가상 스레드
 
-- `spring.threads.virtual.enabled: true`. 30초 폴링 + 카카오 API I/O 대기가 많은 워크로드라 가상 스레드가 실효.
+- `spring.threads.virtual.enabled: true`. 카카오 API, DB, 다수 SSE 연결처럼 I/O 대기가 많은 단일 인스턴스 워크로드에서 플랫폼 스레드 점유를 줄인다.
 
 ---
 
@@ -253,10 +263,10 @@ INDEX idx_restaurant_current (restaurant_id, is_current)
 
 ## 8. 미결정 사항
 
-- [ ] 세션 저장소 구체안: `spring-session-jdbc`(PostgreSQL)로 시작 vs Redis 도입 시점
-- [ ] CI/CD 방법 (GitHub Actions vs 호스팅 자체 빌드)
+- [x] 세션 저장소: `spring-session-jdbc`(PostgreSQL)로 시작, 실제 병목이 확인될 때 Redis 검토
+- [x] CI/CD: GitHub Actions 자동 배포
 - [x] 응답 포맷: HTTP 상태코드를 유지하면서 성공·실패 본문을 공통 `ApiResponse<T>` 래퍼로 통일
-- [ ] 도메인 최종 등록 시점 (출시 직전)
+- [x] 공개 도메인과 프론트 배포: `https://www.katsurank.kr`
 
 ---
 
@@ -274,3 +284,4 @@ INDEX idx_restaurant_current (restaurant_id, is_current)
   - 기술 스택 갱신: Java 21·가상 스레드·RestClient·Flyway·UTC 저장·API 버저닝.
   - 관측 초기 풀세팅 방침(섹션 7) 신설.
 - **v0.4 (2026-07-02)**: 프론트 스택 표기 정정 (Next.js → Vite + React Router v7, 실제 구현 기준). 백엔드 호스팅 표기 정정 (Railway → AWS EC2, 실제 배포 기준 — 06_deployment_guide.md·07_roadmap.md와 일치).
+- **v0.5 (2026-09-01)**: 30초 polling 설명을 실제 TOP 20 캐시 + versioned SSE 스냅샷 구조로 갱신하고 stream API 및 통합 대기 상태를 반영.
