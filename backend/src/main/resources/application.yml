@@ -85,6 +85,13 @@ kakao:
   rest-api-key: ${KAKAO_REST_API_KEY:local-kakao-rest-api-key}
   local-api-base-url: https://dapi.kakao.com
 
+ranking:
+  cache:
+    enabled: ${RANKING_CACHE_ENABLED:true}
+    refresh-delay: 1s
+  sse:
+    max-connections: ${RANKING_SSE_MAX_CONNECTIONS:1000}
+
 # 리버스 프록시(Railway 등) 뒤에서 X-Forwarded-* 신뢰
 server:
   forward-headers-strategy: framework

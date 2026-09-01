@@ -1,6 +1,6 @@
 # 데이터 모델 & 기술 결정
 
-- **버전**: v0.5
+- **버전**: v0.6
 - **작성일**: 2026-09-01
 - **상태**: 백엔드 아키텍처 방향 확정. 최신 브랜치 통합 상태는 `09_current_status.md` 참조.
 
@@ -124,6 +124,47 @@ INDEX idx_restaurant_current (restaurant_id, is_current)
 >
 > 동시성: Restaurant.`vote_count`에 `@Version` 낙관적 락 적용. 충돌 시 재시도(`@Retryable` 또는 수동 루프). 1인 1표 자체는 `PARTIAL UNIQUE INDEX (user_id) WHERE is_current = TRUE`로 DB가 최종 보장. (상세 설계는 백엔드 아키텍처 문서에서 다룸.)
 
+### Comment
+```
+id            BIGINT PK
+restaurant_id BIGINT FK -> Restaurant NOT NULL
+user_id       BIGINT FK -> User NOT NULL
+content       VARCHAR(500) NOT NULL
+created_at    TIMESTAMP NOT NULL
+updated_at    TIMESTAMP NOT NULL
+
+UNIQUE (restaurant_id, user_id)                         -- 가게별 1인 1댓글
+INDEX idx_comments_restaurant_created
+      (restaurant_id, created_at DESC, id DESC)         -- 최신 작성순 조회
+```
+
+- 댓글 목록은 공개하고 작성·수정·삭제는 로그인 사용자만 가능하다.
+- ACTIVE 가게에서만 작성·수정하며 CLOSED/RELOCATED 가게의 기존 댓글은 조회·삭제할 수 있다.
+- 작성자가 삭제한 댓글은 hard delete한다. Restaurant/Vote 영구 보존 정책은 댓글에 적용하지 않는다.
+- 좋아요·대댓글·신고·관리자 모더레이션·수정 이력은 V1 범위가 아니다.
+
+### RankingDailySnapshot
+```
+snapshot_date DATE NOT NULL                              -- KST 기준 날짜
+restaurant_id BIGINT FK -> Restaurant NOT NULL
+rank          INT NOT NULL
+vote_count    INT NOT NULL
+captured_at   TIMESTAMP NOT NULL                         -- UTC
+
+PRIMARY KEY (snapshot_date, restaurant_id)
+INDEX idx_ranking_daily_snapshots_restaurant_date
+      (restaurant_id, snapshot_date DESC)
+
+ranking_daily_snapshot_runs
+snapshot_date DATE PK                                     -- 날짜별 실행 선점·완료 마커
+captured_at   TIMESTAMP NOT NULL                          -- UTC
+```
+
+- 매일 `00:00 Asia/Seoul`에 ACTIVE 가게 전체를 대상으로 서울 단일 랭킹을 기록한다.
+- 동점은 현재 랭킹과 같은 경쟁 순위(`1, 2, 2, 4`)를 사용한다.
+- 날짜별 실행 마커를 먼저 선점하므로 ACTIVE 가게가 0개인 날과 다중 인스턴스 동시 실행도 한 번만 완료한다. 같은 날짜 재실행은 기존 값을 덮어쓰지 않으며, 누락된 날짜를 합성하거나 과거 표로 역산하지 않는다.
+- 폐업·이전 후 새 스냅샷은 만들지 않지만 기존 기록은 보존한다.
+
 ---
 
 ## 3. 식별·상태·폐업 정책 (확정)
@@ -185,6 +226,11 @@ INDEX idx_restaurant_current (restaurant_id, is_current)
 | GET | `/api/v1/ranking/top` | 현재 서울 1위 (왕좌) 단건 조회 |
 | GET | `/api/v1/ranking/map-pins` | 지도 핀용 가게 좌표 목록 (status=ACTIVE, 페이지네이션 없이 전체 반환) |
 | GET | `/api/v1/restaurants/{id}` | 가게 상세 (status 무관, 폐업/이전된 가게도 조회 가능) |
+| GET | `/api/v1/restaurants/{id}/comments` | 가게 댓글 목록 (공개, offset/limit 페이지네이션) |
+| POST | `/api/v1/restaurants/{id}/comments` | 가게 댓글 작성 (로그인 필요, 가게별 1인 1댓글) |
+| PATCH | `/api/v1/restaurants/{id}/comments/{commentId}` | 본인 댓글 수정 (로그인 필요) |
+| DELETE | `/api/v1/restaurants/{id}/comments/{commentId}` | 본인 댓글 삭제 (로그인 필요) |
+| GET | `/api/v1/restaurants/{id}/ranking-history` | KST 일별 서울 순위 스냅샷 최근 7건 (날짜 오름차순) |
 | POST | `/api/v1/restaurants` | 가게 등록 (카카오 place_id 기반, 로그인 필요) |
 | GET | `/api/v1/restaurants/search` | 자체 DB 이름 검색 (status=ACTIVE만, q는 선택 — 없으면 전체 목록, vote_count 순 offset/limit 페이지네이션) |
 | PATCH | `/api/v1/restaurants/{id}/close` | 가게 폐업 처리 (박제, 로그인 필요) |
@@ -285,3 +331,4 @@ INDEX idx_restaurant_current (restaurant_id, is_current)
   - 관측 초기 풀세팅 방침(섹션 7) 신설.
 - **v0.4 (2026-07-02)**: 프론트 스택 표기 정정 (Next.js → Vite + React Router v7, 실제 구현 기준). 백엔드 호스팅 표기 정정 (Railway → AWS EC2, 실제 배포 기준 — 06_deployment_guide.md·07_roadmap.md와 일치).
 - **v0.5 (2026-09-01)**: 30초 polling 설명을 실제 TOP 20 캐시 + versioned SSE 스냅샷 구조로 갱신하고 stream API 및 통합 대기 상태를 반영.
+- **v0.6 (2026-09-01)**: 가게별 1인 1댓글 데이터·API 정책과 KST 자정 일별 서울 순위 스냅샷 데이터·조회 API를 추가.

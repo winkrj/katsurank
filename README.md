@@ -8,7 +8,8 @@
 탐색하는 공간이고 랭킹은 위치와 무관한 **서울 전체 단 하나의 순위**입니다.
 
 [서비스 화면 보기](https://www.katsurank.kr) · [현재 개발 상태](docs/09_current_status.md) ·
-[기술적 의사결정](docs/10_technical_decisions.md)
+[기술적 의사결정](docs/10_technical_decisions.md) ·
+[성능 개선 이야기](backend/loadtest/PERFORMANCE_STORY.md)
 
 ## 직접 해결한 핵심 문제
 
@@ -162,6 +163,8 @@ hard delete하지 않고 상태와 연결 관계로 보존합니다. 그 결과 
 |---|---|
 | [현재 개발 상태](docs/09_current_status.md) | 브랜치·기능별 완료 상태와 V1 남은 작업 |
 | [기술적 의사결정](docs/10_technical_decisions.md) | 선택지, 선택 이유, 트레이드오프, 재검토 조건 |
+| [성능 개선 이야기](backend/loadtest/PERFORMANCE_STORY.md) | 사람이 읽는 polling → cache → SSE 개선 과정 |
+| [성능 실험 기술 이력](backend/loadtest/EXPERIMENT_HISTORY.md) | AI 분석·재현용 EXP-01~06 상태와 제한 |
 | [제품 기획](docs/01_product_spec.md) | 서비스 컨셉과 정책 |
 | [MVP 범위](docs/02_mvp_scope.md) | V1/V1.1/V2 경계 |
 | [데이터 모델과 API](docs/03_data_model_and_tech.md) | 백엔드 데이터·API 설계 |
