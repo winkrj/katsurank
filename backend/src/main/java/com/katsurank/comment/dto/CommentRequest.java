@@ -1,0 +1,14 @@
+package com.katsurank.comment.dto;
+
+import jakarta.validation.constraints.NotBlank;
+import jakarta.validation.constraints.Size;
+
+public record CommentRequest(
+        @NotBlank(message = "댓글 내용은 필수입니다.")
+        @Size(max = 500, message = "댓글은 500자 이하여야 합니다.")
+        String content) {
+
+    public CommentRequest {
+        content = content == null ? null : content.strip();
+    }
+}

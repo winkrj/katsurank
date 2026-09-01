@@ -99,12 +99,15 @@ public class GlobalExceptionHandler {
 
     private HttpStatus statusFor(String code) {
         return switch (code) {
-            case "USER_NOT_FOUND", "RESTAURANT_NOT_FOUND", "NEW_PLACE_NOT_FOUND" -> HttpStatus.NOT_FOUND;
+            case "USER_NOT_FOUND", "RESTAURANT_NOT_FOUND", "NEW_PLACE_NOT_FOUND", "COMMENT_NOT_FOUND" ->
+                    HttpStatus.NOT_FOUND;
+            case "COMMENT_FORBIDDEN" -> HttpStatus.FORBIDDEN;
             case "LIMIT_EXCEEDED" -> HttpStatus.BAD_REQUEST;
             case "CATEGORY_NOT_ALLOWED", "REGION_NOT_ALLOWED" -> HttpStatus.UNPROCESSABLE_CONTENT;
             case "KAKAO_API_ERROR" -> HttpStatus.BAD_GATEWAY;
             case "SSE_CAPACITY_EXCEEDED" -> HttpStatus.SERVICE_UNAVAILABLE;
-            case "DUPLICATE_PLACE", "ALREADY_CLOSED", "RESTAURANT_NOT_VOTABLE", "VOTE_CONFLICT" ->
+            case "DUPLICATE_PLACE", "ALREADY_CLOSED", "RESTAURANT_NOT_VOTABLE", "VOTE_CONFLICT",
+                    "COMMENT_ALREADY_EXISTS", "RESTAURANT_NOT_COMMENTABLE" ->
                     HttpStatus.CONFLICT;
             default -> HttpStatus.INTERNAL_SERVER_ERROR;
         };
