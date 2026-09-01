@@ -1,11 +1,13 @@
 package com.katsurank.ranking.service;
 
 import com.katsurank.ranking.dto.RankingSnapshotEvent;
+import com.katsurank.ranking.exception.SseCapacityExceededException;
 import io.micrometer.core.instrument.Counter;
 import io.micrometer.core.instrument.Gauge;
 import io.micrometer.core.instrument.MeterRegistry;
 import jakarta.annotation.PreDestroy;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
 import org.springframework.web.servlet.mvc.method.annotation.SseEmitter;
@@ -15,6 +17,7 @@ import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.RejectedExecutionException;
+import java.util.concurrent.Semaphore;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicLong;
 import java.util.concurrent.atomic.AtomicReference;
@@ -29,6 +32,8 @@ public class RankingSseService {
     private final ConcurrentHashMap<Long, ClientConnection> connections = new ConcurrentHashMap<>();
     private final AtomicLong connectionSequence = new AtomicLong();
     private final AtomicReference<RankingSnapshotEvent> latestSnapshot = new AtomicReference<>();
+    private final Semaphore connectionPermits;
+    private final int maxConnections;
     private final ExecutorService senderExecutor;
     private final EmitterFactory emitterFactory;
     private final Counter openedConnections;
@@ -39,17 +44,32 @@ public class RankingSseService {
     private final Counter sendFailures;
 
     @Autowired
-    public RankingSseService(MeterRegistry meterRegistry) {
+    public RankingSseService(
+            MeterRegistry meterRegistry,
+            @Value("${ranking.sse.max-connections:1000}") int maxConnections) {
         this(meterRegistry,
                 Executors.newThreadPerTaskExecutor(Thread.ofVirtual().name("ranking-sse-send-", 0).factory()),
-                () -> new SseEmitter(EMITTER_TIMEOUT_MILLIS));
+                () -> new SseEmitter(EMITTER_TIMEOUT_MILLIS),
+                maxConnections);
     }
 
     RankingSseService(MeterRegistry meterRegistry,
                       ExecutorService senderExecutor,
                       EmitterFactory emitterFactory) {
+        this(meterRegistry, senderExecutor, emitterFactory, 1_000);
+    }
+
+    RankingSseService(MeterRegistry meterRegistry,
+                      ExecutorService senderExecutor,
+                      EmitterFactory emitterFactory,
+                      int maxConnections) {
+        if (maxConnections < 1) {
+            throw new IllegalArgumentException("SSE 최대 연결 수는 1 이상이어야 합니다.");
+        }
         this.senderExecutor = senderExecutor;
         this.emitterFactory = emitterFactory;
+        this.maxConnections = maxConnections;
+        this.connectionPermits = new Semaphore(maxConnections);
         this.openedConnections = Counter.builder("ranking.sse.connections.opened").register(meterRegistry);
         this.closedConnections = Counter.builder("ranking.sse.connections.closed").register(meterRegistry);
         this.broadcasts = Counter.builder("ranking.sse.broadcasts").register(meterRegistry);
@@ -63,25 +83,40 @@ public class RankingSseService {
     }
 
     public SseEmitter connect() {
-        long connectionId = connectionSequence.incrementAndGet();
-        SseEmitter emitter = emitterFactory.create();
-        ClientConnection connection = new ClientConnection(connectionId, emitter);
-        emitter.onCompletion(() -> disconnect(connection));
-        emitter.onTimeout(() -> disconnect(connection));
-        emitter.onError(error -> disconnect(connection));
-
-        RankingSnapshotEvent snapshot = latestSnapshot.get();
-        if (snapshot != null) {
-            connection.sendInitial(snapshot);
+        if (!connectionPermits.tryAcquire()) {
+            throw new SseCapacityExceededException(maxConnections);
         }
-        if (!connection.closed.get()) {
-            connections.put(connectionId, connection);
-            openedConnections.increment();
+        long connectionId = connectionSequence.incrementAndGet();
+        SseEmitter emitter;
+        try {
+            emitter = emitterFactory.create();
+        } catch (RuntimeException exception) {
+            connectionPermits.release();
+            throw exception;
+        }
+        ClientConnection connection = new ClientConnection(connectionId, emitter);
+        connections.put(connectionId, connection);
+        openedConnections.increment();
+        try {
+            emitter.onCompletion(() -> disconnect(connection));
+            emitter.onTimeout(() -> disconnect(connection));
+            emitter.onError(error -> disconnect(connection));
+
+            RankingSnapshotEvent snapshot = latestSnapshot.get();
+            if (snapshot != null && !connection.closed.get()) {
+                connection.sendInitial(snapshot);
+            }
             RankingSnapshotEvent latest = latestSnapshot.get();
-            if (latest != null && latest.version() > connection.lastSentVersion.get()) {
+            if (latest != null && !connection.closed.get()
+                    && latest.version() > connection.lastSentVersion.get()) {
                 connection.enqueue(latest);
             }
-            connection.activateAfterResponseInitialization();
+            if (!connection.closed.get()) {
+                connection.activateAfterResponseInitialization();
+            }
+        } catch (RuntimeException exception) {
+            disconnect(connection);
+            throw exception;
         }
         return emitter;
     }
@@ -117,6 +152,7 @@ public class RankingSseService {
         connections.remove(connection.id, connection);
         connection.pendingSnapshot.set(null);
         connection.heartbeatPending.set(false);
+        connectionPermits.release();
         closedConnections.increment();
     }
 
@@ -155,15 +191,9 @@ public class RankingSseService {
         private void activateAfterResponseInitialization() {
             try {
                 senderExecutor.execute(() -> {
-                    try {
-                        Thread.sleep(100);
-                        ready.set(true);
-                        if (pendingSnapshot.get() != null || heartbeatPending.get()) {
-                            scheduleDrain();
-                        }
-                    } catch (InterruptedException exception) {
-                        Thread.currentThread().interrupt();
-                        disconnect(this);
+                    ready.set(true);
+                    if (pendingSnapshot.get() != null || heartbeatPending.get()) {
+                        scheduleDrain();
                     }
                 });
             } catch (RejectedExecutionException exception) {
@@ -235,7 +265,7 @@ public class RankingSseService {
     private SseEmitter.SseEventBuilder snapshotEvent(RankingSnapshotEvent snapshot) {
         return SseEmitter.event()
                 .id(Long.toString(snapshot.version()))
-                .name("ranking-snapshot")
+                .name("vote-changed")
                 .data(snapshot);
     }
 }

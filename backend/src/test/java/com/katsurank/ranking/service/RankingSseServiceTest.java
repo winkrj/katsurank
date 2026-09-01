@@ -17,8 +17,10 @@ import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicInteger;
+import java.util.concurrent.atomic.AtomicReference;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
 class RankingSseServiceTest {
 
@@ -44,6 +46,31 @@ class RankingSseServiceTest {
 
         assertThat(emitter.snapshotSent.await(1, TimeUnit.SECONDS)).isTrue();
         assertThat(emitter.snapshotCount.get()).isEqualTo(1);
+        assertThat(emitter.lastEventText.get()).contains("event:vote-changed");
+        assertThat(service.activeConnectionCount()).isEqualTo(1);
+    }
+
+    @Test
+    void rejectsConnectionsAboveConfiguredCapacity() {
+        service = new RankingSseService(new SimpleMeterRegistry(), executor, CapturingEmitter::new, 1);
+        service.connect();
+
+        assertThatThrownBy(service::connect)
+                .isInstanceOf(com.katsurank.ranking.exception.SseCapacityExceededException.class)
+                .hasMessageContaining("max=1");
+        assertThat(service.activeConnectionCount()).isEqualTo(1);
+    }
+
+    @Test
+    void completionDuringCallbackRegistrationDoesNotLeakConnectionOrPermit() {
+        Queue<SseEmitter> emitters = new ConcurrentLinkedQueue<>(
+                List.of(new CompletingOnRegistrationEmitter(), new CapturingEmitter()));
+        service = new RankingSseService(new SimpleMeterRegistry(), executor, emitters::remove, 1);
+
+        service.connect();
+        assertThat(service.activeConnectionCount()).isZero();
+
+        service.connect();
         assertThat(service.activeConnectionCount()).isEqualTo(1);
     }
 
@@ -79,6 +106,33 @@ class RankingSseServiceTest {
         assertThat(service.activeConnectionCount()).isZero();
     }
 
+    @Test
+    void heartbeatIsDelivered() throws InterruptedException {
+        CapturingEmitter emitter = new CapturingEmitter();
+        service = new RankingSseService(new SimpleMeterRegistry(), executor, () -> emitter);
+        service.connect();
+
+        service.heartbeat();
+
+        assertThat(emitter.heartbeatSent.await(1, TimeUnit.SECONDS)).isTrue();
+        assertThat(emitter.heartbeatCount.get()).isEqualTo(1);
+        assertThat(service.activeConnectionCount()).isEqualTo(1);
+    }
+
+    @Test
+    void heartbeatFailureRemovesConnection() throws InterruptedException {
+        CapturingEmitter broken = new CapturingEmitter();
+        broken.fail = true;
+        service = new RankingSseService(new SimpleMeterRegistry(), executor, () -> broken);
+        service.connect();
+
+        service.heartbeat();
+
+        assertThat(broken.sendAttempted.await(1, TimeUnit.SECONDS)).isTrue();
+        awaitNoConnections();
+        assertThat(service.activeConnectionCount()).isZero();
+    }
+
     private void awaitNoConnections() throws InterruptedException {
         long deadline = System.nanoTime() + TimeUnit.SECONDS.toNanos(1);
         while (service.activeConnectionCount() != 0 && System.nanoTime() < deadline) {
@@ -97,7 +151,10 @@ class RankingSseServiceTest {
         private final CountDownLatch blocker;
         private final CountDownLatch sendAttempted = new CountDownLatch(1);
         private final CountDownLatch snapshotSent = new CountDownLatch(1);
+        private final CountDownLatch heartbeatSent = new CountDownLatch(1);
         private final AtomicInteger snapshotCount = new AtomicInteger();
+        private final AtomicInteger heartbeatCount = new AtomicInteger();
+        private final AtomicReference<String> lastEventText = new AtomicReference<>("");
         private volatile boolean fail;
 
         private CapturingEmitter() {
@@ -121,8 +178,34 @@ class RankingSseServiceTest {
                 Thread.currentThread().interrupt();
                 throw new IOException(exception);
             }
+            String eventText = builder.build().stream()
+                    .map(item -> item.getData().toString())
+                    .filter(data -> data.startsWith("id:") || data.startsWith("event:"))
+                    .reduce("", String::concat);
+            String fullEventText = builder.build().stream()
+                    .map(item -> item.getData().toString())
+                    .reduce("", String::concat);
+            if (fullEventText.contains(":heartbeat")) {
+                heartbeatCount.incrementAndGet();
+                heartbeatSent.countDown();
+                return;
+            }
+            lastEventText.set(eventText);
             snapshotCount.incrementAndGet();
             snapshotSent.countDown();
+        }
+    }
+
+    private static class CompletingOnRegistrationEmitter extends SseEmitter {
+
+        private CompletingOnRegistrationEmitter() {
+            super(0L);
+        }
+
+        @Override
+        public void onCompletion(Runnable callback) {
+            super.onCompletion(callback);
+            callback.run();
         }
     }
 }

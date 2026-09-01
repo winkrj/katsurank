@@ -3,7 +3,6 @@ package com.katsurank.ranking.service;
 import com.katsurank.ranking.dto.MapPinResponse;
 import com.katsurank.ranking.dto.MapPinRow;
 import com.katsurank.ranking.dto.RankingItem;
-import com.katsurank.ranking.dto.RankingRow;
 import com.katsurank.ranking.dto.RankingSnapshotEvent;
 import com.katsurank.ranking.dto.TopRankingResult;
 import com.katsurank.ranking.dto.VoteCountGroup;
@@ -13,6 +12,8 @@ import com.katsurank.common.web.PageResponse;
 import io.micrometer.core.instrument.Counter;
 import io.micrometer.core.instrument.MeterRegistry;
 import io.micrometer.core.instrument.Timer;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Isolation;
@@ -21,7 +22,6 @@ import org.springframework.transaction.annotation.Transactional;
 import java.time.Duration;
 import java.time.Clock;
 import java.time.Instant;
-import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -32,10 +32,13 @@ import java.util.concurrent.atomic.AtomicReference;
 @Service
 public class RankingService {
 
+    private static final Logger log = LoggerFactory.getLogger(RankingService.class);
+
     private static final int MAX_LIMIT = 100;
     private static final int CACHED_LIMIT = 20;
 
     private final RankingQueryRepository rankingQueryRepository;
+    private final RankingPageQueryService rankingPageQueryService;
     private final MeterRegistry meterRegistry;
     private final RankingSseService rankingSseService;
     private final RankingChangeTracker rankingChangeTracker;
@@ -51,12 +54,14 @@ public class RankingService {
     private final Timer refreshInterval;
 
     public RankingService(RankingQueryRepository rankingQueryRepository,
+                          RankingPageQueryService rankingPageQueryService,
                           MeterRegistry meterRegistry,
                           RankingSseService rankingSseService,
                           RankingChangeTracker rankingChangeTracker,
                           Clock clock,
                           @Value("${ranking.cache.enabled:true}") boolean cacheEnabled) {
         this.rankingQueryRepository = rankingQueryRepository;
+        this.rankingPageQueryService = rankingPageQueryService;
         this.meterRegistry = meterRegistry;
         this.rankingSseService = rankingSseService;
         this.rankingChangeTracker = rankingChangeTracker;
@@ -68,7 +73,6 @@ public class RankingService {
         this.refreshInterval = Timer.builder("ranking.cache.refresh.interval").register(meterRegistry);
     }
 
-    @Transactional(readOnly = true, isolation = Isolation.REPEATABLE_READ)
     public PageResponse<RankingItem> getRanking(int offset, int limit) {
         if (offset < 0) {
             throw new IllegalArgumentException("offset은 0 이상이어야 합니다.");
@@ -84,13 +88,13 @@ public class RankingService {
                 return snapshot.page(limit);
             }
             cacheMiss(lastRefreshFailed.get() ? "refresh_failure_fallback" : "cache_empty");
-            return loadRanking(offset, limit);
+            return rankingPageQueryService.load(offset, limit);
         }
 
         if (cacheEnabled) {
             cacheMiss("range_outside");
         }
-        return loadRanking(offset, limit);
+        return rankingPageQueryService.load(offset, limit);
     }
 
     /**
@@ -110,10 +114,14 @@ public class RankingService {
 
         try {
             RankingChangeTracker.ChangeMarker changeMarker = rankingChangeTracker.current();
-            RankingSnapshot refreshed = refreshDuration.record(() -> RankingSnapshot.from(loadRanking(0, CACHED_LIMIT)));
+            RankingSnapshot refreshed = refreshDuration.record(
+                    () -> RankingSnapshot.from(rankingPageQueryService.load(0, CACHED_LIMIT)));
             RankingSnapshot previous = cachedTopRanking.getAndSet(refreshed);
-            lastRefreshFailed.set(false);
-            if (previous == null || !previous.items().equals(refreshed.items())) {
+            boolean recovered = lastRefreshFailed.getAndSet(false);
+            if (recovered) {
+                log.atInfo().log("랭킹 캐시 갱신 복구");
+            }
+            if (previous == null || changeMarker != null || !previous.items().equals(refreshed.items())) {
                 Instant generatedAt = Instant.now(clock);
                 Instant changedAt = changeMarker == null ? generatedAt : changeMarker.committedAt();
                 rankingSseService.broadcast(new RankingSnapshotEvent(
@@ -121,8 +129,11 @@ public class RankingService {
             }
             rankingChangeTracker.clear(changeMarker);
         } catch (RuntimeException exception) {
-            lastRefreshFailed.set(true);
             refreshFailures.increment();
+            if (lastRefreshFailed.compareAndSet(false, true)) {
+                log.atWarn().setCause(exception).addKeyValue("limit", CACHED_LIMIT)
+                        .log("랭킹 캐시 갱신 실패; 마지막 정상 스냅샷 유지");
+            }
         }
     }
 
@@ -133,12 +144,7 @@ public class RankingService {
                 .increment();
     }
 
-    private PageResponse<RankingItem> loadRanking(int offset, int limit) {
-        List<RankingRow> content = rankingQueryRepository.findActiveRanking(offset, limit);
-        return new PageResponse<>(toRankingItems(content, offset),
-                rankingQueryRepository.countActiveRestaurants(), offset, limit);
-    }
-
+    /** total도 스냅샷 갱신 시점 값이며 보통 다음 refresh까지, 갱신 실패 시에는 그보다 오래 DB와 차이 날 수 있다. */
     private record RankingSnapshot(List<RankingItem> items, long total) {
         private static RankingSnapshot from(PageResponse<RankingItem> page) {
             return new RankingSnapshot(List.copyOf(page.items()), page.total());
@@ -183,22 +189,4 @@ public class RankingService {
         return new MapPinResponse(pin.id(), pin.name(), pin.latitude(), pin.longitude(), pin.voteCount(), rank);
     }
 
-    private List<RankingItem> toRankingItems(List<RankingRow> rows, int offset) {
-        if (rows.isEmpty()) {
-            return List.of();
-        }
-
-        int rank = (int) rankingQueryRepository.countWithVoteCountGreaterThan(rows.getFirst().voteCount()) + 1;
-        int previousVoteCount = rows.getFirst().voteCount();
-        List<RankingItem> items = new ArrayList<>(rows.size());
-        for (int index = 0; index < rows.size(); index++) {
-            RankingRow row = rows.get(index);
-            if (index > 0 && row.voteCount() != previousVoteCount) {
-                rank = offset + index + 1;
-            }
-            items.add(row.toItem(rank));
-            previousVoteCount = row.voteCount();
-        }
-        return items;
-    }
 }

@@ -1,6 +1,7 @@
 package com.katsurank.common.web;
 
 import com.katsurank.common.domain.DomainException;
+import com.katsurank.ranking.exception.SseCapacityExceededException;
 import jakarta.validation.ConstraintViolationException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -22,6 +23,13 @@ import org.springframework.web.context.request.async.AsyncRequestNotUsableExcept
 public class GlobalExceptionHandler {
 
     private static final Logger log = LoggerFactory.getLogger(GlobalExceptionHandler.class);
+
+    /** EventSource 요청에서도 메시지 변환 없이 확실히 503을 반환한다. */
+    @ExceptionHandler(SseCapacityExceededException.class)
+    public ResponseEntity<Void> handleSseCapacityExceeded(SseCapacityExceededException ex) {
+        log.atWarn().addKeyValue("errorCode", ex.code()).log("SSE 연결 상한 초과");
+        return ResponseEntity.status(HttpStatus.SERVICE_UNAVAILABLE).build();
+    }
 
     @ExceptionHandler(DomainException.class)
     public ResponseEntity<ApiResponse<Void>> handleDomainException(DomainException ex) {
@@ -95,6 +103,7 @@ public class GlobalExceptionHandler {
             case "LIMIT_EXCEEDED" -> HttpStatus.BAD_REQUEST;
             case "CATEGORY_NOT_ALLOWED", "REGION_NOT_ALLOWED" -> HttpStatus.UNPROCESSABLE_CONTENT;
             case "KAKAO_API_ERROR" -> HttpStatus.BAD_GATEWAY;
+            case "SSE_CAPACITY_EXCEEDED" -> HttpStatus.SERVICE_UNAVAILABLE;
             case "DUPLICATE_PLACE", "ALREADY_CLOSED", "RESTAURANT_NOT_VOTABLE", "VOTE_CONFLICT" ->
                     HttpStatus.CONFLICT;
             default -> HttpStatus.INTERNAL_SERVER_ERROR;
