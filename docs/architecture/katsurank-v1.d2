@@ -1,0 +1,122 @@
+# Render: d2 --layout dagre --theme 0 --pad 40 <source> <target.svg>
+direction: down
+
+classes: {
+  group: {
+    style: {
+      fill: "#FCF8F0"
+      stroke: "#D7C9B6"
+      stroke-width: 2
+      border-radius: 14
+    }
+  }
+  primary: {
+    style: {
+      fill: "#2D2926"
+      stroke: "#2D2926"
+      font-color: "#FFFFFF"
+      stroke-width: 2
+      border-radius: 10
+    }
+  }
+  service: {
+    style: {
+      fill: "#FFFDF8"
+      stroke: "#897A68"
+      stroke-width: 2
+      border-radius: 10
+    }
+  }
+  data: {
+    shape: cylinder
+    style: {
+      fill: "#EFE4D1"
+      stroke: "#897A68"
+      stroke-width: 2
+    }
+  }
+  external: {
+    style: {
+      fill: "#F5F2ED"
+      stroke: "#B5AA9C"
+      stroke-dash: 4
+      border-radius: 10
+    }
+  }
+}
+
+runtime: "" {
+direction: right
+style.fill: transparent
+style.stroke: transparent
+
+user: "사용자" {
+  shape: person
+  style.fill: "#B3261E"
+  style.stroke: "#8C1D18"
+  style.font-color: "#FFFFFF"
+}
+
+frontend: "Frontend · Vercel" {
+  class: group
+  direction: down
+  spa: "React 19 SPA\n지도 · 랭킹 · 검색 · 투표" {
+    class: primary
+  }
+  state: "TanStack Query · Zustand" {
+    class: service
+  }
+  spa -> state: "서버·화면 상태"
+}
+
+backend: "Backend · EC2 / Nginx" {
+  class: group
+  direction: down
+  api: "Spring Boot REST API\nJava 21 · Virtual Threads" {
+    class: primary
+  }
+  domain: "Vote · Restaurant\n1인 1표 · 표 이동 · 상태 전이" {
+    class: service
+  }
+  security: "Kakao OAuth2\nSession JDBC · CSRF" {
+    class: service
+  }
+  cache: "TOP 20 Cache\nSSE Snapshot" {
+    class: service
+  }
+  pending: "vote-changed · TOP 20\nV1 통합 대기" {
+    style.fill: "#FFF0EE"
+    style.stroke: "#B3261E"
+    style.font-color: "#B3261E"
+    style.stroke-width: 2
+    style.stroke-dash: 6
+    style.border-radius: 10
+  }
+  api -> domain: "트랜잭션 경계"
+  api -> security: "인증·인가"
+  api -> cache: "랭킹 조회"
+  cache -> pending
+}
+
+user -> frontend.spa: "탐색 · 투표"
+frontend.spa -> backend.api: "REST\nSession Cookie + CSRF"
+}
+
+platform: "Data · External · Observability" {
+  class: group
+  direction: down
+  postgres: "PostgreSQL\nJPA · QueryDSL · Flyway" {
+    class: data
+  }
+  kakao: "Kakao Platform\n로그인 · 지도 · 로컬 검색" {
+    class: external
+  }
+  metrics: "Actuator · Micrometer\nPrometheus · Grafana" {
+    class: service
+  }
+}
+
+runtime.backend.domain -> platform.postgres: "정합성 · 히스토리"
+runtime.backend.security -> platform.kakao: "OAuth2"
+runtime.backend.api -> platform.kakao: "지도 · 가게 검색"
+runtime.backend.api -> platform.metrics: "metrics · traceId"

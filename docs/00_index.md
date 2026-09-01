@@ -2,8 +2,11 @@
 
 > **이 문서가 단일 진실의 출처(SSOT)입니다.** 다른 대화창에서 시작할 때 이 파일을 먼저 읽고 시작하세요.
 
-- **버전**: v0.4
-- **갱신일**: 2026-07-02
+- **버전**: v0.5
+- **갱신일**: 2026-09-01
+
+> 현재 코드·브랜치·테스트 기준의 완료 상태는 `09_current_status.md`를 우선한다. 아래 스냅샷과
+> 다음 액션에는 과거 시점의 계획도 역사로 남아 있다.
 
 ## 한 줄 요약
 
@@ -20,7 +23,7 @@
 | 항목 | 결정 |
 |---|---|
 | 서비스명 | 카츠랭 (katsurank) |
-| 도메인 (예정) | katsurank.kr |
+| 공개 주소 | https://www.katsurank.kr |
 | 한 줄 카피 | 당신의 인생 돈까스 한 집. |
 | 랭킹 | **서울 단일 랭킹 1개** (서울 1위가 왕좌). 뷰포트 랭킹 없음 |
 | 인증 | 카카오 OAuth + **외부저장소 세션** (JWT 미채택) |
@@ -28,9 +31,9 @@
 | 가게 데이터 | 초기 20곳 수동 + 카카오맵 검증 후 사용자 추가. 지점=독립 식당 |
 | 폐업/이전 | hard delete 금지. 폐업=박제, 이전=승계 (A+C) |
 | 프론트/백 | React(Vite+React Router)+TS / Spring Boot 4.0·Java 21, 순수 REST API |
-| 실시간성 | 30초 폴링 |
+| 실시간성 | TOP 20 SSE 스냅샷 구현, 최신 프론트와 계약 통합 대기 |
 | 디자인 톤 | 화이트 베이스, 먹/도장 빨강, Noto Serif KR (04 v0.2 기준) |
-| 호스팅 | **백엔드 AWS EC2** (t2.micro + Nginx, 배포 완료) / 프론트 Vercel (미정) |
+| 호스팅 | **백엔드 AWS EC2** (t2.micro + Nginx) / 프론트 Vercel, 공개 화면 접근 확인 |
 | 일정 | 한 달, 하루 1~2시간 |
 | 수익 모델 | 없음 (개인 프로젝트, 무료) |
 
@@ -46,6 +49,8 @@
 | `05_week1_setup_guide.md` | 1주차 구체 작업 가이드 (※ Thymeleaf 전제라 갱신 예정) | 개발 |
 | `06_deployment_guide.md` | **서버 배포 가이드** — Oracle Cloud + Nginx + CI/CD 단계별 | 개발·배포 |
 | `07_roadmap.md` | **개발 로드맵 & 진행 추적** — 마일스톤별 체크리스트 | 모든 창 |
+| `09_current_status.md` | **현재 개발 상태** — 브랜치·기능별 완료/미완료와 V1 체크리스트 | 모든 창 |
+| `10_technical_decisions.md` | **포트폴리오용 기술 결정 요약** — 선택·이유·트레이드오프 | 개발·포트폴리오 |
 | `setup/docker-compose.yml` | 로컬 PostgreSQL 셋업 | 개발 |
 | `setup/application.yml` | Spring Boot 설정 템플릿 | 개발 |
 
@@ -96,18 +101,20 @@
 
 ## 다음 액션 (현재 시점)
 
-> 상세 체크리스트는 `07_roadmap.md` 참조.
+> 상세 체크리스트는 `09_current_status.md`를 우선한다.
 
-- [ ] **[M2] 서버 배포** — `06_deployment_guide.md` 순서대로 진행
-  - 1순위: AWS EC2 인스턴스 생성 + 프로비저닝
-  - 2순위: 도메인 등록 (katsurank.kr) + Cloudflare 연결
-- [ ] **[M2] GitHub Actions** 자동 배포 파이프라인 검증 (`.github/workflows/deploy.yml` 작성 완료)
-- [ ] `07_roadmap.md`에서 완료된 항목 체크
+- [ ] 최신 `main`과 `feat/v1-backend-completion` 통합
+- [ ] 프론트·백엔드 SSE 이벤트 이름을 `vote-changed`로 정렬
+- [ ] TOP 100 REST 목록과 TOP 20 SSE 스냅샷의 반영 범위 결정
+- [ ] 상세 화면의 댓글·주간 추이·하드코딩 정보를 제거하고 실제 DTO만 연결
+- [ ] 통합 환경 전체 테스트와 브라우저 실시간 갱신 검증
+- [ ] 최신 코드로 EXP-05·06 재측정
+- [ ] PR #32·#34 review decision 해소
 
 ## 미정 사항 (열린 결정)
 
-- [ ] 응답 포맷: 공통 `ApiResponse` 래퍼 vs 순수 데이터 + 상태코드 (프론트 개발 시작 전 결정)
-- [ ] 프론트 최종 배포 위치: Vercel 유력
+- [x] 응답 포맷: HTTP 상태코드를 유지하면서 `ApiResponse<T>` 공통 래퍼 사용
+- [x] 프론트 배포 위치: Vercel
 
 ## 변경 이력
 
@@ -115,3 +122,4 @@
 - **v0.2 (2026-06-04)**: 백엔드 아키텍처 결정 반영. **랭킹을 서울 단일 랭킹으로 확정**(컨셉 핵심·스냅샷 수정). 인증을 외부저장소 세션으로, 프론트를 React+REST로 확정. 폐업/이전(A+C)·체인점(독립 식당) 정책 추가. 문서 인덱스 버전 갱신(01→v0.3, 02→v0.2, 03→v0.2, 04→v0.2 참조). 05는 Thymeleaf 전제라 갱신 예정으로 표기.
 - **v0.3 (2026-06-28)**: **백엔드 API v1 완료** — Vote 동시성, 랭킹·검색·마이페이지·폐업이전 API, QueryDSL, 통합 테스트. 호스팅을 Railway → Oracle Cloud Free Tier로 변경. `06_deployment_guide.md`, `07_roadmap.md`, `deploy.yml` 추가. 다음 액션을 M2(배포)로 전환.
 - **v0.4 (2026-07-02)**: 프론트 스택 표기 정정 (Next.js → Vite + React Router v7, 실제 구현 기준). M2(서버 배포) 완료 반영.
+- **v0.5 (2026-09-01)**: 공개 화면과 V1 통합 대기 상태를 반영하고 현재 상태 SSOT를 `09_current_status.md`로 분리.
