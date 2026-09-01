@@ -19,6 +19,13 @@ for (const [name, value] of Object.entries({ restaurantA, restaurantB, targetCon
 }
 if (!sessionCookie) throw new Error('SESSION_COOKIE is required');
 if (periods.some((period) => !Number.isInteger(period) || period < 10)) throw new Error('PERIODS_MS must contain integers >= 10');
+if (!Number.isFinite(idleSeconds) || idleSeconds <= 0) throw new Error('IDLE_SECONDS must be positive');
+if (!Number.isInteger(measurementVotes) || measurementVotes <= 0) {
+  throw new Error('MEASUREMENT_VOTES must be a positive integer');
+}
+for (const [name, value] of Object.entries({ settleMillis, voteSettleMillis, eventTimeoutMillis })) {
+  if (!Number.isFinite(value) || value <= 0) throw new Error(`${name} must be positive`);
+}
 
 fs.mkdirSync(outputDir, { recursive: true });
 const phaseStream = fs.createWriteStream(`${outputDir}/phases.csv`);
@@ -38,6 +45,7 @@ let bodyBytes = 0;
 let connectAttempts = 0;
 let reconnects = 0;
 let maxVersion = 0;
+let fatalError = null;
 
 function sleep(ms) { return new Promise((resolve) => setTimeout(resolve, ms)); }
 
@@ -107,8 +115,14 @@ function parseSnapshot(client, block, blockBytes) {
     if (line.startsWith('event:')) eventName = line.slice(6).trim();
     if (line.startsWith('data:')) data.push(line.slice(5).trimStart());
   }
-  if (eventName !== 'ranking-snapshot' || data.length === 0) return;
+  if (eventName !== 'vote-changed' || data.length === 0) return;
   const snapshot = JSON.parse(data.join('\n'));
+  const changedAt = Date.parse(snapshot.changedAt);
+  const generatedAt = Date.parse(snapshot.generatedAt);
+  if (!Number.isInteger(snapshot.version) || snapshot.version <= 0 || !Array.isArray(snapshot.items)
+      || !Number.isFinite(changedAt) || !Number.isFinite(generatedAt)) {
+    throw new Error(`invalid ranking snapshot: ${JSON.stringify(snapshot)}`);
+  }
   if (snapshot.version <= client.lastVersion) return;
   client.lastVersion = snapshot.version;
   client.lastSnapshot = snapshot;
@@ -120,11 +134,28 @@ function parseSnapshot(client, block, blockBytes) {
     versionReceipts.set(snapshot.version, receipts);
   }
   receipts.clients.add(client.id);
-  eventStream.write(`${currentPhase},${currentPeriod},${client.id},${snapshot.version},${Date.parse(snapshot.changedAt)},${Date.parse(snapshot.generatedAt)},${receivedAt},${blockBytes}\n`);
+  eventStream.write(`${currentPhase},${currentPeriod},${client.id},${snapshot.version},${changedAt},${generatedAt},${receivedAt},${blockBytes}\n`);
+}
+
+function recordFatal(error) {
+  if (fatalError) return;
+  fatalError = error;
+  console.error(error.stack || error);
+  void closeAll();
+}
+
+function scheduleReconnect(client) {
+  if (stopping || client.closed || client.reconnectScheduled) return;
+  client.reconnectScheduled = true;
+  setTimeout(() => {
+    client.reconnectScheduled = false;
+    openClient(client);
+  }, 100);
 }
 
 function openClient(client) {
   if (stopping || client.closed) return;
+  client.reconnectScheduled = false;
   connectAttempts += 1;
   if (client.everConnected) reconnects += 1;
   const request = http.get(new URL('/api/v1/ranking/stream', baseUrl), {
@@ -150,12 +181,17 @@ function openClient(client) {
       while ((separator = buffer.indexOf('\n\n')) >= 0) {
         const block = buffer.slice(0, separator);
         buffer = buffer.slice(separator + 2);
-        parseSnapshot(client, block, Buffer.byteLength(block) + 2);
+        try {
+          parseSnapshot(client, block, Buffer.byteLength(block) + 2);
+        } catch (error) {
+          recordFatal(error);
+          return;
+        }
       }
     });
     const disconnected = () => {
       client.connected = false;
-      if (!stopping && !client.closed) setTimeout(() => openClient(client), 100);
+      scheduleReconnect(client);
     };
     response.on('end', disconnected);
     response.on('error', disconnected);
@@ -163,13 +199,14 @@ function openClient(client) {
   request.on('error', (error) => {
     client.connected = false;
     if (!client.everConnected) client.rejectOpen(error);
-    if (!stopping && !client.closed) setTimeout(() => openClient(client), 100);
+    scheduleReconnect(client);
   });
 }
 
 async function waitFor(predicate, timeoutMillis, description) {
   const deadline = Date.now() + timeoutMillis;
   while (Date.now() < deadline) {
+    if (fatalError) throw fatalError;
     if (predicate()) return;
     await sleep(20);
   }
@@ -184,7 +221,7 @@ async function addConnections(target) {
     let rejectOpen;
     const opened = new Promise((resolve, reject) => { resolveOpen = resolve; rejectOpen = reject; });
     const client = { id, opened, resolveOpen, rejectOpen, connected: false, everConnected: false,
-      closed: false, request: null, lastVersion: 0, lastSnapshot: null };
+      closed: false, reconnectScheduled: false, request: null, lastVersion: 0, lastSnapshot: null };
     clients.push(client);
     opens.push(opened);
     openClient(client);

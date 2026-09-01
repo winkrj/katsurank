@@ -44,13 +44,18 @@ def analyze_run(run_dir):
 
     stages = {}
     for phase in ("baseline_0", "hold_250", "hold_500", "hold_1000", "cleanup_0"):
-        interval = intervals[phase]
+        interval = intervals.get(phase)
+        if interval is None or "end" not in interval:
+            raise ValueError(f"missing completed phase {phase} in {run_dir}")
         window_start = max(interval["start"], interval["end"] - 10_000)
         rows = [row for row in metric_rows if window_start <= int(row["timestamp_ms"]) <= interval["end"]
                 and row["scrape_ok"] == "1"]
         def med(column):
             values = [number(row[column]) for row in rows]
-            return statistics.median(value for value in values if value is not None)
+            present = [value for value in values if value is not None]
+            if not present:
+                raise ValueError(f"phase {phase} has no usable {column} samples in {run_dir}")
+            return statistics.median(present)
         stages[phase] = {
             "target_connections": interval["target"],
             "samples": len(rows),
@@ -75,6 +80,9 @@ def analyze_run(run_dir):
 
     measurement_versions = {int(row["version"]) for row in votes if row["role"] == "measurement"}
     latency_rows = [row for row in events if int(row["version"]) in measurement_versions]
+    clients_by_measurement_version = {}
+    for row in latency_rows:
+        clients_by_measurement_version.setdefault(int(row["version"]), set()).add(int(row["client_id"]))
     cache_wait = [int(row["generated_at_ms"]) - int(row["changed_at_ms"]) for row in latency_rows]
     transmission = [int(row["received_at_ms"]) - int(row["generated_at_ms"]) for row in latency_rows]
     total = [int(row["received_at_ms"]) - int(row["changed_at_ms"]) for row in latency_rows]
@@ -86,10 +94,36 @@ def analyze_run(run_dir):
         "total_ms": {key: percentile(total, value) for key, value in (("p50", 50), ("p95", 95), ("p99", 99))},
     }
 
+    rows_by_role = {role: [row for row in votes if row["role"] == role]
+                    for role in ("prepare", "validation", "measurement")}
+    preflight_rows = rows_by_role["prepare"] + rows_by_role["validation"]
+    expected_measurement_votes = int(client_summary["measurementVotes"])
+    expected_connections = int(client_summary.get("pollingComparisonConnections", 1000))
+    expected_client_ids = set(range(1, expected_connections + 1))
+    unique_measurement_deliveries = sum(len(client_ids) for client_ids in clients_by_measurement_version.values())
     validation = {
-        "votes": len([row for row in votes if row["role"] == "validation"]),
-        "all_one_broadcast": all(float(row["broadcast_delta"]) == 1 for row in votes),
-        "measurement_votes": len(measurement_versions),
+        "prepare_vote_rows": len(rows_by_role["prepare"]),
+        "validation_vote_rows": len(rows_by_role["validation"]),
+        "measurement_vote_rows": len(rows_by_role["measurement"]),
+        "measurement_versions": len(measurement_versions),
+        "expected_measurement_votes": expected_measurement_votes,
+        "expected_connections": expected_connections,
+        "preflight_all_one_broadcast": (
+            len(rows_by_role["validation"]) == 2
+            and len(rows_by_role["prepare"]) <= 1
+            and all(float(row["broadcast_delta"]) == 1 for row in preflight_rows)
+        ),
+        "measurement_all_one_broadcast": (
+            len(rows_by_role["measurement"]) == expected_measurement_votes
+            and all(float(row["broadcast_delta"]) == 1 for row in rows_by_role["measurement"])
+        ),
+        "measurement_all_clients_received": (
+            len(measurement_versions) == expected_measurement_votes
+            and set(clients_by_measurement_version) == measurement_versions
+            and all(client_ids == expected_client_ids
+                    for client_ids in clients_by_measurement_version.values())
+            and len(latency_rows) == unique_measurement_deliveries
+        ),
     }
     result = {
         "run": run_dir.name,
@@ -140,7 +174,12 @@ def aggregate(root, runs):
             "total": summary(run_values(lambda run: run["latency"]["total_ms"]["p95"])),
         },
         "request_reduction_multiple": summary(run_values(lambda run: run["request_comparison"]["reduction_multiple"])),
-        "all_preflight_valid": all(run["validation"]["all_one_broadcast"] for run in runs),
+        "all_preflight_valid": all(run["validation"]["preflight_all_one_broadcast"] for run in runs),
+        "all_measurements_valid": all(
+            run["validation"]["measurement_all_one_broadcast"]
+            and run["validation"]["measurement_all_clients_received"]
+            and run["validation"]["measurement_vote_rows"] == run["validation"]["measurement_versions"]
+            for run in runs),
     }
     (root / "aggregate.json").write_text(json.dumps(aggregate_result, ensure_ascii=False, indent=2) + "\n")
     return aggregate_result

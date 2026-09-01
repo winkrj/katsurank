@@ -77,6 +77,8 @@ def analyze_run(run_dir):
         measurement_start = phases[measurement_phase]["start"]
         measurement_end = phases[measurement_phase]["end"]
         idle_duration = (int(idle_end["timestamp_ms"]) - int(idle_start["timestamp_ms"])) / 1000
+        if idle_duration <= 0:
+            raise ValueError(f"idle phase duration must be positive for {period}ms in {run_dir}")
         measurement_duration = (int(measurement_end["timestamp_ms"]) - int(measurement_start["timestamp_ms"])) / 1000
         idle_refreshes = delta(idle_start, idle_end, "refresh_count")
         idle_sql = idle_refreshes * 3
@@ -160,7 +162,13 @@ def analyze_run(run_dir):
 
 
 def summary(values):
-    return {"values": values, "median": statistics.median(values), "min": min(values), "max": max(values)}
+    present = [value for value in values if value is not None]
+    return {
+        "values": values,
+        "median": statistics.median(present) if present else None,
+        "min": min(present) if present else None,
+        "max": max(present) if present else None,
+    }
 
 
 def aggregate(root, runs):
@@ -197,21 +205,37 @@ def aggregate(root, runs):
 
         target_rate = 1000 / period
         reasons = []
-        if fields["logical_refresh_per_second"]["median"] < target_rate * 0.9:
+        required = ("logical_refresh_per_second", "refresh_mean_ms", "sse_transmission_p95_ms",
+                    "refresh_failures", "send_failures", "reconnects")
+        if any(fields[name]["median"] is None for name in required):
+            reasons.append("required measurements missing")
+        if (fields["logical_refresh_per_second"]["median"] is not None
+                and fields["logical_refresh_per_second"]["median"] < target_rate * 0.9):
             reasons.append("actual refresh rate below 90% of target")
-        if fields["refresh_mean_ms"]["median"] >= period * 0.5:
+        if (fields["refresh_mean_ms"]["median"] is not None
+                and fields["refresh_mean_ms"]["median"] >= period * 0.5):
             reasons.append("mean refresh duration reached 50% of period")
-        if fields["refresh_failures"]["max"] > 0 or fields["hikari_pending_max"]["max"] > 0:
+        if ((fields["refresh_failures"]["max"] or 0) > 0
+                or (fields["hikari_pending_max"]["max"] or 0) > 0):
             reasons.append("refresh failure or connection-pool pending observed")
-        if fields["send_failures"]["max"] > 0 or fields["reconnects"]["max"] > 0:
+        if (fields["hikari_pending_max"]["max"] is None):
+            reasons.append("connection-pool pending measurement missing")
+        if ((fields["send_failures"]["max"] or 0) > 0 or (fields["reconnects"]["max"] or 0) > 0):
             reasons.append("SSE send failure or reconnect observed")
         transmission = fields["sse_transmission_p95_ms"]["median"]
-        if prior_transmission is not None and transmission >= prior_transmission * 2:
+        if (prior_transmission is not None and prior_transmission >= 1
+                and transmission is not None and transmission >= prior_transmission * 2):
             reasons.append("SSE transmission p95 doubled from prior period")
         if knee is None and reasons:
             knee = period
             knee_reasons = reasons
-        prior_transmission = transmission
+        if transmission is not None:
+            prior_transmission = transmission
+
+    connection_counts = {run["connections"] for run in runs}
+    if len(connection_counts) != 1:
+        raise ValueError("all runs must use the same connection count")
+    clients = connection_counts.pop()
 
     aggregate_result = {
         "runs": len(runs),
@@ -220,8 +244,8 @@ def aggregate(root, runs):
         "knee_period_ms": knee,
         "knee_reasons": knee_reasons,
         "polling_calculation": {
-            str(period): {"clients": 1000, "poll_interval_ms": period,
-                          "requests_per_second": 1_000_000 / period,
+            str(period): {"clients": clients, "poll_interval_ms": period,
+                          "requests_per_second": clients * 1000 / period,
                           "logical_db_refreshes_per_second": 1000 / period}
             for period in periods
         },

@@ -20,6 +20,15 @@ const eventTimeoutMillis = Number(process.env.EVENT_TIMEOUT_MILLIS || '5000');
 for (const [name, value] of Object.entries({ appPid, restaurantA, restaurantB })) {
   if (!Number.isInteger(value) || value <= 0) throw new Error(`${name} must be a positive integer`);
 }
+for (const [name, value] of Object.entries({ baselineSeconds, holdSeconds, cleanupSeconds })) {
+  if (!Number.isFinite(value) || value < 0) throw new Error(`${name} must be a non-negative number`);
+}
+if (!Number.isInteger(measurementVotes) || measurementVotes <= 0) {
+  throw new Error('measurementVotes must be a positive integer');
+}
+for (const [name, value] of Object.entries({ voteSettleMillis, eventTimeoutMillis })) {
+  if (!Number.isFinite(value) || value <= 0) throw new Error(`${name} must be a positive number`);
+}
 if (!sessionCookie) throw new Error('SESSION_COOKIE is required');
 
 fs.mkdirSync(outputDir, { recursive: true });
@@ -39,6 +48,7 @@ let bodyBytes = 0;
 let connectAttempts = 0;
 let reconnects = 0;
 let maxVersion = 0;
+let fatalError = null;
 
 function sleep(ms) {
   return new Promise((resolve) => setTimeout(resolve, ms));
@@ -56,8 +66,14 @@ function parseSnapshot(client, block, blockBytes) {
     if (line.startsWith('event:')) eventName = line.slice(6).trim();
     if (line.startsWith('data:')) data.push(line.slice(5).trimStart());
   }
-  if (eventName !== 'ranking-snapshot' || data.length === 0) return;
+  if (eventName !== 'vote-changed' || data.length === 0) return;
   const snapshot = JSON.parse(data.join('\n'));
+  const changedAt = Date.parse(snapshot.changedAt);
+  const generatedAt = Date.parse(snapshot.generatedAt);
+  if (!Number.isInteger(snapshot.version) || snapshot.version <= 0 || !Array.isArray(snapshot.items)
+      || !Number.isFinite(changedAt) || !Number.isFinite(generatedAt)) {
+    throw new Error(`invalid ranking snapshot: ${JSON.stringify(snapshot)}`);
+  }
   if (snapshot.version <= client.lastVersion) return;
   client.lastVersion = snapshot.version;
   client.lastSnapshot = snapshot;
@@ -69,11 +85,28 @@ function parseSnapshot(client, block, blockBytes) {
     versionReceipts.set(snapshot.version, receipts);
   }
   receipts.clients.add(client.id);
-  eventStream.write(`${client.id},${snapshot.version},${Date.parse(snapshot.changedAt)},${Date.parse(snapshot.generatedAt)},${receivedAt},${blockBytes}\n`);
+  eventStream.write(`${client.id},${snapshot.version},${changedAt},${generatedAt},${receivedAt},${blockBytes}\n`);
+}
+
+function recordFatal(error) {
+  if (fatalError) return;
+  fatalError = error;
+  console.error(error.stack || error);
+  void closeAll();
+}
+
+function scheduleReconnect(client) {
+  if (stopping || client.closed || client.reconnectScheduled) return;
+  client.reconnectScheduled = true;
+  setTimeout(() => {
+    client.reconnectScheduled = false;
+    openClient(client);
+  }, 100);
 }
 
 function openClient(client) {
   if (stopping || client.closed) return;
+  client.reconnectScheduled = false;
   connectAttempts += 1;
   if (client.everConnected) reconnects += 1;
   const request = http.get(new URL('/api/v1/ranking/stream', baseUrl), {
@@ -100,12 +133,17 @@ function openClient(client) {
       while ((separator = buffer.indexOf('\n\n')) >= 0) {
         const block = buffer.slice(0, separator);
         buffer = buffer.slice(separator + 2);
-        parseSnapshot(client, block, Buffer.byteLength(block) + 2);
+        try {
+          parseSnapshot(client, block, Buffer.byteLength(block) + 2);
+        } catch (error) {
+          recordFatal(error);
+          return;
+        }
       }
     });
     const disconnected = () => {
       client.connected = false;
-      if (!stopping && !client.closed) setTimeout(() => openClient(client), 100);
+      scheduleReconnect(client);
     };
     response.on('end', disconnected);
     response.on('error', disconnected);
@@ -113,7 +151,7 @@ function openClient(client) {
   request.on('error', (error) => {
     client.connected = false;
     if (!client.everConnected) client.rejectOpen(error);
-    if (!stopping && !client.closed) setTimeout(() => openClient(client), 100);
+    scheduleReconnect(client);
   });
 }
 
@@ -128,7 +166,7 @@ async function addConnections(target) {
       rejectOpen = reject;
     });
     const client = { id, opened, resolveOpen, rejectOpen, connected: false, everConnected: false,
-      closed: false, request: null, lastVersion: 0, lastSnapshot: null };
+      closed: false, reconnectScheduled: false, request: null, lastVersion: 0, lastSnapshot: null };
     clients.push(client);
     opens.push(opened);
     openClient(client);
@@ -144,6 +182,7 @@ async function addConnections(target) {
 async function waitFor(predicate, timeoutMillis, description) {
   const deadline = Date.now() + timeoutMillis;
   while (Date.now() < deadline) {
+    if (fatalError) throw fatalError;
     if (predicate()) return;
     await sleep(20);
   }
@@ -282,7 +321,9 @@ async function main() {
   await addConnections(500);
   await hold('hold_500', 500, holdSeconds);
   await addConnections(1000);
+  const reconnectsBeforeComparison = reconnects;
   await hold('hold_1000', 1000, holdSeconds);
+  const comparisonReconnects = reconnects - reconnectsBeforeComparison;
   await prepareAndMeasureVotes();
 
   await closeAll();
@@ -296,9 +337,12 @@ async function main() {
     completedAt: new Date().toISOString(), baselineSeconds, holdSeconds, cleanupSeconds,
     measurementVotes, connectAttempts, reconnects, bodyBytes, maxVersion,
     pollingComparisonSeconds: holdSeconds,
-    pollingRequests: 500 * holdSeconds,
-    sseStreamRequests: connectAttempts,
-    requestReduction: (500 * holdSeconds) / connectAttempts,
+    pollingComparisonConnections: 1000,
+    pollingIntervalSeconds: 2,
+    pollingRequests: 1000 * holdSeconds / 2,
+    comparisonReconnects,
+    sseStreamRequests: 1000 + comparisonReconnects,
+    requestReduction: (1000 * holdSeconds / 2) / (1000 + comparisonReconnects),
   };
   fs.writeFileSync(`${outputDir}/client-summary.json`, `${JSON.stringify(summary, null, 2)}\n`);
 }

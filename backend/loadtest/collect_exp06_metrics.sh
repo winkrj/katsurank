@@ -7,7 +7,14 @@ output_file=${OUTPUT_FILE:?OUTPUT_FILE is required}
 max_duration_seconds=${MAX_DURATION_SECONDS:-900}
 actuator_base_url=${ACTUATOR_BASE_URL:-http://localhost:8080}
 started_epoch=$(date +%s)
+next_sample_epoch=$started_epoch
 snapshot_file=$(mktemp "${TMPDIR:-/tmp}/katsurank-exp06.XXXXXX")
+
+if command -v lsof >/dev/null 2>&1 && lsof -nP -a -p "$app_pid" >/dev/null 2>&1; then
+  lsof_available=1
+else
+  lsof_available=0
+fi
 
 cleanup() { rm -f "$snapshot_file"; }
 trap cleanup EXIT
@@ -32,8 +39,8 @@ while kill -0 "$app_pid" 2>/dev/null; do
         else if (name=="ranking_sse_connections_opened_total") { opened+=value; opened_s=1 }
         else if (name=="ranking_sse_connections_closed_total") { closed+=value; closed_s=1 }
         else if (name=="ranking_sse_broadcasts_total") { broadcasts+=value; broadcasts_s=1 }
-        else if (name=="ranking_sse_deliveries_total" && label($1,"type")=="snapshot") { snapshots+=value; snapshots_s=1 }
-        else if (name=="ranking_sse_deliveries_total" && label($1,"type")=="heartbeat") { heartbeats+=value; heartbeats_s=1 }
+        else if (name=="ranking_sse_deliveries_total" && label($0,"type")=="snapshot") { snapshots+=value; snapshots_s=1 }
+        else if (name=="ranking_sse_deliveries_total" && label($0,"type")=="heartbeat") { heartbeats+=value; heartbeats_s=1 }
         else if (name=="ranking_sse_send_failures_total") { failures+=value; failures_s=1 }
         else if (name=="ranking_cache_refresh_duration_seconds_count") { refreshc+=value; refreshc_s=1 }
         else if (name=="ranking_cache_refresh_duration_seconds_sum") { refreshs+=value; refreshs_s=1 }
@@ -58,13 +65,22 @@ while kill -0 "$app_pid" 2>/dev/null; do
     values=$(awk 'BEGIN { for (i=1; i<24; i++) printf "," }')
   fi
 
-  lsof_fds=$(lsof -nP -a -p "$app_pid" -d 0-999999 2>/dev/null | awk 'NR>1 {count++} END {print count+0}')
-  lsof_established=$(lsof -nP -a -p "$app_pid" -iTCP -sTCP:ESTABLISHED 2>/dev/null | awk 'NR>1 {count++} END {print count+0}')
+  lsof_fds=
+  lsof_established=
+  if [ "$lsof_available" -eq 1 ]; then
+    lsof_fds=$(lsof -nP -a -p "$app_pid" -d 0-999999 2>/dev/null | awk 'NR>1 {count++} END {print count+0}')
+    lsof_established=$(lsof -nP -a -p "$app_pid" -iTCP -sTCP:ESTABLISHED 2>/dev/null | awk 'NR>1 {count++} END {print count+0}')
+  fi
   process_values=$(ps -p "$app_pid" -o rss= -o vsz= 2>/dev/null | awk '{print $1 "," $2}')
   app_rss=$(printf '%s\n' "$process_values" | cut -d, -f1)
   app_vsz=$(printf '%s\n' "$process_values" | cut -d, -f2)
   printf '%s,%s,%s,%s,%s,%s,%s\n' "$timestamp_ms" "$scrape_ok" "$values" "$lsof_fds" "$lsof_established" "$app_rss" "$app_vsz" >> "$output_file"
 
-  if [ $(( $(date +%s) - started_epoch )) -ge "$max_duration_seconds" ]; then break; fi
-  sleep 1
+  now_epoch=$(date +%s)
+  if [ $((now_epoch - started_epoch)) -ge "$max_duration_seconds" ]; then break; fi
+  next_sample_epoch=$((next_sample_epoch + 1))
+  while [ "$next_sample_epoch" -le "$now_epoch" ]; do
+    next_sample_epoch=$((next_sample_epoch + 1))
+  done
+  sleep $((next_sample_epoch - now_epoch))
 done

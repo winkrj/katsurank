@@ -7,7 +7,14 @@ output_file=${OUTPUT_FILE:?OUTPUT_FILE is required}
 max_duration_seconds=${MAX_DURATION_SECONDS:-900}
 actuator_base_url=${ACTUATOR_BASE_URL:-http://localhost:8080}
 started_epoch=$(date +%s)
+next_sample_epoch=$started_epoch
 snapshot_file=$(mktemp "${TMPDIR:-/tmp}/katsurank-exp05.XXXXXX")
+
+if command -v lsof >/dev/null 2>&1 && lsof -nP -a -p "$app_pid" >/dev/null 2>&1; then
+  lsof_available=1
+else
+  lsof_available=0
+fi
 
 cleanup() {
   rm -f "$snapshot_file"
@@ -50,11 +57,15 @@ while kill -0 "$app_pid" 2>/dev/null; do
     ' "$snapshot_file")
   else
     scrape_ok=0
-    values=',,,,,,,,,,,,,,,,,,'
+    values=$(awk 'BEGIN { for (i=1; i<17; i++) printf "," }')
   fi
 
-  lsof_fds=$(lsof -nP -a -p "$app_pid" -d 0-999999 2>/dev/null | awk 'NR>1 {count++} END {print count+0}')
-  lsof_established=$(lsof -nP -a -p "$app_pid" -iTCP -sTCP:ESTABLISHED 2>/dev/null | awk 'NR>1 {count++} END {print count+0}')
+  lsof_fds=
+  lsof_established=
+  if [ "$lsof_available" -eq 1 ]; then
+    lsof_fds=$(lsof -nP -a -p "$app_pid" -d 0-999999 2>/dev/null | awk 'NR>1 {count++} END {print count+0}')
+    lsof_established=$(lsof -nP -a -p "$app_pid" -iTCP -sTCP:ESTABLISHED 2>/dev/null | awk 'NR>1 {count++} END {print count+0}')
+  fi
   process_values=$(ps -p "$app_pid" -o rss= -o vsz= 2>/dev/null | awk '{print $1 "," $2}')
   app_rss=$(printf '%s\n' "$process_values" | cut -d, -f1)
   app_vsz=$(printf '%s\n' "$process_values" | cut -d, -f2)
@@ -62,6 +73,11 @@ while kill -0 "$app_pid" 2>/dev/null; do
   suffix=$(printf '%s\n' "$values" | cut -d, -f14-)
   printf '%s,%s,%s,%s,%s,%s,%s\n' "$timestamp_ms" "$scrape_ok" "$prefix" "$lsof_fds" "$lsof_established" "$app_rss" "$app_vsz,$suffix" >> "$output_file"
 
-  if [ $(( $(date +%s) - started_epoch )) -ge "$max_duration_seconds" ]; then break; fi
-  sleep 1
+  now_epoch=$(date +%s)
+  if [ $((now_epoch - started_epoch)) -ge "$max_duration_seconds" ]; then break; fi
+  next_sample_epoch=$((next_sample_epoch + 1))
+  while [ "$next_sample_epoch" -le "$now_epoch" ]; do
+    next_sample_epoch=$((next_sample_epoch + 1))
+  done
+  sleep $((next_sample_epoch - now_epoch))
 done
