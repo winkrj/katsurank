@@ -11,6 +11,19 @@
 [기술적 의사결정](docs/10_technical_decisions.md) ·
 [성능 개선 이야기](backend/loadtest/PERFORMANCE_STORY.md)
 
+## 직접 해결한 핵심 문제
+
+개인 프로젝트로 제품 규칙 정의부터 데이터 모델, 백엔드·프론트엔드, 배포와 성능 검증까지 연결했습니다.
+기술을 나열하기보다 제품의 요구가 코드와 운영 구조로 어떻게 이어지는지를 중심으로 개발했습니다.
+
+| 문제 | 직접 설계·구현한 해결 방식 |
+|---|---|
+| 동시 요청에서도 한 사람의 표는 한 장이어야 한다 | 부분 유니크 인덱스, 낙관적 락, 새 트랜잭션 재시도로 정합성 보장 |
+| SPA 인증을 서버가 통제할 수 있어야 한다 | 카카오 OAuth2, Spring Session JDBC, CSRF Double Submit Cookie 구성 |
+| 폐업·이전·표 이동 뒤에도 기록이 남아야 한다 | hard delete 대신 상태 전이와 투표 히스토리로 데이터 lifecycle 설계 |
+| 반복 polling이 DB와 서버를 압박한다 | k6·Prometheus로 병목 측정 후 지터 → 캐시 → SSE 순으로 개선 |
+| 실제 사용 가능한 서비스까지 전달해야 한다 | React 지도 UI, Spring REST API, EC2·Nginx·Vercel·GitHub Actions 운영 구성 |
+
 ## 서비스 화면
 
 현재 배포된 서비스의 실제 화면입니다. 데스크톱은 랭킹과 지도를 함께 보고, 모바일은 지도 탐색에
@@ -51,20 +64,11 @@
 ## V1 목표 아키텍처
 
 현재 `origin/main`의 프론트와 `feat/v1-backend-completion`의 캐시·SSE 백엔드를 통합했을 때의
-구조입니다. 점선에 해당하는 SSE 연결은 이벤트 이름과 스냅샷 범위를 정렬한 뒤 출시할 예정입니다.
+구조입니다. 붉은 점선에 해당하는 SSE 연결은 이벤트 이름과 스냅샷 범위를 정렬한 뒤 출시할 예정입니다.
 
-```mermaid
-flowchart LR
-    U[사용자] --> F[React SPA]
-    F -->|세션 쿠키 + CSRF| API[Spring Boot REST API]
-    F -->|지도 표시| KM[카카오맵 JS SDK]
-    API -->|OAuth2| KO[카카오 로그인]
-    API -->|장소 검색| KL[카카오 로컬 API]
-    API --> DB[(PostgreSQL)]
-    API --> CACHE[TOP 20 인메모리 캐시]
-    CACHE -.->|SSE snapshot · 통합 대기| F
-    API --> OBS[Actuator · Prometheus]
-```
+![카츠랭 V1 목표 아키텍처](docs/assets/katsurank-v1-architecture.svg)
+
+그림 원본은 [D2 소스](docs/architecture/katsurank-v1.d2)로 함께 관리합니다.
 
 백엔드는 Controller → Service → Repository의 3계층을 유지합니다. 작은 팀과 단일 서비스에서
 헥사고날 아키텍처의 추가 간접 계층보다 예측 가능한 코드 위치와 빠른 변경을 우선했고, 비즈니스 규칙은
@@ -164,28 +168,6 @@ hard delete하지 않고 상태와 연결 관계로 보존합니다. 그 결과 
 | [제품 기획](docs/01_product_spec.md) | 서비스 컨셉과 정책 |
 | [MVP 범위](docs/02_mvp_scope.md) | V1/V1.1/V2 경계 |
 | [데이터 모델과 API](docs/03_data_model_and_tech.md) | 백엔드 데이터·API 설계 |
-
-## 로컬 실행
-
-요구 사항: Java 21, Docker, Node.js 22+, pnpm.
-
-```bash
-# PostgreSQL
-docker compose up -d
-
-# Backend
-cd backend
-cp src/main/resources/application-local.example.yml src/main/resources/application-local.yml
-./gradlew bootRun --args='--spring.profiles.active=local'
-
-# Frontend
-cd ../frontend
-cp .env.example .env
-pnpm install
-pnpm dev
-```
-
-환경 변수와 OAuth 설정은 [SETUP.md](SETUP.md)를 참고합니다. 비밀값은 저장소에 커밋하지 않습니다.
 
 ## Repository
 
