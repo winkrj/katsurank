@@ -8,6 +8,7 @@ from pathlib import Path
 def main() -> None:
     parser = argparse.ArgumentParser(description="Serve collect_metrics.sh host metrics to Prometheus")
     parser.add_argument("--file", default="loadtest/results/host_metrics.prom")
+    parser.add_argument("--host", default="127.0.0.1")
     parser.add_argument("--port", type=int, default=9105)
     args = parser.parse_args()
     metrics_file = Path(args.file).resolve()
@@ -30,7 +31,7 @@ def main() -> None:
         def log_message(self, _format: str, *_args: object) -> None:
             return
 
-    ThreadingHTTPServer(("0.0.0.0", args.port), Handler).serve_forever()
+    ThreadingHTTPServer((args.host, args.port), Handler).serve_forever()
 
 
 if __name__ == "__main__":

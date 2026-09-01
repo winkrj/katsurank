@@ -6,6 +6,7 @@ actuator_base_url=${ACTUATOR_BASE_URL:-http://localhost:8080}
 output_file=${OUTPUT_FILE:-loadtest/metrics.csv}
 interval_seconds=${INTERVAL_SECONDS:-1}
 process_scan_interval_seconds=${PROCESS_SCAN_INTERVAL_SECONDS:-5}
+top_process_count=${TOP_PROCESS_COUNT:-8}
 max_samples=${MAX_SAMPLES:-0}
 max_duration_seconds=${MAX_DURATION_SECONDS:-0}
 k6_pid=${K6_PID:-}
@@ -23,7 +24,7 @@ sample_count=0
 collector_started_epoch=$(date +%s)
 last_process_scan_epoch=0
 last_process_scan_timestamp=''
-last_top8_cpu_pct_of_machine=''
+last_top_processes_cpu_pct_of_machine=''
 last_host_system_cpu_pct_of_machine=''
 last_unaccounted_cpu_pct_of_machine=''
 prometheus_cpu_raw=''
@@ -62,11 +63,15 @@ case "$machine_cpu_count" in
   ''|*[!0-9]*) printf 'MACHINE_CPU_COUNT must be a positive integer\n' >&2; exit 2 ;;
   0) printf 'MACHINE_CPU_COUNT must be greater than zero\n' >&2; exit 2 ;;
 esac
+case "$top_process_count" in
+  ''|*[!0-9]*) printf 'TOP_PROCESS_COUNT must be a positive integer\n' >&2; exit 2 ;;
+  0) printf 'TOP_PROCESS_COUNT must be greater than zero\n' >&2; exit 2 ;;
+esac
 
 mkdir -p "$(dirname "$output_file")" "$(dirname "$bucket_file")" "$(dirname "$process_file")"
 mkdir -p "$(dirname "$host_metrics_file")"
 
-printf '%s\n' 'timestamp_epoch,timestamp_utc,scrape_ok,machine_cpu_count,hikari_acquire_count,hikari_acquire_sum_seconds,hikari_acquire_max_seconds,hikari_acquire_p95_cumulative_seconds,hikari_usage_count,hikari_usage_sum_seconds,hikari_usage_max_seconds,hikari_usage_p95_cumulative_seconds,hikari_active,hikari_pending,jvm_memory_used_bytes,process_cpu_ratio_raw,process_cpu_pct_of_machine,system_cpu_ratio_raw,system_cpu_pct_of_machine,jdbc_active,jdbc_idle,jdbc_max,jdbc_min,http_requests_count,http_requests_sum_seconds,http_requests_max_seconds,jvm_gc_pause_count,jvm_gc_pause_sum_seconds,jvm_gc_pause_max_seconds,k6_cpu_pct_core_raw,k6_cpu_pct_of_machine,k6_rss_kib,collector_cpu_pct_core_raw,collector_cpu_pct_of_machine,collector_rss_kib,prometheus_cpu_pct_core_raw,prometheus_cpu_pct_of_machine,prometheus_memory_bytes,grafana_cpu_pct_core_raw,grafana_cpu_pct_of_machine,grafana_memory_bytes,process_scan_epoch,host_system_cpu_pct_of_machine,top8_cpu_pct_of_machine,unaccounted_cpu_pct_of_machine' > "$output_file"
+printf '%s\n' 'timestamp_epoch,timestamp_utc,scrape_ok,machine_cpu_count,top_process_count,hikari_acquire_count,hikari_acquire_sum_seconds,hikari_acquire_max_seconds,hikari_acquire_p95_cumulative_seconds,hikari_usage_count,hikari_usage_sum_seconds,hikari_usage_max_seconds,hikari_usage_p95_cumulative_seconds,hikari_active,hikari_pending,jvm_memory_used_bytes,process_cpu_ratio_raw,process_cpu_pct_of_machine,system_cpu_ratio_raw,system_cpu_pct_of_machine,jdbc_active,jdbc_idle,jdbc_max,jdbc_min,http_requests_count,http_requests_sum_seconds,http_requests_max_seconds,jvm_gc_pause_count,jvm_gc_pause_sum_seconds,jvm_gc_pause_max_seconds,k6_cpu_pct_core_raw,k6_cpu_pct_of_machine,k6_rss_kib,collector_cpu_pct_core_raw,collector_cpu_pct_of_machine,collector_rss_kib,prometheus_cpu_pct_core_raw,prometheus_cpu_pct_of_machine,prometheus_memory_bytes,grafana_cpu_pct_core_raw,grafana_cpu_pct_of_machine,grafana_memory_bytes,process_scan_epoch,host_system_cpu_pct_of_machine,top_processes_cpu_pct_of_machine,unaccounted_cpu_pct_of_machine' > "$output_file"
 printf '%s\n' 'timestamp_epoch,timestamp_utc,metric,le,cumulative_count' > "$bucket_file"
 printf '%s\n' 'timestamp_epoch,timestamp_utc,scan_kind,rank,pid,process_name,cpu_pct_core_raw,cpu_pct_of_machine,rss_kib' > "$process_file"
 
@@ -180,11 +185,11 @@ while :; do
     if [ -n "$grafana_memory_value" ]; then grafana_memory_bytes=$(memory_to_bytes "$grafana_memory_value"); fi
 
     ps -axo pid=,%cpu=,rss=,comm= > "$process_snapshot_file"
-    top -l 2 -n 8 -o cpu -stats pid,cpu > "$top_snapshot_file"
+    top -l 2 -n "$top_process_count" -o cpu -stats pid,cpu > "$top_snapshot_file"
     last_host_system_cpu_pct_of_machine=$(awk '/^CPU usage:/ { idle=$7; sub(/%/, "", idle); value=100-idle } END { printf "%.6f", value }' "$top_snapshot_file")
     awk '/^PID/ { sample++; next } sample == 2 && $1 ~ /^[0-9]+$/ { cpu=$2; sub(/%/, "", cpu); printf "%s\t%s\n", cpu, $1 }' "$top_snapshot_file" > "$top_process_file"
-    last_top8_cpu_pct_of_machine=$(awk -F '\t' -v cores="$machine_cpu_count" '{sum += $1} END {printf "%.6f", sum / cores}' "$top_process_file")
-    last_unaccounted_cpu_pct_of_machine=$(awk -v system_pct="$last_host_system_cpu_pct_of_machine" -v top8_pct="$last_top8_cpu_pct_of_machine" 'BEGIN {printf "%.6f", system_pct - top8_pct}')
+    last_top_processes_cpu_pct_of_machine=$(awk -F '\t' -v cores="$machine_cpu_count" '{sum += $1} END {printf "%.6f", sum / cores}' "$top_process_file")
+    last_unaccounted_cpu_pct_of_machine=$(awk -v system_pct="$last_host_system_cpu_pct_of_machine" -v top_processes_pct="$last_top_processes_cpu_pct_of_machine" 'BEGIN {printf "%.6f", system_pct - top_processes_pct}')
     rank=0
     while IFS="$(printf '\t')" read -r cpu_raw pid; do
       rank=$((rank + 1))
@@ -194,7 +199,7 @@ while :; do
       if [ -z "$process_name" ]; then process_name='[exited before process metadata lookup]'; fi
       cpu_machine=$(awk -v raw="$cpu_raw" -v cores="$machine_cpu_count" 'BEGIN {printf "%.6f", raw / cores}')
       escaped_name=$(printf '%s' "$process_name" | sed 's/"/""/g')
-      printf '%s,%s,top8,%s,%s,"%s",%s,%s,%s\n' "$timestamp_epoch" "$timestamp_utc" "$rank" "$pid" "$escaped_name" "$cpu_raw" "$cpu_machine" "$rss" >> "$process_file"
+      printf '%s,%s,top_processes,%s,%s,"%s",%s,%s,%s\n' "$timestamp_epoch" "$timestamp_utc" "$rank" "$pid" "$escaped_name" "$cpu_raw" "$cpu_machine" "$rss" >> "$process_file"
     done < "$top_process_file"
     awk 'BEGIN {IGNORECASE=1} /com\.docker|qemu|virtiofsd|Virtualization\.VirtualMachine|Docker Desktop/ {print}' "$process_snapshot_file" | while read -r pid cpu_raw rss process_name; do
       if ! awk -F '\t' -v target="$pid" '$2 == target {found=1} END {exit !found}' "$top_process_file"; then
@@ -210,8 +215,8 @@ while :; do
     {
       printf '# TYPE katsurank_host_system_cpu_pct_of_machine gauge\n'
       printf 'katsurank_host_system_cpu_pct_of_machine %s\n' "$last_host_system_cpu_pct_of_machine"
-      printf '# TYPE katsurank_host_top8_cpu_pct_of_machine gauge\n'
-      printf 'katsurank_host_top8_cpu_pct_of_machine %s\n' "$last_top8_cpu_pct_of_machine"
+      printf '# TYPE katsurank_host_top_processes_cpu_pct_of_machine gauge\n'
+      printf 'katsurank_host_top_processes_cpu_pct_of_machine{count="%s"} %s\n' "$top_process_count" "$last_top_processes_cpu_pct_of_machine"
       printf '# TYPE katsurank_host_unaccounted_cpu_pct_of_machine gauge\n'
       printf 'katsurank_host_unaccounted_cpu_pct_of_machine %s\n' "$last_unaccounted_cpu_pct_of_machine"
       if [ -n "$k6_cpu_machine" ]; then printf 'katsurank_host_k6_cpu_pct_of_machine %s\n' "$k6_cpu_machine"; fi
@@ -223,7 +228,7 @@ while :; do
     mv "$host_metrics_tmp" "$host_metrics_file"
   fi
 
-  printf '%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s\n' "$timestamp_epoch" "$timestamp_utc" "$scrape_ok" "$machine_cpu_count" "$metric_values" "$k6_cpu_raw" "$k6_cpu_machine" "$k6_rss" "$collector_cpu_raw" "$collector_cpu_machine" "$collector_rss" "$prometheus_cpu_raw" "$prometheus_cpu_machine" "$prometheus_memory_bytes" "$grafana_cpu_raw" "$grafana_cpu_machine" "$grafana_memory_bytes" "$last_process_scan_timestamp" "$last_host_system_cpu_pct_of_machine" "$last_top8_cpu_pct_of_machine" "$last_unaccounted_cpu_pct_of_machine" >> "$output_file"
+  printf '%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s\n' "$timestamp_epoch" "$timestamp_utc" "$scrape_ok" "$machine_cpu_count" "$top_process_count" "$metric_values" "$k6_cpu_raw" "$k6_cpu_machine" "$k6_rss" "$collector_cpu_raw" "$collector_cpu_machine" "$collector_rss" "$prometheus_cpu_raw" "$prometheus_cpu_machine" "$prometheus_memory_bytes" "$grafana_cpu_raw" "$grafana_cpu_machine" "$grafana_memory_bytes" "$last_process_scan_timestamp" "$last_host_system_cpu_pct_of_machine" "$last_top_processes_cpu_pct_of_machine" "$last_unaccounted_cpu_pct_of_machine" >> "$output_file"
 
   sample_count=$((sample_count + 1))
   if [ "$max_samples" -gt 0 ] && [ "$sample_count" -ge "$max_samples" ]; then break; fi

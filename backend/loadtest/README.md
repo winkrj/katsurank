@@ -1,6 +1,29 @@
+# 카츠랭 랭킹 성능 개선 자료
+
+이 폴더는 같은 TOP 20을 반복해서 조회하던 구조가 캐시와 SSE로 발전한 과정과 그 근거를 보관한다.
+
+## 처음 방문했다면
+
+| 읽을거리 | 대상 | 내용 |
+|---|---|---|
+| [PERFORMANCE_STORY.md](PERFORMANCE_STORY.md) | 사람·GitHub·블로그 | 문제, 시행착오, 선택을 쉬운 말로 설명 |
+| [EXPERIMENT_HISTORY.md](EXPERIMENT_HISTORY.md) | AI·검증·재현 | EXP-01~06 상태, 수치 인용 제한, Git 분류 |
+| 이 문서의 아래 절차 | 실험 실행자 | 관측 환경 기동과 재실행 방법 |
+
+원본 결과와 분석기는 자동 검산과 재현을 위해 그대로 유지한다. 사람에게 설명할 때는 EXP 번호보다
+`polling 간격 실험`, `지터 실험`, `캐시 검증`, `SSE 연결 검증`처럼 목적을 먼저 표현한다.
+
+> **검증된 기준 환경:** macOS + Docker Desktop + `/bin/zsh` + k6 v2.
+> 아래 절차의 `caffeinate`와 `host.docker.internal`은 macOS 기준이며, 다른 OS에서는 절전 방지와
+> 호스트 접근 주소를 해당 환경에 맞게 바꿔야 한다.
+
+---
+
 # 부하 테스트 실시간 관측 실행 절차
 
 아래 명령은 모두 `backend/` 디렉터리에서 실행한다. 본 측정 중에는 Mac 절전과 Grafana 브라우저 렌더링이 결과를 흔들 수 있으므로 `caffeinate`를 사용하고, 화면 확인을 마치면 Grafana 탭을 닫는다.
+
+실험의 기술적 완료 상태와 현재 코드에 대한 유효성은 [EXPERIMENT_HISTORY.md](EXPERIMENT_HISTORY.md)를 확인한다.
 
 ## 1. PostgreSQL, Prometheus, Grafana 기동
 
@@ -43,8 +66,12 @@ curl -fsS http://localhost:8080/actuator/prometheus | rg '^jvm_gc_pause_seconds_
 ```bash
 python3 loadtest/observability/serve_host_metrics.py \
   --file loadtest/results/host_metrics.prom \
+  --host 0.0.0.0 \
   --port 9105
 ```
+
+기본 바인딩은 `127.0.0.1`이다. 위 실행은 Docker의 Prometheus가
+`host.docker.internal:9105`로 접근해야 하므로 측정 중에만 전체 인터페이스 바인딩을 명시한다.
 
 Grafana 주소:
 

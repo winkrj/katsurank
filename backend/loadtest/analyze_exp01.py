@@ -42,11 +42,19 @@ def percentile_delta(previous, current, percentile=0.95):
     if total <= 0:
         return float("nan")
     target = total * percentile
-    bounds = sorted(float(bound) for bound in current if bound != "+Inf")
-    for bound in bounds:
-        key = str(bound)
-        if current.get(key, 0) - previous.get(key, 0) >= target:
-            return bound * 1000
+    bounds = sorted((float(key), key) for key in current if key != "+Inf")
+    lower_bound = 0.0
+    lower_count = 0.0
+    for upper_bound, original_key in bounds:
+        cumulative_count = current.get(original_key, 0) - previous.get(original_key, 0)
+        if cumulative_count >= target:
+            bucket_count = cumulative_count - lower_count
+            if bucket_count <= 0:
+                return upper_bound * 1000
+            position = (target - lower_count) / bucket_count
+            return (lower_bound + (upper_bound - lower_bound) * position) * 1000
+        lower_bound = upper_bound
+        lower_count = cumulative_count
     return float("nan")
 
 
