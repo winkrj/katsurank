@@ -55,7 +55,7 @@ export function RestaurantVoteConfirmButton({
           onClick={saveLoginRedirect}
           className={className}
         >
-          {label}
+          로그인하고 투표하기
         </Button>
       ) : alreadyVoted ? (
         <button
