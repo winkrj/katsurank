@@ -14,10 +14,14 @@ export const queryKeys = {
     list: (limit: number, offset: number) => ['ranking', 'list', limit, offset] as const,
     top: ['ranking', 'top'] as const,
     mapPins: ['ranking', 'map-pins'] as const,
+    history: (restaurantId: number) => ['ranking', 'history', restaurantId] as const,
   },
   me: {
     all: ['me'] as const,
     profile: ['me', 'profile'] as const,
     voteHistory: ['me', 'vote-history'] as const,
+  },
+  comments: {
+    list: (restaurantId: number) => ['comments', 'list', restaurantId] as const,
   },
 } as const

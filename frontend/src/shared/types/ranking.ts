@@ -17,3 +17,10 @@ export type MapPinResponse = {
   longitude: number
   voteCount: number
 }
+
+// GET /api/v1/restaurants/{id}/ranking-history — KST 기준 날짜 오름차순, 최근 7건까지(초기엔 더 적을 수 있음)
+export type RankingHistoryItem = {
+  date: string
+  rank: number
+  voteCount: number
+}

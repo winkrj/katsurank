@@ -16,7 +16,7 @@ type RankingSnapshotEvent = {
 }
 
 /**
- * 랭킹 SSE 스트림(ranking-snapshot 이벤트)을 구독해 랭킹 쿼리 캐시를 직접 갱신한다.
+ * 랭킹 SSE 스트림(vote-changed 이벤트)을 구독해 랭킹 쿼리 캐시를 직접 갱신한다.
  * 이벤트마다 전체 랭킹 스냅샷이 오므로 재요청 없이 캐시를 바로 patch한다.
  * 신호가 연달아 와도 3초에 한 번만 반영하도록 스로틀한다
  * (leading: 3초 넘게 조용했다 첫 신호면 즉시, trailing: 그 후 몰린 신호는 가장 최신 걸로 한 번만).
@@ -59,7 +59,7 @@ export function useRankingLiveUpdates() {
     }
 
     const eventSource = new EventSource(RANKING_STREAM_URL, { withCredentials: true })
-    eventSource.addEventListener('ranking-snapshot', handleSnapshot)
+    eventSource.addEventListener('vote-changed', handleSnapshot)
     eventSource.onerror = () => {
       // EventSource는 연결이 끊기면 브라우저가 자동으로 재연결을 시도한다 — 별도 처리 불필요.
     }

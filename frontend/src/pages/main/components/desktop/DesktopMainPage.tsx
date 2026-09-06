@@ -35,7 +35,15 @@ export function DesktopMainPage() {
 
   function handlePinSelect(restaurant: MapRestaurant) {
     setSelected(restaurant)
-    openDetail(restaurant.id)
+  }
+
+  function handleRankingSelect(id: number) {
+    const target = restaurants.find((r) => r.id === id)
+    if (target) {
+      setSelected(target)
+    } else {
+      openDetail(id)
+    }
   }
 
   return (
@@ -50,7 +58,7 @@ export function DesktopMainPage() {
           ) : (
             <>
               <div className="min-h-0 flex-1 overflow-y-auto px-4 pt-4">
-                <RankingPanel limit={100} onSelectRestaurant={openDetail} />
+                <RankingPanel limit={100} onSelectRestaurant={handleRankingSelect} />
               </div>
 
               <div className="shrink-0 space-y-3 border-t border-[#E8D9BF] p-4">

@@ -1,5 +1,5 @@
 import { apiClient } from './client'
-import type { RankingItem, MapPinResponse } from '../types/ranking'
+import type { RankingItem, MapPinResponse, RankingHistoryItem } from '../types/ranking'
 import type { Paginated } from '../types/common'
 
 export function fetchRanking(limit = 20, offset = 0) {
@@ -14,4 +14,8 @@ export function fetchRankingTop() {
 
 export function fetchMapPins() {
   return apiClient<MapPinResponse[]>('/api/v1/ranking/map-pins')
+}
+
+export function fetchRestaurantRankingHistory(restaurantId: number) {
+  return apiClient<RankingHistoryItem[]>(`/api/v1/restaurants/${restaurantId}/ranking-history`)
 }

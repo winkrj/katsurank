@@ -17,7 +17,7 @@ export function DesktopRestaurantDetailContent({ restaurant }: DesktopRestaurant
 
       <hr className="my-10 border-[#E8D9BF]" />
 
-      <ShopDetailTabs />
+      <ShopDetailTabs restaurantId={restaurant.id} isActive={restaurant.status === 'ACTIVE'} />
     </div>
   );
 }

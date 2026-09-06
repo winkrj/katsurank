@@ -46,7 +46,11 @@ export function MobileRestaurantDetailContent({ restaurant, onClose }: MobileRes
 
         <hr className="border-[#E8D9BF]" />
 
-        <ShopDetailTabs layout="mobile" />
+        <ShopDetailTabs
+          restaurantId={restaurant.id}
+          isActive={restaurant.status === 'ACTIVE'}
+          layout="mobile"
+        />
       </div>
 
       <Toast message={toastMessage} onDismiss={dismissToast} />

@@ -1,47 +1,22 @@
 import { Toast } from '../../../../shared/ui/Toast';
+import { useRestaurantRankingHistoryQuery } from '../../../../shared/queries/ranking';
+import { CommentSection } from '../detail/CommentSection';
+import { RankTrendChart } from '../detail/RankTrendChart';
 import { RestaurantClosedBadge, RestaurantClosedNotice } from '../detail/RestaurantClosedStatus';
 import { RestaurantVoteConfirmButton } from '../detail/RestaurantVoteConfirmButton';
 import { useShareRestaurant } from '../../hooks/useShareRestaurant';
 import { useRestaurantDetailQuery } from '../../queries/useRestaurantDetailQuery';
-import { WeeklyVoteTrendChart } from './WeeklyVoteTrendChart';
 
 type RestaurantDetailAsideProps = {
   restaurantId: number;
   onClose: () => void;
 };
 
-// TODO: 실제 API 나오면 교체 — 백엔드가 최근 4주 투표 추이 데이터를 내려줄 예정
-function getMockWeeklyTrend(totalVotes: number) {
-  const labels = ['3주 전', '2주 전', '1주 전', '이번 주'];
-  const steps = [0.7, 0.79, 0.92, 1];
-  return labels.map((label, i) => ({
-    label,
-    value: Math.max(0, Math.round(totalVotes * steps[i])),
-  }));
-}
-
-// TODO: 실제 댓글/리뷰 API 나오면 교체
-const MOCK_COMMENTS = [
-  {
-    author: '돈까스러버',
-    timeAgo: '2시간 전',
-    text: '겉은 바삭하고 속은 촉촉해요! 소스도 직접 만드시는 것 같아요 👍',
-  },
-  {
-    author: '바삭한정석',
-    timeAgo: '5시간 전',
-    text: '카츠 진짜 부드럽고 맛있었어요. 재방문 의사 100%!',
-  },
-  {
-    author: '김카츠',
-    timeAgo: '1일 전',
-    text: '양도 적당하고, 밥이랑 국도 최고! 점심엔 웨이팅 필수예요.',
-  },
-];
-
 export function RestaurantDetailAside({ restaurantId, onClose }: RestaurantDetailAsideProps) {
   const { data: restaurant, isPending, isError } = useRestaurantDetailQuery(restaurantId);
   const { share, toastMessage, dismissToast } = useShareRestaurant();
+  const { data: rankingHistory, isPending: isHistoryPending } =
+    useRestaurantRankingHistoryQuery(restaurantId);
 
   if (isPending) {
     return (
@@ -68,7 +43,6 @@ export function RestaurantDetailAside({ restaurantId, onClose }: RestaurantDetai
 
   const isClosed = restaurant.status === 'CLOSED';
   const isOpen = restaurant.status === 'ACTIVE';
-  const weeklyTrend = getMockWeeklyTrend(restaurant.totalVotes);
 
   return (
     <div className="flex h-full flex-col overflow-y-auto">
@@ -200,46 +174,31 @@ export function RestaurantDetailAside({ restaurantId, onClose }: RestaurantDetai
             <hr className="border-[#E8D9BF]" />
 
             <section className="space-y-3">
-              <p className="text-[13px] font-black text-[#2A1A12]">투표 히스토리</p>
+              <p className="text-[13px] font-black text-[#2A1A12]">순위 히스토리</p>
 
               <div className="rounded-2xl border border-[#E8D9BF] bg-white p-4">
                 <div className="mb-3 flex items-center justify-between">
-                  <p className="text-[12px] font-bold text-[#5F4A3C]">주간 투표 추이 (최근 4주)</p>
+                  <p className="text-[12px] font-bold text-[#5F4A3C]">최근 순위 추이 (최근 7일)</p>
                   <span className="flex items-center gap-1 text-[11px] font-bold text-[#8A7A6A]">
                     <span className="size-1.5 rounded-full bg-[#D88A24]" />
-                    투표 수
+                    순위
                   </span>
                 </div>
-                <WeeklyVoteTrendChart data={weeklyTrend} />
+                {isHistoryPending ? (
+                  <p className="py-8 text-center text-[12px] text-[#8A7A6A]">불러오는 중…</p>
+                ) : !rankingHistory || rankingHistory.length === 0 ? (
+                  <p className="py-8 text-center text-[12px] text-[#8A7A6A]">
+                    아직 순위 데이터가 없어요.
+                  </p>
+                ) : (
+                  <RankTrendChart data={rankingHistory} />
+                )}
               </div>
             </section>
 
             <hr className="border-[#E8D9BF]" />
 
-            {/* 댓글 */}
-            <section className="space-y-4">
-              <p className="text-[13px] font-black text-[#2A1A12]">댓글 ({MOCK_COMMENTS.length})</p>
-              <ul className="space-y-4">
-                {MOCK_COMMENTS.map((comment) => (
-                  <li key={comment.author + comment.timeAgo} className="flex gap-2.5">
-                    <span className="flex size-8 shrink-0 items-center justify-center rounded-full border border-[#E8D9BF] bg-[#FFF4D8] text-[12px] font-black text-[#7A431D]">
-                      {comment.author.slice(0, 1)}
-                    </span>
-                    <div className="min-w-0">
-                      <p className="flex items-center gap-1.5 text-[12px] font-bold text-[#2A1A12]">
-                        {comment.author}
-                        <span className="text-[11px] font-normal text-[#8A7A6A]">
-                          {comment.timeAgo}
-                        </span>
-                      </p>
-                      <p className="mt-0.5 text-[13px] leading-relaxed text-[#5F4A3C]">
-                        {comment.text}
-                      </p>
-                    </div>
-                  </li>
-                ))}
-              </ul>
-            </section>
+            <CommentSection restaurantId={restaurant.id} isActive={isOpen} />
           </div>
         </>
       )}
