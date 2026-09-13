@@ -1,5 +1,17 @@
 {
   "rewrites": [
+    {
+      "source": "/",
+      "has": [
+        { "type": "query", "key": "restaurant", "value": "(?<restaurantId>.*)" },
+        {
+          "type": "header",
+          "key": "user-agent",
+          "value": ".*(Kakaotalk|KakaoTalk|Slackbot|facebookexternalhit|Twitterbot|Discordbot|TelegramBot|WhatsApp|LinkedInBot|NaverBot|Line).*"
+        }
+      ],
+      "destination": "/api/og-restaurant?restaurant=$restaurantId"
+    },
     { "source": "/(.*)", "destination": "/index.html" }
   ]
 }
